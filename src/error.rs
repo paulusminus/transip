@@ -16,4 +16,10 @@ pub enum Error {
 
     #[error("Systemtime: {0}")]
     SystemTime(#[from] SystemTimeError),
+
+    #[error("Json: {0}")]
+    Json(#[from] ureq::serde_json::Error),
+
+    #[error("Ureq: {0}")]
+    Ureq(#[from] ureq::Error),
 }
