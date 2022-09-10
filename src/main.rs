@@ -1,49 +1,57 @@
 use error::Error;
+use serde::de::DeserializeOwned;
 
+mod authentication;
+mod domain;
 mod error;
-mod sign;
+mod general;
 mod vps;
 
 type Result<T> = std::result::Result<T, Error>;
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/"; 
-const TRANSIP_PEM_FILE: &str = "/home/paul/.config/transip/desktop.pem";
+const TRANSIP_PEM_FILENAME: &str = "/home/paul/.config/transip/desktop.pem";
+const TRANSIP_USERNAME: &str = "paulusminus";
+const EXPIRATION_TIME: &str = "30 seconds";
 
 fn transip_url(command: &str) -> String {
     format!("{TRANSIP_API_PREFIX}{command}")
 }
 
+fn get_token(username: &str, expiration_time: &str, pem_filename: &str) -> Result<String> {
+    let auth_request = authentication::AuthRequest::new(username, expiration_time);
+    let signature = authentication::sign(auth_request.json().as_slice(), pem_filename)?;
+    let auth_url = transip_url("auth");
+    let token_response = 
+        ureq::post(&auth_url)
+        .set("Signature", &signature)
+        .send_bytes(auth_request.json().as_slice())?
+        .into_json::<authentication::TokenResponse>()?;
+    Ok::<String, Error>(token_response.token)
+}
+
+fn get<T>(token: &str, command: &str) -> Result<T>
+where T: DeserializeOwned
+{
+    let json = ureq::get(&transip_url(command))
+    .set("Authorization", &format!("Bearer {}", token))
+    .call()?
+    .into_json::<T>()?;
+    Ok(json)
+}
+
 fn main() -> Result<()> {
+    let token = get_token(TRANSIP_USERNAME, EXPIRATION_TIME, TRANSIP_PEM_FILENAME)?;
 
-    let key_pair = sign::read_rsa_key_pair_from_pem(TRANSIP_PEM_FILE)?;
-    let auth_request = sign::AuthRequest::default();
-    let json = ureq::serde_json::to_vec(&auth_request)?;
-    let json_string = ureq::serde_json::to_string_pretty(&auth_request)?;
-    let signature = sign::sign(json.as_slice(), key_pair)?;
-
-    println!("Signature: {signature}");
-    println!("Json Body:\n{json_string}");
-
-    let token = {
-        let auth_url = transip_url("auth");
-        let token_response = 
-            ureq::post(&auth_url)
-            .set("Signature", &signature)
-            .send_bytes(json.as_slice())?
-            .into_json::<sign::TokenResponse>()?;
-        Ok::<String, Error>(token_response.token)
-    }?;
-
-    let vpss = 
-        ureq::get(&transip_url("vps"))
-        .set("Authorization", &format!("Bearer {}", token))
-        .call()?
-        .into_json::<vps::Vpss>()?;
-
+    let vpss = get::<vps::Vpss>(&token, "vps")?;
     println!("Total Vps: {}", vpss.vpss.len());
     for vps in vpss.vpss {
-        println!("Vps: {}", vps.name);
+        println!("Vps: {} ({})", vps.name, vps.operating_system);
     }
 
+    let invoices = get::<general::Invoices>(&token, "invoices")?;
+    for invoice in invoices.invoices {
+        println!("Invoice: {}", invoice.invoice_number);
+    }
     Ok(())
 }

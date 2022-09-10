@@ -9,9 +9,6 @@ use serde::{Serialize, Deserialize};
 use crate::Result;
 use crate::error::Error;
 
-const TRANSIP_USERNAME: &str = "paulusminus";
-const EXPIRATION_TIME: &str = "30 seconds";
-
 #[derive(Serialize)]
 pub struct AuthRequest {
     login: String,
@@ -22,17 +19,21 @@ pub struct AuthRequest {
     global_key: bool,
 }
 
-impl Default for AuthRequest {
-    fn default() -> Self {
+impl AuthRequest {
+    pub fn new(username: &str, expiration_time: &str) -> Self {
         let now = chrono::offset::Local::now().format("%Y%m%dT%H%M");
         Self {
-            login: TRANSIP_USERNAME.to_owned(),
+            login: username.into(),
             nonce: milliseconds_since_epoch(),
             read_only: false,
-            expiration_time: EXPIRATION_TIME.to_owned(),
+            expiration_time: expiration_time.into(),
             label: hostname::get().map(|hostname| format!("{}-{}", hostname.to_string_lossy(), now)).unwrap_or_default(),
             global_key: false,
         }
+    }
+
+    pub fn json(&self) -> Vec<u8> {
+        ureq::serde_json::to_vec(self).unwrap()
     }
 }
 
@@ -49,7 +50,7 @@ fn milliseconds_since_epoch() -> String {
     .to_string()
 }
 
-pub fn read_rsa_key_pair_from_pem<P>(path: P) -> Result<signature::RsaKeyPair> 
+fn read_rsa_key_pair_from_pem<P>(path: P) -> Result<signature::RsaKeyPair> 
 where P: AsRef<Path>
 {
     let file = File::open(path)?;
@@ -64,7 +65,10 @@ where P: AsRef<Path>
     }
 }
 
-pub fn sign(body: &[u8], key_pair: signature::RsaKeyPair) -> Result<String> {
+pub fn sign<P>(body: &[u8], path: P) -> Result<String> 
+where P: AsRef<Path>
+{
+    let key_pair = read_rsa_key_pair_from_pem(path)?;
     let rng = rand::SystemRandom::new();
     let mut signature = vec![0; key_pair.public_modulus_len()];
     key_pair.sign(
