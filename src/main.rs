@@ -53,5 +53,16 @@ fn main() -> Result<()> {
     for invoice in invoices.invoices {
         println!("Invoice: {}", invoice.invoice_number);
     }
+
+    let nameservers = get::<domain::NameServers>(&token, "domains/paulmin.nl/nameservers")?;
+    for nameserver in nameservers.nameservers {
+        println!("{}", nameserver.hostname);
+    }
+
+    let dns_entries = get::<domain::DnsEntries>(&token, "domains/paulmin.nl/dns")?;
+    for dns_entry in dns_entries.dns_entries {
+        println!("{:10} {} = {}", dns_entry.entry_type, dns_entry.name, dns_entry.content);
+    }
+
     Ok(())
 }

@@ -21,8 +21,15 @@ pub struct WhoisContact {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct NameServer {
+pub struct NameServers {
+    pub nameservers: Vec<NameServer>,
+}
 
+#[derive(Deserialize, Serialize)]
+pub struct NameServer {
+    pub hostname: String,
+    pub ipv4: Option<String>,
+    pub ipv6: Option<String>,
 }
 
 #[derive(Deserialize, Serialize)]
