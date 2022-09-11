@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
-pub struct Vpss {
+pub struct VpsList {
     pub vpss: Vec<Vps>,
     #[serde(rename = "_links")]
     pub links: Vec<Link>,

@@ -6,19 +6,25 @@ pub struct Ping {
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Invoice {
-    pub invoice_number: String,
-    pub creation_date: String,
-    pub pay_date: String,
-    pub due_date: String,
-    pub invoice_status: String,
-    pub currency: String,
-    pub total_amount: u64,
-    pub total_amount_incl_vat: u64,
+pub struct ProductList {
+    products: Products,
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct Invoices {
-    pub invoices: Vec<Invoice>,
+#[serde(rename_all = "camelCase")]
+pub struct Products {
+    pub vps: Vec<Product>,
+    pub vps_addon: Vec<Product>,
+    pub haip: Vec<Product>,
+    pub private_networks: Vec<Product>,
+
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Product {
+    pub name: String,
+    pub description: String,
+    pub price: u32,
+    pub recurring_price: u32,   
 }

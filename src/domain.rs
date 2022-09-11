@@ -21,7 +21,7 @@ pub struct WhoisContact {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct NameServers {
+pub struct NameServerList {
     pub nameservers: Vec<NameServer>,
 }
 
@@ -38,7 +38,7 @@ pub struct Domain {
     nameservers: Vec<NameServer>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct DnsEntry {
     pub name: String,
     pub expire: u32,
@@ -49,6 +49,12 @@ pub struct DnsEntry {
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DnsEntries {
+pub struct DnsEntryList {
     pub dns_entries: Vec<DnsEntry>
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DnsEntryItem {
+    pub dns_entry: DnsEntry
 }

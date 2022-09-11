@@ -1,10 +1,16 @@
+use domain::DnsEntry;
 use error::Error;
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 
+use crate::domain::DnsEntryItem;
+
+mod account;
 mod authentication;
+mod configuration;
 mod domain;
 mod error;
 mod general;
+mod requester;
 mod vps;
 
 type Result<T> = std::result::Result<T, Error>;
@@ -13,6 +19,11 @@ const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
 const TRANSIP_PEM_FILENAME: &str = "/home/paul/.config/transip/desktop.pem";
 const TRANSIP_USERNAME: &str = "paulusminus";
 const EXPIRATION_TIME: &str = "30 seconds";
+const DOMAIN_NAME: &str = "paulmin.nl";
+
+fn is_acme_challenge(dns_entry: &DnsEntry) -> bool {
+    dns_entry.entry_type.as_str() == "TXT" && dns_entry.name.as_str() == "_acme-challenge"
+}
 
 fn transip_url(command: &str) -> String {
     format!("{TRANSIP_API_PREFIX}{command}")
@@ -30,39 +41,67 @@ fn get_token(username: &str, expiration_time: &str, pem_filename: &str) -> Resul
     Ok::<String, Error>(token_response.token)
 }
 
-fn get<T>(token: &str, command: &str) -> Result<T>
+fn get<T>(token: &str, url: &str) -> Result<T>
 where T: DeserializeOwned
 {
-    let json = ureq::get(&transip_url(command))
+    let json = ureq::get(url)
     .set("Authorization", &format!("Bearer {}", token))
     .call()?
     .into_json::<T>()?;
     Ok(json)
 }
 
+fn delete<T>(token: &str, url: &str, t: T) -> Result<()>
+where T: Serialize
+{
+    ureq::delete(url)
+    .set("Authorization", &format!("Bearer {}", token))
+    .send_json(t)?;
+    Ok(())
+}
+
+fn post<T>(token: &str, url: &str, t: T) -> Result<()>
+where T: Serialize
+{
+    ureq::post(url)
+    .set("Authorization", &format!("Bearer {}", token))
+    .send_json(t)?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
+    tracing_subscriber::fmt::init();
+    let url = requester::Url::new(TRANSIP_API_PREFIX);
     let token = get_token(TRANSIP_USERNAME, EXPIRATION_TIME, TRANSIP_PEM_FILENAME)?;
 
-    let vpss = get::<vps::Vpss>(&token, "vps")?;
-    println!("Total Vps: {}", vpss.vpss.len());
-    for vps in vpss.vpss {
-        println!("Vps: {} ({})", vps.name, vps.operating_system);
+    let ping = get::<general::Ping>(&token, &url.api_test())?;
+    tracing::info!("Sending ping answer: {}", ping.ping);
+
+    let vps_list = get::<vps::VpsList>(&token, &url.vps())?;
+    for vps in vps_list.vpss {
+        tracing::info!("Vps: {} ({})", vps.name, vps.operating_system);
     }
 
-    let invoices = get::<general::Invoices>(&token, "invoices")?;
-    for invoice in invoices.invoices {
-        println!("Invoice: {}", invoice.invoice_number);
+    let invoice_list = get::<account::InvoiceList>(&token, &url.invoices())?;
+    for invoice in invoice_list.invoices {
+        tracing::info!("Invoice: {}", invoice.invoice_number);
     }
 
-    let nameservers = get::<domain::NameServers>(&token, "domains/paulmin.nl/nameservers")?;
-    for nameserver in nameservers.nameservers {
-        println!("{}", nameserver.hostname);
+    let nameserver_list = get::<domain::NameServerList>(&token, &url.domain_nameservers(DOMAIN_NAME))?;
+    for nameserver in nameserver_list.nameservers {
+        tracing::info!("{}", nameserver.hostname);
     }
 
-    let dns_entries = get::<domain::DnsEntries>(&token, "domains/paulmin.nl/dns")?;
-    for dns_entry in dns_entries.dns_entries {
-        println!("{:10} {} = {}", dns_entry.entry_type, dns_entry.name, dns_entry.content);
+    let dns_entry_list = get::<domain::DnsEntryList>(&token, &url.domain_dns(DOMAIN_NAME))?;
+
+    for dns_entry in dns_entry_list.dns_entries.into_iter().filter(is_acme_challenge) {
+        // tracing::info!("Acme challenge found in domain {} with content {}", DOMAIN_NAME, dns_entry.content);
+        delete(&token, &url.domain_dns(DOMAIN_NAME), &domain::DnsEntryItem { dns_entry: dns_entry.clone() })?;
+        tracing::info!("{:10} {} = {} deleted", dns_entry.entry_type, dns_entry.name, dns_entry.content);
     }
+
+    let dns_entry = DnsEntryItem { dns_entry: DnsEntry { name: "_acme-challenge".into(), expire: 60, entry_type: "TXT".into(), content: "test".into() }};
+    post(&token, &url.domain_dns(DOMAIN_NAME), dns_entry)?;
 
     Ok(())
 }
