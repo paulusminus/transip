@@ -13,6 +13,12 @@ pub struct Invoice {
     pub total_amount_incl_vat: u64,
 }
 
+impl std::fmt::Display for Invoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Invoice: {}", self.invoice_number)
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct InvoiceList {
     pub invoices: Vec<Invoice>,

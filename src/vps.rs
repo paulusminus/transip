@@ -30,6 +30,12 @@ pub struct Vps {
     pub tags: Vec<String>,
 }
 
+impl std::fmt::Display for Vps {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Vps: {}", self.name)
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct Link {
     pub rel: String,

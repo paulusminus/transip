@@ -32,6 +32,12 @@ pub struct NameServer {
     pub ipv6: Option<String>,
 }
 
+impl std::fmt::Display for NameServer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Nameserver: {}", self.hostname)
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct Domain {
     name: String,

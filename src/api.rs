@@ -11,7 +11,7 @@ use ureq::{Agent, AgentBuilder};
 
 use crate::account::{Invoice, InvoiceList};
 use crate::domain::{NameServerList, NameServer, DnsEntry, DnsEntryList, DnsEntryItem};
-use crate::general::Ping;
+use crate::general::{Ping, AvailabilityZone, AvailabilityZones, Product, ProductList, Products, ProductElement, ProductElements};
 use crate::url::Url;
 use crate::vps::{VpsList, self};
 use crate::{Result};
@@ -25,12 +25,15 @@ const AGENT_TIMEOUT_SECONDS: u64 = 30;
 
 pub trait TransipApi {
     fn api_test(&mut self) -> Result<String>;
-    fn vps_list(&mut self) -> Result<Vec<vps::Vps>>;
-    fn invoice_list(&mut self) -> Result<Vec<Invoice>>;
-    fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
-    fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
+    fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>>;
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()>;
+    fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
     fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()>;
+    fn invoice_list(&mut self) -> Result<Vec<Invoice>>;
+    fn products(&mut self) -> Result<Products>;
+    fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>>;
+    fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
+    fn vps_list(&mut self) -> Result<Vec<vps::Vps>>;
 }
 
 pub struct AuthConfiguration {
@@ -163,13 +166,23 @@ impl ApiClient {
  
 impl TransipApi for ApiClient {
     fn api_test(&mut self) -> Result<String> {
-        tracing::info!("Request api_test");
         self.get::<Ping>(&self.url.api_test()).map(|p| p.ping)
     }
 
-    fn vps_list(&mut self) -> Result<Vec<vps::Vps>> {
-        tracing::info!("Request vps_list");
-        self.get::<VpsList>(&self.url.vps()).map(|list| list.vpss)
+    fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>> {
+        self.get::<AvailabilityZones>(&self.url.availability_zones()).map(|a| a.availability_zones)
+    }
+
+    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()> {
+        self.delete(&self.url.domain_dns(domain_name), entry)
+    }
+
+    fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {
+        self.get::<DnsEntryList>(&self.url.domain_dns(domain_name)).map(|list| list.dns_entries)
+    }
+
+    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()> {
+        self.post(&self.url.domain_dns(domain_name), entry)
     }
 
     fn invoice_list(&mut self) -> Result<Vec<Invoice>> {
@@ -180,15 +193,15 @@ impl TransipApi for ApiClient {
         self.get::<NameServerList>(&self.url.domain_nameservers(domain_name)).map(|list| list.nameservers)
     }
 
-    fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {
-        self.get::<DnsEntryList>(&self.url.domain_dns(domain_name)).map(|list| list.dns_entries)
+    fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>> {
+        self.get::<ProductElements>(&self.url.product_elements(name)).map(|list| list.product_elements)
     }
 
-    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()> {
-        self.delete(&self.url.domain_dns(domain_name), entry)
+    fn products(&mut self) -> Result<Products> {
+        self.get::<ProductList>(&self.url.products()).map(|list| list.products)
     }
 
-    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()> {
-        self.post(&self.url.domain_dns(domain_name), entry)
+    fn vps_list(&mut self) -> Result<Vec<vps::Vps>> {
+        self.get::<VpsList>(&self.url.vps()).map(|list| list.vpss)
     }
 }
