@@ -78,6 +78,7 @@ where P: AsRef<Path>
         &mut signature,
     )
     .map_err(Error::Sign)?;
+    
     Ok(
         base64::encode(signature.as_slice())
     )

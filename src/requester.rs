@@ -12,9 +12,15 @@ const DNS: &str = "dns";
 const NAMESERVERS: &str = "nameservers";
 const VPS: &str = "vps";
 
+pub struct Token {
+    raw_token: String,
+    expiration_time: u32,
+}
+
 pub struct Requester<'a> {
     url: Url<'a>,
     agent: Agent,
+    token: Option<Token>,
 }
 
 impl<'a> Requester<'a> {
@@ -24,6 +30,7 @@ impl<'a> Requester<'a> {
         Self {
             url,
             agent,
+            token: None,
         }
     }
 }
