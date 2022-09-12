@@ -37,7 +37,7 @@ fn no_acme_challenge(resolver: &Resolver) -> bool {
     }
 }
 
-pub fn check_has_acme_challenge(nameservers: Vec<crate::domain::NameServer>) -> Result<()>{
+pub fn servers_have_acme_challenge(nameservers: Vec<crate::domain::NameServer>) -> Result<()>{
     let resolvers = nameservers.iter().map(to_resolver).collect::<Result<Vec<Resolver>>>()?;
     let mut i = 0;
     while !resolvers.iter().all(has_acme_challenge) && i < 60 {

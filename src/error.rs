@@ -44,4 +44,7 @@ pub enum Error {
 
     #[error("Parse Int: {0}")]
     ParseInt(#[from] ParseIntError),
+
+    #[error("Api test failed")]
+    ApiTest,
 }

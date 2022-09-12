@@ -58,3 +58,11 @@ pub struct DnsEntryList {
 pub struct DnsEntryItem {
     pub dns_entry: DnsEntry
 }
+
+impl From<DnsEntry> for DnsEntryItem {
+    fn from(dns_entry: DnsEntry) -> Self {
+        Self {
+            dns_entry
+        }
+    }
+}
