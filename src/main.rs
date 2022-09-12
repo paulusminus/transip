@@ -28,6 +28,7 @@ impl<T> VecExt for Vec<T> where T: std::fmt::Display {
 const DOMAIN_NAME: &str = "paulmin.nl";
 const ACME_CHALLENGE: &str = "_acme-challenge";
 
+#[allow(dead_code)]
 fn is_acme_challenge(dns_entry: &DnsEntry) -> bool {
     dns_entry.entry_type.as_str() == "TXT" && dns_entry.name.as_str() == ACME_CHALLENGE
 }

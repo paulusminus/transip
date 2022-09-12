@@ -31,6 +31,7 @@ impl Url {
         format!("{}{}", self.prefix, AVAILABILITY_ZONES)
     }
 
+    #[allow(dead_code)]
     pub fn domain(&self, domain_name: &str) -> String {
         format!("{}/{}", self.domains(), domain_name)
     }
@@ -47,6 +48,7 @@ impl Url {
         format!("{}{}", self.prefix, DOMAINS)
     }
 
+    #[allow(dead_code)]
     pub fn invoice(&self, invoice_number: String) -> String {
         format!("{}/{}", self.invoices(), invoice_number)
     }
@@ -56,7 +58,7 @@ impl Url {
     }
 
     pub fn product_elements(&self, name: &str) -> String {
-        format!("{}/{}", self.products(), PRODUCT_ELEMENTS)
+        format!("{}/{}/{}", self.products(), name, PRODUCT_ELEMENTS)
     }
 
     pub fn products(&self) -> String {

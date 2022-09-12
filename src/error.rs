@@ -24,9 +24,11 @@ pub enum Error {
     #[error("Ureq: {0}")]
     Ureq(#[from] ureq::Error),
 
+    #[allow(dead_code)]
     #[error("IP 4 address missing")]
     Ipv4,
 
+    #[allow(dead_code)]
     #[error("Acme challenge not found")]
     AcmeChallege,
 

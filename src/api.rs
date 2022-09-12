@@ -11,7 +11,7 @@ use ureq::{Agent, AgentBuilder};
 
 use crate::account::{Invoice, InvoiceList};
 use crate::domain::{NameServerList, NameServer, DnsEntry, DnsEntryList, DnsEntryItem};
-use crate::general::{Ping, AvailabilityZone, AvailabilityZones, Product, ProductList, Products, ProductElement, ProductElements};
+use crate::general::{Ping, AvailabilityZone, AvailabilityZones, ProductList, Products, ProductElement, ProductElements};
 use crate::url::Url;
 use crate::vps::{VpsList, self};
 use crate::{Result};
@@ -157,7 +157,7 @@ impl ApiClient {
     where T: Serialize
     {
         let token = self.token()?;
-        ureq::post(url)
+        self.agent.post(url)
         .set("Authorization", &format!("Bearer {}", token))
         .send_json(t)?;
         Ok(())
