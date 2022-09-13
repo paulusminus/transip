@@ -1,4 +1,13 @@
 use serde::{Deserialize, Serialize};
+use crate::{Result, api_client::ApiClient};
+
+pub trait TransipApiGeneral {
+    fn api_test(&mut self) -> Result<String>;
+    fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>>;
+    fn invoice_list(&mut self) -> Result<Vec<Invoice>>;
+    fn products(&mut self) -> Result<Products>;
+    fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>>;
+}
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -90,4 +99,26 @@ impl std::fmt::Display for AvailabilityZone {
 #[serde(rename_all = "camelCase")]
 pub struct AvailabilityZones {
     pub availability_zones: Vec<AvailabilityZone>,
+}
+
+impl TransipApiGeneral for ApiClient {
+    fn api_test(&mut self) -> Result<String> {
+        self.get::<Ping>(&self.url.api_test()).map(|p| p.ping)
+    }
+
+    fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>> {
+        self.get::<AvailabilityZones>(&self.url.availability_zones()).map(|a| a.availability_zones)
+    }
+
+    fn invoice_list(&mut self) -> Result<Vec<Invoice>> {
+        self.get::<InvoiceList>(&self.url.invoices()).map(|list| list.invoices)
+    }
+
+    fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>> {
+        self.get::<ProductElements>(&self.url.product_elements(name)).map(|list| list.product_elements)
+    }
+
+    fn products(&mut self) -> Result<Products> {
+        self.get::<ProductList>(&self.url.products()).map(|list| list.products)
+    }
 }

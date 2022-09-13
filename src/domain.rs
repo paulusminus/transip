@@ -1,4 +1,12 @@
 use serde::{Deserialize, Serialize};
+use crate::{Result, api_client::ApiClient};
+
+pub trait TransipApiDomain {
+    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()>;
+    fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
+    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()>;
+    fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
+}
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -70,5 +78,23 @@ impl From<DnsEntry> for DnsEntryItem {
         Self {
             dns_entry
         }
+    }
+}
+
+impl TransipApiDomain for ApiClient {
+    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()> {
+        self.delete(&self.url.domain_dns(domain_name), entry)
+    }
+
+    fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {
+        self.get::<DnsEntryList>(&self.url.domain_dns(domain_name)).map(|list| list.dns_entries)
+    }
+
+    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()> {
+        self.post(&self.url.domain_dns(domain_name), entry)
+    }
+
+    fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>> {
+        self.get::<NameServerList>(&self.url.domain_nameservers(domain_name)).map(|list| list.nameservers)
     }
 }

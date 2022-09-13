@@ -1,4 +1,9 @@
 use serde::{Deserialize, Serialize};
+use crate::{Result, api_client::ApiClient};
+
+pub trait TransipApiVps {
+    fn vps_list(&mut self) -> Result<Vec<Vps>>;
+}
 
 #[derive(Deserialize, Serialize)]
 pub struct VpsList {
@@ -40,4 +45,10 @@ impl std::fmt::Display for Vps {
 pub struct Link {
     pub rel: String,
     pub link: String,
+}
+
+impl TransipApiVps for ApiClient {
+    fn vps_list(&mut self) -> Result<Vec<Vps>> {
+        self.get::<VpsList>(&self.url.vps()).map(|list| list.vpss)
+    }
 }

@@ -1,40 +1,7 @@
-use domain::{DnsEntry};
-use error::Error;
-use crate::api::{get_default_account, ApiClient, TransipApi};
-
-mod authentication;
-mod api;
-// mod dns_lookup;
-mod domain;
-mod error;
-mod general;
-mod url;
-mod token;
-mod vps;
-
-type Result<T> = std::result::Result<T, Error>;
-
-pub trait VecExt {
-    fn trace(&self);
-}
-
-impl<T> VecExt for Vec<T> where T: std::fmt::Display {
-    fn trace(&self) {
-        self.into_iter().for_each(trace_object)
-    }
-}
+use transip_api::*;
+use trace::VecExt;
 
 const DOMAIN_NAME: &str = "paulmin.nl";
-const ACME_CHALLENGE: &str = "_acme-challenge";
-
-#[allow(dead_code)]
-fn is_acme_challenge(dns_entry: &DnsEntry) -> bool {
-    dns_entry.entry_type.as_str() == "TXT" && dns_entry.name.as_str() == ACME_CHALLENGE
-}
-
-fn trace_object<T: std::fmt::Display>(t: T) {
-    tracing::info!("{}", t)
-}
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
@@ -69,4 +36,20 @@ fn main() -> Result<()> {
     // client.dns_entry_insert(DOMAIN_NAME, dns_entry.into())?;
 
     Ok(())
+}
+
+mod trace {
+    pub trait VecExt {
+        fn trace(&self);
+    }
+    
+    impl<T> VecExt for Vec<T> where T: std::fmt::Display {
+        fn trace(&self) {
+            self.into_iter().for_each(trace_object)
+        }
+    }
+    
+    fn trace_object<T: std::fmt::Display>(t: T) {
+        tracing::info!("{}", t)
+    }    
 }
