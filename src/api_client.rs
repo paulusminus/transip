@@ -1,8 +1,9 @@
-use std::fmt::Display;
+use core::fmt::Display;
+use core::str::from_utf8;
+use core::time::Duration;
+
 use std::fs::File;
 use std::path::PathBuf;
-use std::str::from_utf8;
-use std::time::Duration;
 use std::{fs::read_dir, ffi::OsStr, path::Path, io::BufReader};
 
 use chrono::{TimeZone, Utc, DateTime};
@@ -11,8 +12,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use ureq::{Agent, AgentBuilder};
 
 use crate::url::Url;
-use crate::{Result};
-use crate::error::Error;
+use crate::{Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/"; 
 const TRANSIP_CONFIG_DIR: &str = "/home/paul/.config/transip";

@@ -1,3 +1,4 @@
+use core::fmt::Display;
 use serde::{Deserialize, Serialize};
 use crate::{Result, api_client::ApiClient};
 
@@ -22,7 +23,7 @@ pub struct Invoice {
     pub total_amount_incl_vat: u64,
 }
 
-impl std::fmt::Display for Invoice {
+impl Display for Invoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Invoice: {}", self.invoice_number)
     }
@@ -62,7 +63,7 @@ pub struct Product {
     pub recurring_price: u32,   
 }
 
-impl std::fmt::Display for Product {
+impl Display for Product {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Product: {}", self.name)
     }
@@ -89,7 +90,7 @@ pub struct AvailabilityZone {
     pub is_default: bool,
 }
 
-impl std::fmt::Display for AvailabilityZone {
+impl Display for AvailabilityZone {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Availability zone: {}", self.name)
     }

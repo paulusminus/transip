@@ -1,3 +1,4 @@
+use core::fmt::Display;
 use serde::{Deserialize, Serialize};
 use crate::{Result, api_client::ApiClient};
 
@@ -43,7 +44,7 @@ pub struct NameServer {
     pub ipv6: Option<String>,
 }
 
-impl std::fmt::Display for NameServer {
+impl Display for NameServer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Nameserver: {}", self.hostname)
     }
@@ -70,7 +71,7 @@ pub struct Domain {
     pub status: String,
 }
 
-impl std::fmt::Display for Domain {
+impl Display for Domain {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Domain: {}", self.name)
     }

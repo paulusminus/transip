@@ -1,3 +1,4 @@
+use core::fmt::Display;
 use serde::{Deserialize, Serialize};
 use crate::{Result, api_client::ApiClient};
 
@@ -35,7 +36,7 @@ pub struct Vps {
     pub tags: Vec<String>,
 }
 
-impl std::fmt::Display for Vps {
+impl Display for Vps {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Vps: {}", self.name)
     }

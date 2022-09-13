@@ -41,17 +41,19 @@ fn main() -> Result<()> {
 }
 
 mod trace {
+    use core::fmt::Display;
+
     pub trait VecExt {
         fn trace(&self);
     }
     
-    impl<T> VecExt for Vec<T> where T: std::fmt::Display {
+    impl<T> VecExt for Vec<T> where T: Display {
         fn trace(&self) {
             self.iter().for_each(trace_object)
         }
     }
     
-    fn trace_object<T: std::fmt::Display>(t: T) {
+    fn trace_object<T>(t: T) where T: Display {
         tracing::info!("{}", t)
     }    
 }
