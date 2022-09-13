@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::fs::File;
 use std::str::from_utf8;
 use std::time::Duration;
@@ -9,9 +10,8 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use ureq::{Agent, AgentBuilder};
 
-use crate::account::{Invoice, InvoiceList};
 use crate::domain::{NameServerList, NameServer, DnsEntry, DnsEntryList, DnsEntryItem};
-use crate::general::{Ping, AvailabilityZone, AvailabilityZones, ProductList, Products, ProductElement, ProductElements};
+use crate::general::{Ping, AvailabilityZone, AvailabilityZones, Invoice, InvoiceList, ProductList, Products, ProductElement, ProductElements};
 use crate::url::Url;
 use crate::vps::{VpsList, self};
 use crate::{Result};
@@ -20,8 +20,28 @@ use crate::token::Token;
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/"; 
 const TRANSIP_CONFIG_DIR: &str = "/home/paul/.config/transip";
-const TOKEN_EXPIRATION_TIME: &str = "30 seconds";
+const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Minutes(1);
 const AGENT_TIMEOUT_SECONDS: u64 = 30;
+
+pub enum TokenExpiration {
+    Seconds(u8),
+    Minutes(u8),
+    Hours(u8),
+}
+
+fn fmt(count: &u8, unit: &'static str) -> String {
+    format!("{} {}", count, unit) + if count <= &1 { "" } else { "s" }
+}
+
+impl Display for TokenExpiration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            TokenExpiration::Seconds(seconds) => fmt(seconds, "second"),
+            TokenExpiration::Minutes(minutes) => fmt(minutes, "minute"),
+            TokenExpiration::Hours(hours) => fmt(hours, "hour"),
+        })
+    }
+}
 
 pub trait TransipApi {
     fn api_test(&mut self) -> Result<String>;
@@ -94,7 +114,7 @@ impl From<AuthConfiguration> for ApiClient {
 
 impl ApiClient {
     fn get_token(&self) -> Result<Token> {
-        let auth_request = crate::authentication::AuthRequest::new(&self.auth_config.account_name, TOKEN_EXPIRATION_TIME);
+        let auth_request = crate::authentication::AuthRequest::new(&self.auth_config.account_name, &TOKEN_EXPIRATION_TIME.to_string());
         let json = auth_request.json();
         let signature = crate::authentication::sign(json.as_slice(), &self.auth_config.key)?;
         tracing::info!("Json signing success");

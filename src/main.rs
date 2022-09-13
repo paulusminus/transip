@@ -2,10 +2,9 @@ use domain::{DnsEntry};
 use error::Error;
 use crate::api::{get_default_account, ApiClient, TransipApi};
 
-mod account;
 mod authentication;
 mod api;
-// mod dns;
+// mod dns_lookup;
 mod domain;
 mod error;
 mod general;
