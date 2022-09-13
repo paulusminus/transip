@@ -18,22 +18,23 @@ fn main() -> Result<()> {
     products.haip.trace();
     products.private_networks.trace();
     client.vps_list()?.trace();
-    client.invoice_list()?.trace();
+    // client.invoice_list()?.trace();
     client.nameserver_list(DOMAIN_NAME)?.trace();
 
-    // for dns_entry in client.dns_entry_list(DOMAIN_NAME)?.into_iter().filter(is_acme_challenge) {
-    //     tracing::info!("Acme challenge found in domain {} with content {}", DOMAIN_NAME, dns_entry.content);
-    //     client.dns_entry_delete(DOMAIN_NAME, dns_entry.clone().into())?;
-    //     tracing::info!("{:10} {} = {} deleted", &dns_entry.entry_type, &dns_entry.name, &dns_entry.content);
-    // }
+    let is_acme_challenge = |entry: &DnsEntry| entry.name == "_acme-challenge".to_owned() && entry.entry_type == "TXT".to_owned();
+    for dns_entry in client.dns_entry_list(DOMAIN_NAME)?.into_iter().filter(is_acme_challenge) {
+        tracing::info!("Acme challenge found in domain {} with content {}", DOMAIN_NAME, dns_entry.content);
+        client.dns_entry_delete(DOMAIN_NAME, dns_entry.clone())?;
+        tracing::info!("{:10} {} = {} deleted", &dns_entry.entry_type, &dns_entry.name, &dns_entry.content);
+    }
 
     // let dns_entry = DnsEntry { 
-    //     name: ACME_CHALLENGE.into(), 
+    //     name: "_acme-challenge".into(), 
     //     expire: 60,
     //     entry_type: "TXT".into(),
     //     content: "Testenmaar".into(), 
     // };
-    // client.dns_entry_insert(DOMAIN_NAME, dns_entry.into())?;
+    // client.dns_entry_insert(DOMAIN_NAME, dns_entry)?;
 
     Ok(())
 }

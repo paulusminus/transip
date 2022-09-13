@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use crate::{Result, api_client::ApiClient};
 
 pub trait TransipApiDomain {
-    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()>;
+    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
-    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()>;
+    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
 }
 
@@ -82,16 +82,18 @@ impl From<DnsEntry> for DnsEntryItem {
 }
 
 impl TransipApiDomain for ApiClient {
-    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()> {
-        self.delete(&self.url.domain_dns(domain_name), entry)
+    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
+        let dns_entry_item: DnsEntryItem = entry.into();
+        self.delete(&self.url.domain_dns(domain_name), dns_entry_item)
     }
 
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {
         self.get::<DnsEntryList>(&self.url.domain_dns(domain_name)).map(|list| list.dns_entries)
     }
 
-    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntryItem) -> Result<()> {
-        self.post(&self.url.domain_dns(domain_name), entry)
+    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
+        let dns_entry_item: DnsEntryItem = entry.into();
+        self.post(&self.url.domain_dns(domain_name), dns_entry_item)
     }
 
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>> {

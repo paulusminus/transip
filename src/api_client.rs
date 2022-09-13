@@ -27,7 +27,7 @@ pub trait Persist<T> where T: Serialize + DeserializeOwned {
 impl<T> Persist<T> for PathBuf where T: Serialize + DeserializeOwned {
     fn dump(&self, t: T) -> Result<()> {
         let file = std::fs::File::create(self)?;
-        ureq::serde_json::to_writer(file, &t)?;
+        ureq::serde_json::to_writer_pretty(file, &t)?;
         Ok(())
     }
 

@@ -1,9 +1,8 @@
-use domain::{DnsEntry};
 pub use error::Error;
 pub use api_client::{get_default_account, ApiClient};
 pub use general::TransipApiGeneral;
 pub use vps::TransipApiVps;
-pub use domain::TransipApiDomain;
+pub use domain::{DnsEntry, TransipApiDomain};
 
 mod authentication;
 mod api_client;
