@@ -3,6 +3,7 @@ const AUTH: &str = "auth";
 const AVAILABILITY_ZONES: &str = "availability-zones";
 const INVOICES: &str = "invoices";
 const DOMAINS: &str = "domains";
+const DOMAINS_INCLUDES: &str = "?include=nameservers,contacts";
 const DNS: &str = "dns";
 const NAMESERVERS: &str = "nameservers";
 const PRODUCT_ELEMENTS: &str = "elements";
@@ -33,19 +34,19 @@ impl Url {
 
     #[allow(dead_code)]
     pub fn domain(&self, domain_name: &str) -> String {
-        format!("{}/{}", self.domains(), domain_name)
+        format!("{}/{}", self.domains(false), domain_name)
     }
 
     pub fn domain_dns(&self, domain_name: &str) -> String {
-        format!("{}/{}/{}", self.domains(), domain_name, DNS)
+        format!("{}/{}/{}", self.domains(false), domain_name, DNS)
     }
 
     pub fn domain_nameservers(&self, domain_name: &str) -> String {
-        format!("{}/{}/{}", self.domains(), domain_name, NAMESERVERS)
+        format!("{}/{}/{}", self.domains(false), domain_name, NAMESERVERS)
     }
 
-    pub fn domains(&self) -> String {
-        format!("{}{}", self.prefix, DOMAINS)
+    pub fn domains(&self, includes: bool) -> String {
+        format!("{}{}{}", self.prefix, DOMAINS, if includes { DOMAINS_INCLUDES } else { "" })
     }
 
     #[allow(dead_code)]

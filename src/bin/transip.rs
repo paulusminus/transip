@@ -19,6 +19,7 @@ fn main() -> Result<()> {
     products.private_networks.trace();
     client.vps_list()?.trace();
     // client.invoice_list()?.trace();
+    client.domain_list()?.trace();
     client.nameserver_list(DOMAIN_NAME)?.trace();
 
     let is_acme_challenge = |entry: &DnsEntry| entry.name == "_acme-challenge".to_owned() && entry.entry_type == "TXT".to_owned();
