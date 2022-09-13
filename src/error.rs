@@ -7,7 +7,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Key: {0}")]
-    Key(String),
+    Key(&'static str),
 
     #[error("IO: {0}")]
     IO(#[from] std::io::Error),
@@ -22,7 +22,7 @@ pub enum Error {
     Json(#[from] ureq::serde_json::Error),
 
     #[error("Ureq: {0}")]
-    Ureq(#[from] ureq::Error),
+    Ureq(#[from] Box<ureq::Error>),
 
     #[allow(dead_code)]
     #[error("IP 4 address missing")]

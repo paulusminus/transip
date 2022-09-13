@@ -22,7 +22,7 @@ fn main() -> Result<()> {
     client.domain_list()?.trace();
     client.nameserver_list(DOMAIN_NAME)?.trace();
 
-    let is_acme_challenge = |entry: &DnsEntry| entry.name == "_acme-challenge".to_owned() && entry.entry_type == "TXT".to_owned();
+    let is_acme_challenge = |entry: &DnsEntry| entry.name == *"_acme-challenge" && entry.entry_type == *"TXT";
     for dns_entry in client.dns_entry_list(DOMAIN_NAME)?.into_iter().filter(is_acme_challenge) {
         tracing::info!("Acme challenge found in domain {} with content {}", DOMAIN_NAME, dns_entry.content);
         client.dns_entry_delete(DOMAIN_NAME, dns_entry.clone())?;
@@ -47,7 +47,7 @@ mod trace {
     
     impl<T> VecExt for Vec<T> where T: std::fmt::Display {
         fn trace(&self) {
-            self.into_iter().for_each(trace_object)
+            self.iter().for_each(trace_object)
         }
     }
     

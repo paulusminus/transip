@@ -16,7 +16,7 @@ use crate::error::Error;
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/"; 
 const TRANSIP_CONFIG_DIR: &str = "/home/paul/.config/transip";
-const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Minutes(30);
+const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Hours(2);
 const AGENT_TIMEOUT_SECONDS: u64 = 30;
 
 pub trait Persist<T> where T: Serialize + DeserializeOwned {
@@ -96,12 +96,12 @@ where P: AsRef<Path>
     let file = File::open(path)?;
     let mut buf_reader = BufReader::new(file);
     let keys = rustls_pemfile::pkcs8_private_keys(&mut buf_reader)?;
-    if keys.len() < 1 {
-        Err(Error::Key("None".to_owned()))
+    if keys.is_empty() {
+        Err(Error::Key("None"))
     }
     else {
         signature::RsaKeyPair::from_pkcs8(keys[0].as_slice())
-        .map_err(|_| Error::Key("Invalid".to_owned()))
+        .map_err(|_| Error::Key("Invalid"))
     }
 }
 
@@ -109,15 +109,14 @@ pub fn get_default_account() -> Result<AuthConfiguration> {
     read_dir(TRANSIP_CONFIG_DIR)?
     .filter_map(|de| de.ok())
     .map(|de| de.path())
-    .filter(|path| path.extension() == Some(&OsStr::new("pem")))
-    .nth(0)
+    .find(|path| path.extension() == Some(OsStr::new("pem")))
     .and_then(|path| {
         read_rsa_key_pair_from_pem(&path).ok().map(|key| AuthConfiguration {
             account_name: path.file_stem().unwrap_or_default().to_string_lossy().to_string(),
             key,
         })
     })
-    .ok_or(Error::Key("No key for account".to_owned()))
+    .ok_or(Error::Key("No key for account"))
 }
 
 pub struct ApiClient {
@@ -163,10 +162,11 @@ impl ApiClient {
             let token_response = 
                 self.agent.post(&self.url.auth())
                 .set("Signature", &signature)
-                .send_bytes(json.as_slice())?
+                .send_bytes(json.as_slice())
+                .map_err(Box::new)?
                 .into_json::<crate::authentication::TokenResponse>()?;
             tracing::info!("Received token");
-            let mut splitted = token_response.token.split(".");
+            let mut splitted = token_response.token.split('.');
             if splitted.clone().count() != 3 {
                 Err(Error::Token)
             }
@@ -195,7 +195,8 @@ impl ApiClient {
         let token = self.token.as_ref().ok_or(Error::Token)?;
         let json = self.agent.get(url)
         .set("Authorization", &format!("Bearer {}", token.raw))
-        .call()?
+        .call()
+        .map_err(Box::new)?
         .into_json::<T>()?;
         Ok(json)
     }
@@ -207,7 +208,8 @@ impl ApiClient {
         let token = self.token.as_ref().ok_or(Error::Token)?;
         self.agent.delete(url)
         .set("Authorization", &format!("Bearer {}", token.raw))
-        .send_json(t)?;
+        .send_json(t)
+        .map_err(Box::new)?;
         Ok(())
     }
     
@@ -218,7 +220,8 @@ impl ApiClient {
         let token = self.token.as_ref().ok_or(Error::Token)?;
         self.agent.post(url)
         .set("Authorization", &format!("Bearer {}", token.raw))
-        .send_json(t)?;
+        .send_json(t)
+        .map_err(Box::new)?;
         Ok(())
     }
 }
