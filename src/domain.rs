@@ -1,6 +1,18 @@
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::ApiClient};
+use crate::{Result, api_client::ApiClient, url::Url};
+
+const DOMAINS: &str = "domains";
+const DOMAINS_INCLUDES: &str = "?include=nameservers,contacts";
+const DNS: &str = "dns";
+const NAMESERVERS: &str = "nameservers";
+
+trait UrlDomain {
+    fn domain(&self, domain_name: &str) -> String;
+    fn domain_dns(&self, domain_name: &str) -> String;
+    fn domain_nameservers(&self, domain_name: &str) -> String;
+    fn domains(&self, includes: bool) -> String;
+}
 
 pub trait TransipApiDomain {
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
@@ -16,20 +28,20 @@ pub trait TransipApiDomain {
 #[serde(rename_all = "camelCase")]
 pub struct WhoisContact {
     #[serde(rename = "type")]
-    contact_type: String,
-    first_name: String,
-    last_name: String,
-    company_name: String,
-    company_kvk: String,
-    company_type: String,
-    street: String,
-    number: String,
-    postal_code: String,
-    city: String,
-    phone_number: String,
-    fax_number: String,
-    email: String,
-    country: String,
+    pub contact_type: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub company_name: String,
+    pub company_kvk: String,
+    pub company_type: String,
+    pub street: String,
+    pub number: String,
+    pub postal_code: String,
+    pub city: String,
+    pub phone_number: String,
+    pub fax_number: String,
+    pub email: String,
+    pub country: String,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -108,6 +120,24 @@ impl From<DnsEntry> for DnsEntryItem {
         Self {
             dns_entry
         }
+    }
+}
+
+impl UrlDomain for Url {
+    fn domain(&self, domain_name: &str) -> String {
+        format!("{}/{}", self.domains(false), domain_name)
+    }
+
+    fn domain_dns(&self, domain_name: &str) -> String {
+        format!("{}/{}/{}", self.domains(false), domain_name, DNS)
+    }
+
+    fn domain_nameservers(&self, domain_name: &str) -> String {
+        format!("{}/{}/{}", self.domains(false), domain_name, NAMESERVERS)
+    }
+
+    fn domains(&self, includes: bool) -> String {
+        format!("{}{}{}", self.prefix, DOMAINS, if includes { DOMAINS_INCLUDES } else { "" })
     }
 }
 

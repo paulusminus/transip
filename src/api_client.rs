@@ -11,6 +11,7 @@ use ring::signature::{RsaKeyPair, self};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use ureq::{Agent, AgentBuilder};
 
+use crate::authentication::{sign, AuthRequest, TokenResponse};
 use crate::url::Url;
 use crate::{Error, Result};
 
@@ -90,7 +91,7 @@ pub struct AuthConfiguration {
     pub key: RsaKeyPair,
 }
 
-pub fn read_rsa_key_pair_from_pem<P>(path: P) -> Result<signature::RsaKeyPair> 
+pub fn read_rsa_key_pair_from_pem<P>(path: P) -> Result<RsaKeyPair> 
 where P: AsRef<Path>
 {
     let file = File::open(path)?;
@@ -155,16 +156,16 @@ impl Drop for ApiClient {
 impl ApiClient {
     fn refresh_token_if_needed(&mut self) -> Result<()> {
         if self.token.as_ref().map(|t| t.expired()) != Some(false) {
-            let auth_request = crate::authentication::AuthRequest::new(&self.auth_config.account_name, &TOKEN_EXPIRATION_TIME.to_string());
+            let auth_request = AuthRequest::new(&self.auth_config.account_name, &TOKEN_EXPIRATION_TIME.to_string());
             let json = auth_request.json();
-            let signature = crate::authentication::sign(json.as_slice(), &self.auth_config.key)?;
+            let signature = sign(json.as_slice(), &self.auth_config.key)?;
             tracing::info!("Json signing success");
             let token_response = 
                 self.agent.post(&self.url.auth())
                 .set("Signature", &signature)
                 .send_bytes(json.as_slice())
                 .map_err(Box::new)?
-                .into_json::<crate::authentication::TokenResponse>()?;
+                .into_json::<TokenResponse>()?;
             tracing::info!("Received token");
             let mut splitted = token_response.token.split('.');
             if splitted.clone().count() != 3 {

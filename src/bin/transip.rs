@@ -17,6 +17,7 @@ fn main() -> Result<()> {
     products.vps.trace();
     products.haip.trace();
     products.private_networks.trace();
+    client.product_elements("vps-bladevps-xs")?.trace();
     client.vps_list()?.trace();
     // client.invoice_list()?.trace();
     client.domain_list()?.trace();

@@ -1,37 +1,24 @@
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::ApiClient};
+use crate::{Result, api_client::ApiClient, url::Url};
+
+const API_TEST: &str = "api-test";
+const AVAILABILITY_ZONES: &str = "availability-zones";
+const PRODUCT_ELEMENTS: &str = "elements";
+const PRODUCTS: &str = "products";
+
+trait UrlGeneral {
+    fn api_test(&self) -> String;
+    fn availability_zones(&self) -> String;
+    fn products(&self) -> String;
+    fn product_elements(&self, name: &str) -> String;
+}
 
 pub trait TransipApiGeneral {
     fn api_test(&mut self) -> Result<String>;
     fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>>;
-    fn invoice_list(&mut self) -> Result<Vec<Invoice>>;
     fn products(&mut self) -> Result<Products>;
     fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>>;
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Invoice {
-    pub invoice_number: String,
-    pub creation_date: String,
-    pub pay_date: String,
-    pub due_date: String,
-    pub invoice_status: String,
-    pub currency: String,
-    pub total_amount: u64,
-    pub total_amount_incl_vat: u64,
-}
-
-impl Display for Invoice {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Invoice: {}", self.invoice_number)
-    }
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct InvoiceList {
-    pub invoices: Vec<Invoice>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -76,6 +63,12 @@ pub struct ProductElement {
     pub amount: u64,
 }
 
+impl Display for ProductElement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Element: {}, {} = {}", self.name, self.description, self.amount)
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductElements {
@@ -102,6 +95,24 @@ pub struct AvailabilityZones {
     pub availability_zones: Vec<AvailabilityZone>,
 }
 
+impl UrlGeneral for Url {
+    fn api_test(&self) -> String {
+        format!("{}{}", self.prefix, API_TEST)
+    }
+
+    fn availability_zones(&self) -> String {
+        format!("{}{}", self.prefix, AVAILABILITY_ZONES)
+    }
+
+    fn product_elements(&self, name: &str) -> String {
+        format!("{}/{}/{}", self.products(), name, PRODUCT_ELEMENTS)
+    }
+
+    fn products(&self) -> String {
+        format!("{}{}", self.prefix, PRODUCTS)
+    }
+}
+
 impl TransipApiGeneral for ApiClient {
     fn api_test(&mut self) -> Result<String> {
         self.get::<Ping>(&self.url.api_test()).map(|p| p.ping)
@@ -109,10 +120,6 @@ impl TransipApiGeneral for ApiClient {
 
     fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>> {
         self.get::<AvailabilityZones>(&self.url.availability_zones()).map(|a| a.availability_zones)
-    }
-
-    fn invoice_list(&mut self) -> Result<Vec<Invoice>> {
-        self.get::<InvoiceList>(&self.url.invoices()).map(|list| list.invoices)
     }
 
     fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>> {

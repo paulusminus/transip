@@ -1,6 +1,12 @@
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::ApiClient};
+use crate::{Result, api_client::ApiClient, url::Url};
+
+const VPS: &str = "vps";
+
+trait UrlVps {
+    fn vps(&self) -> String;
+}
 
 pub trait TransipApiVps {
     fn vps_list(&mut self) -> Result<Vec<Vps>>;
@@ -46,6 +52,12 @@ impl Display for Vps {
 pub struct Link {
     pub rel: String,
     pub link: String,
+}
+
+impl UrlVps for Url {
+    fn vps(&self) -> String {
+        format!("{}{}", self.prefix, VPS)
+    }
 }
 
 impl TransipApiVps for ApiClient {
