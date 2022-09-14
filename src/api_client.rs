@@ -11,8 +11,7 @@ use ring::signature::{RsaKeyPair, self};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use ureq::{Agent, AgentBuilder};
 
-use crate::authentication::{sign, AuthRequest, TokenResponse};
-use crate::url::Url;
+use crate::authentication::{sign, AuthRequest, TokenResponse, UrlAuthentication};
 use crate::{Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/"; 
@@ -39,6 +38,7 @@ impl<T> Persist<T> for PathBuf where T: Serialize + DeserializeOwned {
     }
 }
 
+#[allow(dead_code)]
 pub enum TokenExpiration {
     Seconds(u8),
     Minutes(u8),
@@ -118,6 +118,18 @@ pub fn get_default_account() -> Result<AuthConfiguration> {
         })
     })
     .ok_or(Error::Key("No key for account"))
+}
+
+pub struct Url {
+    pub prefix: String,
+}
+
+impl Url {
+    pub(crate) fn new(prefix: String) -> Self {
+        Self {
+            prefix
+        }
+    }
 }
 
 pub struct ApiClient {

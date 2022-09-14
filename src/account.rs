@@ -1,16 +1,23 @@
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::ApiClient, url::Url};
+use crate::{Result, api_client::{ApiClient, Url}};
 
 const INVOICES: &str = "invoices";
+const INVOICE_ITEMS: &str = "invoice-items";
+const PDF: &str = "pdf";
 
 trait UrlAccount {
-    fn invoice(&self, invoice_number: String) -> String;
+    fn invoice(&self, invoice_number: &str) -> String;
+    fn invoice_items(&self, invoice_number: &str) -> String;
     fn invoices(&self) -> String;
+    fn invoice_pdf(&self, invoice_number: &str) -> String;
 }
 
 pub trait TransipApiAccount {
+    fn invoice(&mut self, invoice_number: &str) -> Result<Invoice>;
+    fn invoice_items(&mut self, invoice_number: &str) -> Result<Vec<InvoiceItem>>;
     fn invoice_list(&mut self) -> Result<Vec<Invoice>>;
+    fn invoice_pdf(&mut self, invoice_number: &str) -> Result<String>;
 }
 
 #[derive(Deserialize, Serialize)]
@@ -35,6 +42,11 @@ impl Display for Invoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Invoice: {}", self.invoice_number)
     }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct InvoiceResponse {
+    pub invoice: Invoice,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -70,17 +82,38 @@ pub struct Pdf {
 }
 
 impl UrlAccount for Url {
-    fn invoice(&self, invoice_number: String) -> String {
+    fn invoice(&self, invoice_number: &str) -> String {
         format!("{}/{}", self.invoices(), invoice_number)
     }
     
+    fn invoice_items(&self, invoice_number: &str) -> String {
+        format!("{}/{}/{}", self.invoices(), invoice_number, INVOICE_ITEMS)
+    }
+
     fn invoices(&self) -> String { 
         format!("{}{}", self.prefix, INVOICES) 
-    }    
+    }
+
+    fn invoice_pdf(&self, invoice_number: &str) -> String {
+        format!("{}/{}/{}", self.invoices(), invoice_number, PDF)
+    }
 }
 
 impl TransipApiAccount for ApiClient {
+
+    fn invoice(&mut self, invoice_number: &str) -> Result<Invoice> {
+        self.get::<InvoiceResponse>(&self.url.invoice(invoice_number)).map(|item| item.invoice)
+    }
+
+    fn invoice_items(&mut self, invoice_number: &str) -> Result<Vec<InvoiceItem>> {
+        self.get::<InvoiceItemList>(&self.url.invoice_items(invoice_number)).map(|list| list.invoice_items)
+    }
+
     fn invoice_list(&mut self) -> Result<Vec<Invoice>> {
         self.get::<InvoiceList>(&self.url.invoices()).map(|list| list.invoices)
+    }
+
+    fn invoice_pdf(&mut self, invoice_number: &str) -> Result<String> {
+        self.get::<Pdf>(&self.url.invoice_pdf(invoice_number)).map(|item| item.pdf)
     }
 }

@@ -13,8 +13,6 @@ mod api_client;
 mod domain;
 mod error;
 mod general;
-mod url;
-// mod token;
 mod vps;
 
 pub type Result<T> = std::result::Result<T, Error>;

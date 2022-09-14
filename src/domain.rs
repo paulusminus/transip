@@ -1,6 +1,6 @@
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::ApiClient, url::Url};
+use crate::{Result, api_client::{ApiClient, Url}};
 
 const DOMAINS: &str = "domains";
 const DOMAINS_INCLUDES: &str = "?include=nameservers,contacts";

@@ -5,7 +5,20 @@ use ring::{rand, signature};
 use serde::{Serialize, Deserialize};
 
 use crate::Result;
+use crate::api_client::Url;
 use crate::error::Error;
+
+const AUTH: &str = "auth";
+
+pub trait UrlAuthentication {
+    fn auth(&self) -> String;
+}
+
+impl UrlAuthentication for Url {
+    fn auth(&self) -> String {
+        format!("{}{}", self.prefix, AUTH)
+    }
+}
 
 #[derive(Serialize)]
 pub struct AuthRequest {
