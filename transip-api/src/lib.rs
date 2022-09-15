@@ -1,5 +1,5 @@
 pub use error::Error;
-pub use api_client::{get_default_account, ApiClient};
+pub use api_client::{default_account, ApiClient};
 
 pub use account::{TransipApiAccount};
 pub use domain::{DnsEntry, TransipApiDomain};

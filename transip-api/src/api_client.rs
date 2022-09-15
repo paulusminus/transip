@@ -106,7 +106,7 @@ where P: AsRef<Path>
     }
 }
 
-pub fn get_default_account() -> Result<AuthConfiguration> {
+pub fn default_account() -> Result<AuthConfiguration> {
     read_dir(TRANSIP_CONFIG_DIR)?
     .filter_map(|de| de.ok())
     .map(|de| de.path())
@@ -132,11 +132,16 @@ impl Url {
     }
 }
 
+/// ApiClient is the main entry for this library. Creation is done by using ApiClient::new().
+/// After creation of a client, this client can be used to call a Transip API call.
+/// Each call starts with a check to see if we have a valid JWT token
+/// If the token is expired or non existant then the Transip API call for requesting a new token is called
+/// Tokens are persisted to disk on exit
 pub struct ApiClient {
-    pub url: Url,
-    pub auth_config: AuthConfiguration,
-    pub token: Option<Token>,
-    pub agent: Agent,
+    pub(crate) url: Url,
+    auth_config: AuthConfiguration,
+    token: Option<Token>,
+    agent: Agent,
 }
 
 impl From<AuthConfiguration> for ApiClient {

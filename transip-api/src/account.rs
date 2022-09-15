@@ -13,10 +13,15 @@ trait UrlAccount {
     fn invoice_pdf(&self, invoice_number: &str) -> String;
 }
 
+/// See <https://api.transip.nl/rest/docs.html#account>
 pub trait TransipApiAccount {
+    /// See <https://api.transip.nl/rest/docs.html#account-invoices-get-1>
     fn invoice(&mut self, invoice_number: &str) -> Result<Invoice>;
+    /// See <https://api.transip.nl/rest/docs.html#account-invoiceitems-get>
     fn invoice_items(&mut self, invoice_number: &str) -> Result<Vec<InvoiceItem>>;
+    /// See <https://api.transip.nl/rest/docs.html#account-invoices-get>
     fn invoice_list(&mut self) -> Result<Vec<Invoice>>;
+    /// See <https://api.transip.nl/rest/docs.html#account-pdf-get>
     fn invoice_pdf(&mut self, invoice_number: &str) -> Result<String>;
 }
 

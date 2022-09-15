@@ -1,6 +1,7 @@
 use std::io;
 
 use thiserror::Error;
+use trust_dns_resolver::error::ResolveError;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -12,4 +13,7 @@ pub enum Error {
 
     #[error("IO: {0}")]
     IO(#[from] io::Error),
+
+    #[error("Resolve: {0}")]
+    Resolve(#[from] ResolveError)
 }

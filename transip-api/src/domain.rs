@@ -1,5 +1,5 @@
 use core::fmt::Display;
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use serde::{Deserialize, Serialize};
 use crate::{Result, api_client::{ApiClient, Url}};
 
@@ -15,12 +15,19 @@ trait UrlDomain {
     fn domains(&self, includes: bool) -> String;
 }
 
+/// See <https://api.transip.nl/rest/docs.html#domains>
 pub trait TransipApiDomain {
+    /// See <https://api.transip.nl/rest/docs.html#domains-domains-get>
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
+    /// See <https://api.transip.nl/rest/docs.html#domains-dns-delete>
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
+    /// Delete all entries which comply to Filter F
     fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()> where F: Fn(&DnsEntry) -> bool;
+    /// See <https://api.transip.nl/rest/docs.html#domains-dns-get>
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
+    /// See <https://api.transip.nl/rest/docs.html#domains-dns-post>
     fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
+    /// See <https://api.transip.nl/rest/docs.html#domains-nameservers-get>
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
 }
 
@@ -67,10 +74,24 @@ impl Display for NameServer {
 impl NameServer {
     pub fn to_ip_address(&self) -> Result<IpAddr> {
         if let Some(ipv4) = self.ipv4.as_ref() {
-            return Ok(ipv4.parse::<IpAddr>()?);
+            tracing::info!("Ip4 address: {}", ipv4);
+            if !ipv4.trim().is_empty() {
+                return Ok(
+                    IpAddr::V4(
+                        ipv4.parse::<Ipv4Addr>()?
+                    )
+                )
+            };
         }
         if let Some(ipv6) = self.ipv6.as_ref() {
-            return Ok(ipv6.parse::<IpAddr>()?);
+            tracing::info!("Ip6 address: {}", ipv6);
+            if !ipv6.trim().is_empty() {
+                return Ok(
+                    IpAddr::V6(
+                        ipv6.parse::<Ipv6Addr>()?                    
+                    )
+                );    
+            }
         }
         Err(crate::error::Error::NoIp)
     }

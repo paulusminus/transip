@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 tracing = "0.1.36"
+tracing-journald = "0.3.0"
 tracing-subscriber = "0.3.15"
 transip-api = { path = "../transip-api" }

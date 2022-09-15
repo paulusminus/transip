@@ -1,13 +1,20 @@
-use std::net::IpAddr;
-
+use tracing::Level;
+use tracing_subscriber::prelude::*;
+use tracing_subscriber::filter::LevelFilter;
 use transip_api::*;
 use trace::VecExt;
 
 const DOMAIN_NAME: &str = "paulmin.nl";
 
 fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
-    let mut client: ApiClient = get_default_account()?.into();
+    match tracing_journald::layer() {
+        Ok(layer) => { 
+            let filter_layer = LevelFilter::from_level(Level::INFO);
+            tracing_subscriber::registry::Registry::default().with(layer).with(filter_layer).init(); 
+        },
+        Err(_) => { tracing_subscriber::fmt::init(); },
+    }
+    let mut client: ApiClient = default_account()?.into();
 
     if client.api_test()?.as_str() != "pong" {
         return Err(Error::ApiTest);
@@ -27,9 +34,9 @@ fn main() -> Result<()> {
     let ip_addresses = 
         client
         .nameserver_list(DOMAIN_NAME)?
-        .iter()
-        .map(|nameserver| nameserver.to_ip_address())
-        .collect::<Result<Vec<IpAddr>>>()?;
+        .into_iter()
+        .map(|nameserver| nameserver.hostname)
+        .collect::<Vec<String>>();
     ip_addresses.trace();
 
     let is_acme_challenge = |entry: &DnsEntry| entry.name == *"_acme-challenge" && entry.entry_type == *"TXT";

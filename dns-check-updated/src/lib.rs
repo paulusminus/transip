@@ -1,20 +1,33 @@
-use std::{net::{SocketAddr}, thread::{sleep}, time::Duration};
-use trust_dns_resolver::{Resolver, config::{ResolverConfig, NameServerConfig, Protocol, ResolverOpts}};
+use std::{net::{IpAddr}, thread::{sleep}, time::Duration};
+use trust_dns_resolver::{Resolver, config::{ResolverConfig, ResolverOpts, NameServerConfigGroup}};
+
 use crate::error::Error;
 
 mod error;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-fn to_resolver(nameserver: std::net::IpAddr) -> Result<Resolver> {
-    let socket_address =SocketAddr::new(nameserver, 53);
-    let name_server_config = NameServerConfig::new(socket_address, Protocol::Udp);
-    let mut resolver_config = ResolverConfig::new();
-    resolver_config.add_name_server(name_server_config);
-    let mut options = ResolverOpts::default();
-    options.recursion_desired = false;
-    options.use_hosts_file = false;
-    Ok(Resolver::new(resolver_config, options)?)
+fn default_resolver() -> Result<Resolver> {
+    Resolver::new(ResolverConfig::default(), ResolverOpts::default()).map_err(Error::from)
+}
+
+fn resolve_hostname(hostname: String, resolver: &Resolver) -> Result<Vec<IpAddr>> {
+    resolver.lookup_ip(hostname)
+    .map_err(Error::from)
+    .map(|response| response.into_iter().collect())
+
+}
+
+fn to_resolver_by_resolver(resolver: Resolver) -> impl Fn(String) -> Result<Resolver> {
+    move |nameserver| {
+        let ip_addresses = resolve_hostname(nameserver, &resolver)?;
+        let nameserver_config_group = NameServerConfigGroup::from_ips_clear(&ip_addresses, 53, false);
+        let resolver_config = ResolverConfig::from_parts(None, vec![], nameserver_config_group);
+        let mut options = ResolverOpts::default();
+        options.recursion_desired = false;
+        options.use_hosts_file = false;
+        Resolver::new(resolver_config, options).map_err(Error::from)
+    }
 }
 
 fn has_acme_challenge_domain(domain_name: &str) -> impl Fn(&Resolver) -> bool + '_ {
@@ -33,8 +46,9 @@ fn no_acme_challenge(resolver: &Resolver) -> bool {
     }
 }
 
-pub fn servers_have_acme_challenge(nameservers: impl Iterator<Item = std::net::IpAddr> + Copy, domain_name: &str) -> Result<()>{
-    let resolvers = nameservers.map(to_resolver).collect::<Result<Vec<Resolver>>>()?;
+pub fn servers_have_acme_challenge(nameservers: impl Iterator<Item = String> + Copy, domain_name: &str) -> Result<()>{
+    let default_resolver = default_resolver()?;
+    let resolvers = nameservers.map(to_resolver_by_resolver(default_resolver)).collect::<Result<Vec<Resolver>>>()?;
     let mut i = 0;
     while !resolvers.iter().all(has_acme_challenge_domain(domain_name)) && i < 60 {
         i += 1;
