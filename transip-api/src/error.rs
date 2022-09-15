@@ -24,7 +24,7 @@ pub enum Error {
     #[error("Ureq: {0}")]
     Ureq(#[from] Box<ureq::Error>),
 
-    #[allow(dead_code)]
+    // #[allow(dead_code)]
     #[error("IP 4 address missing")]
     Ipv4,
 
@@ -49,4 +49,7 @@ pub enum Error {
 
     #[error("Api test failed")]
     ApiTest,
+
+    #[error("No IP")]
+    NoIp,
 }

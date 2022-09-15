@@ -1,4 +1,5 @@
 use core::fmt::Display;
+use std::net::IpAddr;
 use serde::{Deserialize, Serialize};
 use crate::{Result, api_client::{ApiClient, Url}};
 
@@ -17,6 +18,7 @@ trait UrlDomain {
 pub trait TransipApiDomain {
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
+    fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()> where F: Fn(&DnsEntry) -> bool;
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
     fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
@@ -59,6 +61,18 @@ pub struct NameServer {
 impl Display for NameServer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Nameserver: {}", self.hostname)
+    }
+}
+
+impl NameServer {
+    pub fn to_ip_address(&self) -> Result<IpAddr> {
+        if let Some(ipv4) = self.ipv4.as_ref() {
+            return Ok(ipv4.parse::<IpAddr>()?);
+        }
+        if let Some(ipv6) = self.ipv6.as_ref() {
+            return Ok(ipv6.parse::<IpAddr>()?);
+        }
+        Err(crate::error::Error::NoIp)
     }
 }
 
@@ -149,6 +163,13 @@ impl TransipApiDomain for ApiClient {
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
         let dns_entry_item: DnsEntryItem = entry.into();
         self.delete(&self.url.domain_dns(domain_name), dns_entry_item)
+    }
+
+    fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()> where F: Fn(&DnsEntry) -> bool {
+        for dns_entry in self.dns_entry_list(domain_name)?.into_iter().filter(f) {
+            self.dns_entry_delete(domain_name, dns_entry)?;
+        }
+        Ok(())
     }
 
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {

@@ -1,3 +1,5 @@
+use std::net::IpAddr;
+
 use transip_api::*;
 use trace::VecExt;
 
@@ -21,14 +23,17 @@ fn main() -> Result<()> {
     client.vps_list()?.trace();
     // client.invoice_list()?.trace();
     client.domain_list()?.trace();
-    client.nameserver_list(DOMAIN_NAME)?.trace();
+
+    let ip_addresses = 
+        client
+        .nameserver_list(DOMAIN_NAME)?
+        .iter()
+        .map(|nameserver| nameserver.to_ip_address())
+        .collect::<Result<Vec<IpAddr>>>()?;
+    ip_addresses.trace();
 
     let is_acme_challenge = |entry: &DnsEntry| entry.name == *"_acme-challenge" && entry.entry_type == *"TXT";
-    for dns_entry in client.dns_entry_list(DOMAIN_NAME)?.into_iter().filter(is_acme_challenge) {
-        tracing::info!("Acme challenge found in domain {} with content {}", DOMAIN_NAME, dns_entry.content);
-        client.dns_entry_delete(DOMAIN_NAME, dns_entry.clone())?;
-        tracing::info!("{:10} {} = {} deleted", &dns_entry.entry_type, &dns_entry.name, &dns_entry.content);
-    }
+    client.dns_entry_delete_all(DOMAIN_NAME, is_acme_challenge)?;
 
     // let dns_entry = DnsEntry { 
     //     name: "_acme-challenge".into(), 

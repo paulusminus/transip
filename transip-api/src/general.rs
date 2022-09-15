@@ -38,7 +38,6 @@ pub struct Products {
     pub vps_addon: Vec<Product>,
     pub haip: Vec<Product>,
     pub private_networks: Vec<Product>,
-
 }
 
 #[derive(Deserialize, Serialize)]
