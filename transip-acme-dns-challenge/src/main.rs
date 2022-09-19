@@ -23,65 +23,60 @@ fn main() -> Result<()> {
         return Err(Error::ApiTest);
     }
 
-    // client.availability_zones()?.trace();
+    let is_acme_challenge = |entry: &DnsEntry| entry.name == *"_acme-challenge" && entry.entry_type == *"TXT";
 
-    // let products = client.products()?;
-    // products.vps.trace();
-    // products.haip.trace();
-    // products.private_networks.trace();
-    // client.product_elements("vps-bladevps-xs")?.trace();
-    // client.vps_list()?.trace();
-    // // client.invoice_list()?.trace();
-    // client.domain_list()?.trace();
-
-
-
-    if let Some(challenge) = validation_config.validation() {
+    if let Some(auth_output) = validation_config.auth_output() {
+        tracing::info!("Auth output: {}", auth_output);
         if let Some(domain) = validation_config.domain() {
-            let is_acme_challenge = |entry: &DnsEntry| entry.name == *"_acme-challenge" && entry.entry_type == *"TXT";
             client.dns_entry_delete_all(&domain, is_acme_challenge)?;
-        
-            let dns_entry = DnsEntry { 
-                name: ACME_CHALLENGE.into(), 
-                expire: 60,
-                entry_type: "TXT".into(),
-                content: challenge, 
-            };
-            client.dns_entry_insert(&domain, dns_entry)?;
-            
-            let name_servers = 
-                client
-                .nameserver_list(&domain)?
-                .into_iter()
-                .map(|nameserver| nameserver.hostname)
-                .collect::<Vec<String>>();
-            name_servers.trace();
-
-            match dns_check_updated::servers_have_acme_challenge(
-                name_servers.iter(),
-                &domain,
-                ACME_CHALLENGE,
-            ) {
-                Ok(_) => {
-                    tracing::info!("Dns servers updated");
-                    println!("OK");
-                },
-                Err(_) => {
-                    tracing::error!("Updated Dns servers not verified");
-                    println!("ERR");
-                },
-            };
-
-            
-        }
-        else {
-            tracing::error!("Domain not specified in environment");
-            println!("ERR");
+            tracing::info!("Alle acme challenges deleted from domain {}", domain);
         }
     }
     else {
-        tracing::error!("Challenge not specified in environment");
-        println!("ERR");
+        if let Some(challenge) = validation_config.validation() {
+            if let Some(domain) = validation_config.domain() {
+                client.dns_entry_delete_all(&domain, is_acme_challenge)?;
+            
+                let dns_entry = DnsEntry { 
+                    name: ACME_CHALLENGE.into(), 
+                    expire: 60,
+                    entry_type: "TXT".into(),
+                    content: challenge, 
+                };
+                client.dns_entry_insert(&domain, dns_entry)?;
+                
+                let name_servers = 
+                    client
+                    .nameserver_list(&domain)?
+                    .into_iter()
+                    .map(|nameserver| nameserver.hostname)
+                    .collect::<Vec<String>>();
+                name_servers.trace();
+    
+                match dns_check_updated::servers_have_acme_challenge(
+                    name_servers.iter(),
+                    &domain,
+                    ACME_CHALLENGE,
+                ) {
+                    Ok(_) => {
+                        tracing::info!("Dns servers updated");
+                        println!("OK");
+                    },
+                    Err(_) => {
+                        tracing::error!("Updated Dns servers not verified");
+                        println!("ERR");
+                    },
+                };                
+            }
+            else {
+                tracing::error!("Domain not specified in environment");
+                println!("ERR");
+            }
+        }
+        else {
+            tracing::error!("Challenge not specified in environment");
+            println!("ERR");
+        }    
     }
 
     Ok(())
@@ -139,5 +134,8 @@ mod certbot {
             self.certbot_domain.as_ref().map(|d| d.to_owned())
         }
 
+        pub fn auth_output(&self) -> Option<String> {
+            self.cerbot_auth_output.as_ref().map(|d| d.to_owned())
+        }
     }
 }
