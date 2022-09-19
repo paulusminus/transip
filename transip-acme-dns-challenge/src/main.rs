@@ -4,6 +4,8 @@ use tracing_subscriber::filter::LevelFilter;
 use transip_api::prelude::*;
 use trace::VecExt;
 
+pub const ACME_CHALLENGE: &str = "_acme-challenge";
+
 fn main() -> Result<()> {
     match tracing_journald::layer() {
         Ok(layer) => { 
@@ -40,7 +42,7 @@ fn main() -> Result<()> {
             client.dns_entry_delete_all(&domain, is_acme_challenge)?;
         
             let dns_entry = DnsEntry { 
-                name: "_acme-challenge".into(), 
+                name: ACME_CHALLENGE.into(), 
                 expire: 60,
                 entry_type: "TXT".into(),
                 content: challenge, 
@@ -55,19 +57,31 @@ fn main() -> Result<()> {
                 .collect::<Vec<String>>();
             name_servers.trace();
 
-            match dns_check_updated::servers_have_acme_challenge(name_servers.iter(), &domain) {
-                Ok(_) => tracing::info!("Dns servers updated"),
-                Err(_) => tracing::error!("Updated Dns servers not verified"),
+            match dns_check_updated::servers_have_acme_challenge(
+                name_servers.iter(),
+                &domain,
+                ACME_CHALLENGE,
+            ) {
+                Ok(_) => {
+                    tracing::info!("Dns servers updated");
+                    println!("OK");
+                },
+                Err(_) => {
+                    tracing::error!("Updated Dns servers not verified");
+                    println!("ERR");
+                },
             };
 
             
         }
         else {
             tracing::error!("Domain not specified in environment");
+            println!("ERR");
         }
     }
     else {
         tracing::error!("Challenge not specified in environment");
+        println!("ERR");
     }
 
     Ok(())

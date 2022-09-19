@@ -6,7 +6,7 @@ fn main() {
         "ns1.transip.nl".to_owned(),
         "ns2.transip.eu".to_owned(),
     ].into_iter();
-    match servers_have_acme_challenge(nameservers, "paulmin.nl") {
+    match servers_have_acme_challenge(nameservers, "paulmin.nl", "_acme-challenge") {
         Ok(_) => {},
         Err(e) => { eprintln!("Error: {}", e); }
     }

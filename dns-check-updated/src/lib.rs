@@ -34,9 +34,9 @@ where S: AsRef<str>
     }
 }
 
-fn has_acme_challenge_domain(domain_name: &str) -> impl Fn(&Resolver) -> bool + '_ {
+fn has_acme_challenge_domain(record_name: &str) -> impl Fn(&Resolver) -> bool + '_ {
     move |resolver|
-        match resolver.txt_lookup(&format!("_acme-challenge.{}.", domain_name)) {
+        match resolver.txt_lookup(record_name) {
             Ok(result) => {
                 result.as_lookup().record_iter().for_each(|record| tracing::info!("{}", record));
                 !result.as_lookup().records().to_vec().is_empty()
@@ -56,13 +56,13 @@ fn no_acme_challenge(resolver: &Resolver) -> bool {
     }
 }
 
-pub fn servers_have_acme_challenge<I, S>(nameservers: I, domain_name: &str) -> Result<()> 
+pub fn servers_have_acme_challenge<I, S>(nameservers: I, domain_name: &str, acme_challenge: &str) -> Result<()> 
 where I: Iterator<Item = S>, S: AsRef<str>
 {
     let default_resolver = default_resolver()?;
     let resolvers = nameservers.map(to_resolver_by_resolver(default_resolver)).collect::<Result<Vec<Resolver>>>()?;
     let mut i = 0;
-    while !resolvers.iter().all(has_acme_challenge_domain(domain_name)) && i < 60 {
+    while !resolvers.iter().all(has_acme_challenge_domain(&format!("{}.{}.", acme_challenge, domain_name))) && i < 60 {
         i += 1;
         tracing::warn!("Attempt {} failed", i);
         sleep(Duration::from_secs(60));
