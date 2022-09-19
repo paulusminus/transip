@@ -62,7 +62,8 @@ where I: Iterator<Item = S>, S: AsRef<str>
     let default_resolver = default_resolver()?;
     let resolvers = nameservers.map(to_resolver_by_resolver(default_resolver)).collect::<Result<Vec<Resolver>>>()?;
     let mut i = 0;
-    while !resolvers.iter().all(has_acme_challenge_domain(&format!("{}.{}.", acme_challenge, domain_name))) && i < 60 {
+    let record_name = format!("{}.{}.", acme_challenge, domain_name);
+    while !resolvers.iter().all(has_acme_challenge_domain(&record_name)) && i < 60 {
         i += 1;
         tracing::warn!("Attempt {} failed", i);
         sleep(Duration::from_secs(60));

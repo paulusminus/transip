@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::sync::Mutex;
+
 use tracing::Level;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::filter::LevelFilter;
@@ -7,14 +10,30 @@ use trace::VecExt;
 pub const ACME_CHALLENGE: &str = "_acme-challenge";
 
 fn main() -> Result<()> {
+    let (file, mut client): (Result<File>, ApiClient) = default_account()?.into();
+    let filter_layer = LevelFilter::from_level(Level::INFO);
+
     match tracing_journald::layer() {
         Ok(layer) => { 
-            let filter_layer = LevelFilter::from_level(Level::INFO);
-            tracing_subscriber::registry::Registry::default().with(layer).with(filter_layer).init(); 
+            tracing_subscriber::registry::Registry::default()
+            .with(layer)
+            .with(filter_layer)
+            .init(); 
         },
-        Err(_) => { tracing_subscriber::fmt::init(); },
+        Err(_) => { 
+            if let Ok(log_file) = file {
+                let layer = tracing_subscriber::fmt::layer().with_writer(Mutex::new(log_file));
+                tracing_subscriber::registry::Registry::default()
+                .with(layer)
+                .with(filter_layer)
+                .init();
+            }
+            else {
+                tracing_subscriber::fmt::init();
+            }
+        },
     }
-    let mut client: ApiClient = default_account()?.into();
+
 
     let validation_config = certbot::ValidationConfig::new();
     tracing::info!("Certbot environment: {:#?}", validation_config);
@@ -23,7 +42,7 @@ fn main() -> Result<()> {
         return Err(Error::ApiTest);
     }
 
-    let is_acme_challenge = |entry: &DnsEntry| entry.name == *"_acme-challenge" && entry.entry_type == *"TXT";
+    let is_acme_challenge = |entry: &DnsEntry| entry.name == *ACME_CHALLENGE && entry.entry_type == *"TXT";
 
     if let Some(auth_output) = validation_config.auth_output() {
         tracing::info!("Auth output: {}", auth_output);

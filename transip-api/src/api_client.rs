@@ -2,7 +2,7 @@ use core::fmt::Display;
 use core::str::from_utf8;
 use core::time::Duration;
 
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::path::PathBuf;
 use std::{fs::read_dir, ffi::OsStr, path::Path, io::BufReader};
 
@@ -144,18 +144,23 @@ pub struct ApiClient {
     agent: Agent,
 }
 
-impl From<AuthConfiguration> for ApiClient {
+impl From<AuthConfiguration> for (Result<File>, ApiClient) {
     fn from(auth_config: AuthConfiguration) -> Self {
         let url = Url::new(TRANSIP_API_PREFIX.to_owned());
         let agent = AgentBuilder::new().timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS)).build();
         let token_file: PathBuf = [TRANSIP_CONFIG_DIR, "token.json"].iter().collect();
+        let log_file: PathBuf = [TRANSIP_CONFIG_DIR, "transip.log"].iter().collect();
+        let file = OpenOptions::new().append(true).open(log_file).map_err(Error::from);
         let token: Option<Token> = token_file.load().ok();
-        Self {
-            url,
-            auth_config,
-            token,
-            agent,
-        }        
+        (
+            file,
+            ApiClient {
+                url,
+                auth_config,
+                token,
+                agent,
+            }
+        )
     }
 }
 
