@@ -27,12 +27,12 @@ pub trait TransipApiGeneral {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct Ping {
+struct Ping {
     pub ping: String,
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct ProductList {
+struct ProductList {
     pub products: Products,
 }
 
@@ -79,6 +79,7 @@ pub struct ProductElements {
     pub product_elements: Vec<ProductElement>,
 }
 
+/// What is Availability
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AvailabilityZone {
@@ -95,7 +96,7 @@ impl Display for AvailabilityZone {
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct AvailabilityZones {
+struct AvailabilityZones {
     pub availability_zones: Vec<AvailabilityZone>,
 }
 

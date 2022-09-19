@@ -830,6 +830,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "transip-acme-dns-challenge"
+version = "0.2.0"
+dependencies = [
+ "dns-check-updated",
+ "tracing",
+ "tracing-journald",
+ "tracing-subscriber",
+ "transip-api",
+]
+
+[[package]]
 name = "transip-api"
 version = "0.1.0"
 dependencies = [
@@ -843,16 +854,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "ureq",
-]
-
-[[package]]
-name = "transip-client"
-version = "0.1.0"
-dependencies = [
- "tracing",
- "tracing-journald",
- "tracing-subscriber",
- "transip-api",
 ]
 
 [[package]]

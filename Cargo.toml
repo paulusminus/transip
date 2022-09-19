@@ -2,7 +2,7 @@
 members = [
     "dns-check-updated",
     "transip-api",
-    "transip-client",
+    "transip-acme-dns-challenge",
 ]
 
 [profile.release]

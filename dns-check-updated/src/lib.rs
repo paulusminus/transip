@@ -11,14 +11,18 @@ fn default_resolver() -> Result<Resolver> {
     Resolver::new(ResolverConfig::default(), ResolverOpts::default()).map_err(Error::from)
 }
 
-fn resolve_hostname(hostname: String, resolver: &Resolver) -> Result<Vec<IpAddr>> {
-    resolver.lookup_ip(hostname)
+fn resolve_hostname<S>(hostname: S, resolver: &Resolver) -> Result<Vec<IpAddr>>
+where S: AsRef<str>
+{
+    resolver.lookup_ip(hostname.as_ref())
     .map_err(Error::from)
     .map(|response| response.into_iter().collect())
 
 }
 
-fn to_resolver_by_resolver(resolver: Resolver) -> impl Fn(String) -> Result<Resolver> {
+fn to_resolver_by_resolver<S>(resolver: Resolver) -> impl Fn(S) -> Result<Resolver>
+where S: AsRef<str>
+{
     move |nameserver| {
         let ip_addresses = resolve_hostname(nameserver, &resolver)?;
         let nameserver_config_group = NameServerConfigGroup::from_ips_clear(&ip_addresses, 53, false);
@@ -32,8 +36,11 @@ fn to_resolver_by_resolver(resolver: Resolver) -> impl Fn(String) -> Result<Reso
 
 fn has_acme_challenge_domain(domain_name: &str) -> impl Fn(&Resolver) -> bool + '_ {
     move |resolver|
-        match resolver.txt_lookup(&format!("_acme_challenge.{}.", domain_name)) {
-            Ok(result) => !result.as_lookup().records().to_vec().is_empty(),
+        match resolver.txt_lookup(&format!("_acme-challenge.{}.", domain_name)) {
+            Ok(result) => {
+                result.as_lookup().record_iter().for_each(|record| tracing::info!("{}", record));
+                !result.as_lookup().records().to_vec().is_empty()
+            },
             Err(_) => false,
         }
 }
@@ -41,12 +48,17 @@ fn has_acme_challenge_domain(domain_name: &str) -> impl Fn(&Resolver) -> bool + 
 #[allow(dead_code)]
 fn no_acme_challenge(resolver: &Resolver) -> bool {
     match resolver.txt_lookup("_acme-challenge.paulmin.nl.") {
-        Ok(result) => result.as_lookup().records().to_vec().is_empty(),
+        Ok(result) => {
+
+            result.as_lookup().records().to_vec().is_empty()
+        },
         Err(_) => false,
     }
 }
 
-pub fn servers_have_acme_challenge(nameservers: impl Iterator<Item = String> + Copy, domain_name: &str) -> Result<()>{
+pub fn servers_have_acme_challenge<I, S>(nameservers: I, domain_name: &str) -> Result<()> 
+where I: Iterator<Item = S>, S: AsRef<str>
+{
     let default_resolver = default_resolver()?;
     let resolvers = nameservers.map(to_resolver_by_resolver(default_resolver)).collect::<Result<Vec<Resolver>>>()?;
     let mut i = 0;
@@ -57,7 +69,7 @@ pub fn servers_have_acme_challenge(nameservers: impl Iterator<Item = String> + C
     }
 
     if i >= 60 {
-        tracing::error!("Failed to find acme challenge in {}", nameservers.map(|n| format!("{n}") ).collect::<Vec<String>>().join(", "));
+        tracing::error!("Failed to find acme challenge");
         Err(Error::AcmeChallege)
     }
     else {
