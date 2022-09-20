@@ -51,52 +51,51 @@ fn main() -> Result<()> {
             tracing::info!("Alle acme challenges deleted from domain {}", domain);
         }
     }
-    else {
-        if let Some(challenge) = validation_config.validation() {
-            if let Some(domain) = validation_config.domain() {
-                client.dns_entry_delete_all(&domain, is_acme_challenge)?;
+    else if let Some(challenge) = validation_config.validation() {
+        if let Some(domain) = validation_config.domain() {
+            client.dns_entry_delete_all(&domain, is_acme_challenge)?;
             
-                let dns_entry = DnsEntry { 
-                    name: ACME_CHALLENGE.into(), 
-                    expire: 60,
-                    entry_type: "TXT".into(),
-                    content: challenge, 
-                };
-                client.dns_entry_insert(&domain, dns_entry)?;
+            let dns_entry = DnsEntry { 
+                name: ACME_CHALLENGE.into(), 
+                expire: 60,
+                entry_type: "TXT".into(),
+                content: challenge, 
+            };
+            client.dns_entry_insert(&domain, dns_entry)?;
                 
-                let name_servers = 
-                    client
-                    .nameserver_list(&domain)?
-                    .into_iter()
-                    .map(|nameserver| nameserver.hostname)
-                    .collect::<Vec<String>>();
-                name_servers.trace();
+            let name_servers = 
+                client
+                .nameserver_list(&domain)?
+                .into_iter()
+                .map(|nameserver| nameserver.hostname)
+                .collect::<Vec<String>>();
+            name_servers.trace();
     
-                match dns_check_updated::servers_have_acme_challenge(
-                    name_servers.iter(),
-                    &domain,
-                    ACME_CHALLENGE,
-                ) {
-                    Ok(_) => {
-                        tracing::info!("Dns servers updated");
-                        println!("OK");
-                    },
-                    Err(_) => {
-                        tracing::error!("Updated Dns servers not verified");
-                        println!("ERR");
-                    },
-                };                
-            }
-            else {
-                tracing::error!("Domain not specified in environment");
-                println!("ERR");
-            }
-        }
+            match dns_check_updated::servers_have_acme_challenge(
+                name_servers.iter(),
+                &domain,
+                ACME_CHALLENGE,
+            ) {
+                Ok(_) => {
+                    tracing::info!("Dns servers updated");
+                    println!("OK");
+                },
+                Err(_) => {
+                    tracing::error!("Updated Dns servers not verified");
+                    println!("ERR");
+                },
+            };
+        }                
         else {
-            tracing::error!("Challenge not specified in environment");
+            tracing::error!("Domain not specified in environment");
             println!("ERR");
-        }    
+        }
     }
+    else {
+        tracing::error!("Challenge not specified in environment");
+        println!("ERR");
+    }    
+    
 
     Ok(())
 }
@@ -122,6 +121,7 @@ mod trace {
 mod certbot {
     use std::env::var;
 
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct ValidationConfig {
         certbot_domain: Option<String>,

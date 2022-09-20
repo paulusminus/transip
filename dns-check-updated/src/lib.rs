@@ -8,7 +8,7 @@ mod error;
 pub type Result<T> = std::result::Result<T, Error>;
 
 fn default_resolver() -> Result<Resolver> {
-    Resolver::new(ResolverConfig::default(), ResolverOpts::default()).map_err(Error::from)
+    Resolver::from_system_conf().map_err(Error::from)
 }
 
 fn resolve_hostname<S>(hostname: S, resolver: &Resolver) -> Result<Vec<IpAddr>>
