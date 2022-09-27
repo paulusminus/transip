@@ -830,7 +830,7 @@ dependencies = [
 
 [[package]]
 name = "transip-acme-dns-challenge"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "dns-check-updated",
  "tracing",
@@ -851,7 +851,6 @@ dependencies = [
  "serde",
  "thiserror",
  "tracing",
- "tracing-subscriber",
  "ureq",
 ]
 
