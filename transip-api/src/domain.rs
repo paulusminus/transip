@@ -1,5 +1,4 @@
 use core::fmt::Display;
-// use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use serde::{Deserialize, Serialize};
 use crate::{Result, api_client::{ApiClient, Url}};
 
@@ -70,32 +69,6 @@ impl Display for NameServer {
         write!(f, "Nameserver: {}", self.hostname)
     }
 }
-
-// impl NameServer {
-//     pub fn to_ip_address(&self) -> Result<IpAddr> {
-//         if let Some(ipv4) = self.ipv4.as_ref() {
-//             tracing::info!("Ip4 address: {}", ipv4);
-//             if !ipv4.trim().is_empty() {
-//                 return Ok(
-//                     IpAddr::V4(
-//                         ipv4.parse::<Ipv4Addr>()?
-//                     )
-//                 )
-//             };
-//         }
-//         if let Some(ipv6) = self.ipv6.as_ref() {
-//             tracing::info!("Ip6 address: {}", ipv6);
-//             if !ipv6.trim().is_empty() {
-//                 return Ok(
-//                     IpAddr::V6(
-//                         ipv6.parse::<Ipv6Addr>()?                    
-//                     )
-//                 );    
-//             }
-//         }
-//         Err(crate::error::Error::NoIp)
-//     }
-// }
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

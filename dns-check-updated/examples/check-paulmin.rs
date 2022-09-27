@@ -1,12 +1,19 @@
 use dns_check_updated::{servers_have_acme_challenge};
 
+const NAMESERVERS: [&str; 3] = [
+    "ns0.transip.net",
+    "ns1.transip.nl",
+    "ns2.transip.eu",
+];
+const DOMAIN_NAME: &str = "paulmin.nl";
+const ACME_CHALLENGE: &str = "_acme-challenge";
+
 fn main() {
-    let nameservers = vec![
-        "ns0.transip.net".to_owned(),
-        "ns1.transip.nl".to_owned(),
-        "ns2.transip.eu".to_owned(),
-    ].into_iter();
-    match servers_have_acme_challenge(nameservers, "paulmin.nl", "_acme-challenge") {
+    match servers_have_acme_challenge(
+        NAMESERVERS.iter(),
+        DOMAIN_NAME,
+        ACME_CHALLENGE,
+    ) {
         Ok(_) => {},
         Err(e) => { eprintln!("Error: {}", e); }
     }
