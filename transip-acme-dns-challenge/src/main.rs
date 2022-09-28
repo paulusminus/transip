@@ -4,7 +4,7 @@ use std::sync::Mutex;
 use tracing::Level;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::filter::LevelFilter;
-use transip_api::prelude::*;
+use transip_api::*;
 use trace::VecExt;
 
 pub const ACME_CHALLENGE: &str = "_acme-challenge";

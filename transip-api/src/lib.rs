@@ -37,14 +37,18 @@ fn main() -> Result<(), Box<dyn Error>> {
 */
 
 pub use error::Error;
+pub use crate::account::{TransipApiAccount};
+pub use crate::domain::{DnsEntry, TransipApiDomain};
+pub use crate::general::{TransipApiGeneral};
+pub use crate::vps::TransipApiVps;
+pub use crate::api_client::{default_account, ApiClient};
 
 mod account;
 mod authentication;
 mod api_client;
 mod domain;
 mod error;
-pub mod general;
-pub mod prelude;
+mod general;
 mod vps;
 
 pub type Result<T> = std::result::Result<T, Error>;
