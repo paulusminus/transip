@@ -1,16 +1,19 @@
-use std::fs::File;
-use std::sync::Mutex;
+use std::sync::{Mutex};
 
-use tracing::Level;
-use tracing_subscriber::prelude::*;
+use tracing::{Level};
+use tracing_subscriber::{prelude::*};
 use tracing_subscriber::filter::LevelFilter;
 use transip_api::*;
 use trace::VecExt;
 
 pub const ACME_CHALLENGE: &str = "_acme-challenge";
 
+fn is_acme_challenge(entry: &DnsEntry) -> bool {
+    entry.name == *ACME_CHALLENGE && entry.entry_type == *"TXT"    
+}
+
 fn main() -> Result<()> {
-    let (file, mut client): (Result<File>, ApiClient) = default_account()?.into();
+    let (mut client, log_file): (ApiClient, WriteWrapper) = default_account()?.into();
     let filter_layer = LevelFilter::from_level(Level::INFO);
 
     match tracing_journald::layer() {
@@ -20,17 +23,11 @@ fn main() -> Result<()> {
             .with(filter_layer)
             .init(); 
         },
-        Err(_) => { 
-            if let Ok(log_file) = file {
-                let layer = tracing_subscriber::fmt::layer().with_writer(Mutex::new(log_file));
-                tracing_subscriber::registry::Registry::default()
-                .with(layer)
-                .with(filter_layer)
-                .init();
-            }
-            else {
-                tracing_subscriber::fmt::init();
-            }
+        Err(_) => {
+            tracing_subscriber::fmt()
+            .with_writer(Mutex::new(log_file))
+            .with_max_level(Level::INFO)
+            .init();
         },
     }
 
@@ -41,8 +38,6 @@ fn main() -> Result<()> {
     if client.api_test()?.as_str() != "pong" {
         return Err(Error::ApiTest);
     }
-
-    let is_acme_challenge = |entry: &DnsEntry| entry.name == *ACME_CHALLENGE && entry.entry_type == *"TXT";
 
     if let Some(auth_output) = validation_config.auth_output() {
         tracing::info!("Auth output: {}", auth_output);
@@ -146,15 +141,15 @@ mod certbot {
         }
 
         pub fn validation(&self) -> Option<String> {
-            self.cerbot_validation.as_ref().map(|v| v.to_owned())
+            self.cerbot_validation.clone()
         }
 
         pub fn domain(&self) -> Option<String> {
-            self.certbot_domain.as_ref().map(|d| d.to_owned())
+            self.certbot_domain.clone()
         }
 
         pub fn auth_output(&self) -> Option<String> {
-            self.cerbot_auth_output.as_ref().map(|d| d.to_owned())
+            self.cerbot_auth_output.clone()
         }
     }
 }

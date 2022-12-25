@@ -14,7 +14,8 @@ trait UrlDomain {
     fn domains(&self, includes: bool) -> String;
 }
 
-/// See <https://api.transip.nl/rest/docs.html#domains>
+/// [Domains](https://api.transip.nl/rest/docs.html#domains)
+///  
 pub trait TransipApiDomain {
     /// See <https://api.transip.nl/rest/docs.html#domains-domains-get>
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
@@ -155,8 +156,7 @@ impl TransipApiDomain for ApiClient {
     }
 
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
-        let dns_entry_item: DnsEntryItem = entry.into();
-        self.delete(&self.url.domain_dns(domain_name), dns_entry_item)
+        self.delete::<DnsEntryItem>(&self.url.domain_dns(domain_name), entry.into())
     }
 
     fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()> where F: Fn(&DnsEntry) -> bool {
@@ -167,12 +167,15 @@ impl TransipApiDomain for ApiClient {
     }
 
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {
-        self.get::<DnsEntryList>(&self.url.domain_dns(domain_name)).map(|list| list.dns_entries)
+        self.get::<DnsEntryList>(&self.url.domain_dns(domain_name))
+        .map(|list| list.dns_entries)
     }
 
     fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
-        let dns_entry_item: DnsEntryItem = entry.into();
-        self.post(&self.url.domain_dns(domain_name), dns_entry_item)
+        self.post::<DnsEntryItem>(
+            &self.url.domain_dns(domain_name),
+            entry.into()
+        )
     }
 
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>> {

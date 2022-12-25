@@ -14,14 +14,26 @@ trait UrlGeneral {
     fn product_elements(&self, name: &str) -> String;
 }
 
-/// See <https://api.transip.nl/rest/docs.html#general>
+/// [General](https://api.transip.nl/rest/docs.html#general)
 pub trait TransipApiGeneral {
     /// See <https://api.transip.nl/rest/docs.html#general-apitest-get>
+    /// 
+    /// The result of this method should always be `pong` if successfull.
+    /// 
+    /// # Example
+    /// 
+    /// ```rust
+    /// let ping_result: String = client.api_test()?;
+    /// ```
+    /// 
     fn api_test(&mut self) -> Result<String>;
+
     /// See <https://api.transip.nl/rest/docs.html#general-availabilityzone-get>
     fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>>;
+
     /// See <https://api.transip.nl/rest/docs.html#general-products-get>
     fn products(&mut self) -> Result<Products>;
+
     /// See <https://api.transip.nl/rest/docs.html#general-elements-get>
     fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>>;
 }

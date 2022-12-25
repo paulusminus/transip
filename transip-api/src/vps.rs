@@ -8,9 +8,9 @@ trait UrlVps {
     fn vps(&self) -> String;
 }
 
-/// See <https://api.transip.nl/rest/docs.html#vps>
+/// [VPS](https://api.transip.nl/rest/docs.html#vps)
 pub trait TransipApiVps {
-    /// See <https://api.transip.nl/rest/docs.html#vps-vps-get>
+    /// [VPS list](https://api.transip.nl/rest/docs.html#vps-vps-get)
     fn vps_list(&mut self) -> Result<Vec<Vps>>;
 }
 

@@ -13,7 +13,7 @@ trait UrlAccount {
     fn invoice_pdf(&self, invoice_number: &str) -> String;
 }
 
-/// See <https://api.transip.nl/rest/docs.html#account>
+/// [Account](https://api.transip.nl/rest/docs.html#account)
 pub trait TransipApiAccount {
     /// See <https://api.transip.nl/rest/docs.html#account-invoices-get-1>
     fn invoice(&mut self, invoice_number: &str) -> Result<Invoice>;

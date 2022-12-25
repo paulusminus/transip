@@ -3,10 +3,12 @@ use core::str::from_utf8;
 use core::time::Duration;
 
 use std::fs::{File, OpenOptions};
+use std::io::{Stdout, stdout};
 use std::path::PathBuf;
 use std::{fs::read_dir, ffi::OsStr, path::Path, io::BufReader};
 
 use chrono::{TimeZone, Utc, DateTime};
+use lazy_static::lazy_static;
 use ring::signature::{RsaKeyPair, self};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use ureq::{Agent, AgentBuilder};
@@ -15,9 +17,16 @@ use crate::authentication::{sign, AuthRequest, TokenResponse, UrlAuthentication}
 use crate::{Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/"; 
-const TRANSIP_CONFIG_DIR: &str = "/home/paul/.config/transip";
 const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Hours(2);
 const AGENT_TIMEOUT_SECONDS: u64 = 30;
+
+lazy_static! {
+    static ref TRANSIP_CONFIG_DIR: PathBuf = {
+        directories::ProjectDirs::from("nl", "paulmin", "transip")
+        .map(|proj_dir| proj_dir.config_dir().to_path_buf())
+        .unwrap()    
+    };
+}
 
 pub trait Persist<T> where T: Serialize + DeserializeOwned {
     fn load(&self) -> Result<T>;
@@ -26,15 +35,21 @@ pub trait Persist<T> where T: Serialize + DeserializeOwned {
 
 impl<T> Persist<T> for PathBuf where T: Serialize + DeserializeOwned {
     fn dump(&self, t: T) -> Result<()> {
-        let file = std::fs::File::create(self)?;
-        ureq::serde_json::to_writer_pretty(file, &t)?;
-        Ok(())
+        std::fs::File::create(self)
+        .map_err(Into::into)
+        .and_then(|file|
+            ureq::serde_json::to_writer_pretty(file, &t)
+            .map_err(Into::into)
+        )
     }
 
     fn load(&self) -> Result<T> {
-        let file = std::fs::File::open(self)?;
-        let t: T = ureq::serde_json::from_reader(file)?;
-        Ok(t)
+        std::fs::File::open(self)
+        .map_err(Into::into)
+        .and_then(|file| 
+            ureq::serde_json::from_reader(file)
+            .map_err(Into::into)
+        )
     }
 }
 
@@ -107,7 +122,7 @@ where P: AsRef<Path>
 }
 
 pub fn default_account() -> Result<AuthConfiguration> {
-    read_dir(TRANSIP_CONFIG_DIR)?
+    read_dir(TRANSIP_CONFIG_DIR.as_path())?
     .filter_map(|de| de.ok())
     .map(|de| de.path())
     .find(|path| path.extension() == Some(OsStr::new("pem")))
@@ -132,11 +147,33 @@ impl Url {
     }
 }
 
+pub enum WriteWrapper {
+    File(File),
+    Stdout(Stdout),
+    
+} 
+
+impl std::io::Write for WriteWrapper {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        match self {
+            Self::File(file) => file.write(buf),
+            Self::Stdout(stdout) => stdout.write(buf)
+        }
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        match self {
+            Self::File(file) => file.flush(),
+            Self::Stdout(stdout) => stdout.flush()
+        }
+    }
+}
+
 /// ApiClient is the main entry for this library. Creation is done by using ApiClient::new().
 /// After creation of a client, this client can be used to call a Transip API call.
 /// Each call starts with a check to see if we have a valid JWT token
 /// If the token is expired or non existant then the Transip API call for requesting a new token is called
-/// Tokens are persisted to disk on exit
+/// Tokens are persisted to disk on exit and reused if not expired on run
 pub struct ApiClient {
     pub(crate) url: Url,
     auth_config: AuthConfiguration,
@@ -144,22 +181,27 @@ pub struct ApiClient {
     agent: Agent,
 }
 
-impl From<AuthConfiguration> for (Result<File>, ApiClient) {
+impl From<AuthConfiguration> for (ApiClient, WriteWrapper) {
     fn from(auth_config: AuthConfiguration) -> Self {
         let url = Url::new(TRANSIP_API_PREFIX.to_owned());
         let agent = AgentBuilder::new().timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS)).build();
-        let token_file: PathBuf = [TRANSIP_CONFIG_DIR, "token.json"].iter().collect();
-        let log_file: PathBuf = [TRANSIP_CONFIG_DIR, "transip.log"].iter().collect();
-        let file = OpenOptions::new().append(true).open(log_file).map_err(Error::from);
+        let token_file: PathBuf = TRANSIP_CONFIG_DIR.join("token.json");
         let token: Option<Token> = token_file.load().ok();
+        let log_file: PathBuf = TRANSIP_CONFIG_DIR.join("transip.log");
+
+        let write_wrapper = match OpenOptions::new().append(true).open(log_file) {
+            Ok(file) => WriteWrapper::File(file),
+            Err(_) => WriteWrapper::Stdout(stdout())
+        };
+        
         (
-            file,
             ApiClient {
                 url,
                 auth_config,
                 token,
-                agent,
-            }
+                agent,    
+            },
+            write_wrapper,
         )
     }
 }
@@ -167,7 +209,7 @@ impl From<AuthConfiguration> for (Result<File>, ApiClient) {
 impl Drop for ApiClient {
     fn drop(&mut self) {
         if let Some(token) = self.token.take() {
-            let token_file: PathBuf = [TRANSIP_CONFIG_DIR, "token.json"].iter().collect();
+            let token_file: PathBuf = TRANSIP_CONFIG_DIR.join("token.json");
             if let Err(e) = token_file.dump(token) {
                 tracing::error!("Failed to dump token to file: {}", e);
             }
@@ -195,12 +237,12 @@ impl ApiClient {
             }
             else {
                 let input = splitted.nth(1).ok_or(Error::Token)?;
-                let decoded = base64::decode_config(input, base64::URL_SAFE)?;
+                let decoded = base64::decode(input)?;
                 let s = from_utf8(decoded.as_slice())?;
                 let token_meta = ureq::serde_json::from_str::<TokenResponseMeta>(s)?;
                 let token = Token {
                     raw: token_response.token,
-                    expire: Utc.timestamp_millis((token_meta.exp as i64) * 1000),
+                    expire: Utc.timestamp_millis_opt((token_meta.exp as i64) * 1000).unwrap(),
                 };
                 self.token = Some(token);
                 Ok(())
