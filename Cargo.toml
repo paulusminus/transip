@@ -1,9 +1,5 @@
 [workspace]
-members = [
-    "dns-check-updated",
-    "transip-api",
-    "transip-acme-dns-challenge",
-]
+members = ["crates/*"]
 
 [profile.release]
 strip = true
