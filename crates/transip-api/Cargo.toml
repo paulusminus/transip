@@ -4,9 +4,9 @@ version = "0.3.0"
 edition = "2021"
 
 [dependencies]
-base64 = "0.20"
+base64 = "0.21"
 chrono = { version = "0.4", features = ["serde"] }
-directories = "4.0"
+directories = "5.0"
 hostname = "0.3"
 lazy_static = "1.4"
 ring = "0.16"

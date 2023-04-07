@@ -7,6 +7,7 @@ use std::io::{Stdout, stdout};
 use std::path::PathBuf;
 use std::{fs::read_dir, ffi::OsStr, path::Path, io::BufReader};
 
+use base64::{Engine, engine};
 use chrono::{TimeZone, Utc, DateTime};
 use lazy_static::lazy_static;
 use ring::signature::{RsaKeyPair, self};
@@ -237,7 +238,7 @@ impl ApiClient {
             }
             else {
                 let input = splitted.nth(1).ok_or(Error::Token)?;
-                let decoded = base64::decode(input)?;
+                let decoded = engine::general_purpose::STANDARD.decode(input)?;
                 let s = from_utf8(decoded.as_slice())?;
                 let token_meta = ureq::serde_json::from_str::<TokenResponseMeta>(s)?;
                 let token = Token {

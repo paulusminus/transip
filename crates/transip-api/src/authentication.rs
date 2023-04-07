@@ -1,5 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use base64::engine::general_purpose::STANDARD as base64;
+use base64::{Engine};
 use ring::signature::RsaKeyPair;
 use ring::{rand, signature};
 use serde::{Serialize, Deserialize};
@@ -75,6 +77,6 @@ pub fn sign(body: &[u8], key_pair: &RsaKeyPair) -> Result<String>
     .map_err(Error::Sign)?;
     
     Ok(
-        base64::encode(signature.as_slice())
+        base64.encode(signature.as_slice())
     )
 }
