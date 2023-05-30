@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-thiserror = "1.0"
+thiserror = "1"
 tracing = "0.1"
 trust-dns-resolver = "0.22"
