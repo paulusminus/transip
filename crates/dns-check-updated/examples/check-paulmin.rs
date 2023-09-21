@@ -1,20 +1,14 @@
-use dns_check_updated::{servers_have_acme_challenge};
+use dns_check_updated::servers_have_acme_challenge;
 
-const NAMESERVERS: [&str; 3] = [
-    "ns0.transip.net",
-    "ns1.transip.nl",
-    "ns2.transip.eu",
-];
+const NAMESERVERS: [&str; 3] = ["ns0.transip.net", "ns1.transip.nl", "ns2.transip.eu"];
 const DOMAIN_NAME: &str = "paulmin.nl";
 const ACME_CHALLENGE: &str = "_acme-challenge";
 
 fn main() {
-    match servers_have_acme_challenge(
-        NAMESERVERS.iter(),
-        DOMAIN_NAME,
-        ACME_CHALLENGE,
-    ) {
-        Ok(_) => {},
-        Err(e) => { eprintln!("Error: {}", e); }
+    match servers_have_acme_challenge(NAMESERVERS.iter(), DOMAIN_NAME, ACME_CHALLENGE) {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("Error: {}", e);
+        }
     }
 }

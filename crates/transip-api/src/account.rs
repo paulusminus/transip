@@ -1,6 +1,9 @@
+use crate::{
+    api_client::{ApiClient, Url},
+    Result,
+};
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::{ApiClient, Url}};
 
 const INVOICES: &str = "invoices";
 const INVOICE_ITEMS: &str = "invoice-items";
@@ -90,13 +93,13 @@ impl UrlAccount for Url {
     fn invoice(&self, invoice_number: &str) -> String {
         format!("{}/{}", self.invoices(), invoice_number)
     }
-    
+
     fn invoice_items(&self, invoice_number: &str) -> String {
         format!("{}/{}/{}", self.invoices(), invoice_number, INVOICE_ITEMS)
     }
 
-    fn invoices(&self) -> String { 
-        format!("{}{}", self.prefix, INVOICES) 
+    fn invoices(&self) -> String {
+        format!("{}{}", self.prefix, INVOICES)
     }
 
     fn invoice_pdf(&self, invoice_number: &str) -> String {
@@ -105,20 +108,23 @@ impl UrlAccount for Url {
 }
 
 impl TransipApiAccount for ApiClient {
-
     fn invoice(&mut self, invoice_number: &str) -> Result<Invoice> {
-        self.get::<InvoiceResponse>(&self.url.invoice(invoice_number)).map(|item| item.invoice)
+        self.get::<InvoiceResponse>(&self.url.invoice(invoice_number))
+            .map(|item| item.invoice)
     }
 
     fn invoice_items(&mut self, invoice_number: &str) -> Result<Vec<InvoiceItem>> {
-        self.get::<InvoiceItemList>(&self.url.invoice_items(invoice_number)).map(|list| list.invoice_items)
+        self.get::<InvoiceItemList>(&self.url.invoice_items(invoice_number))
+            .map(|list| list.invoice_items)
     }
 
     fn invoice_list(&mut self) -> Result<Vec<Invoice>> {
-        self.get::<InvoiceList>(&self.url.invoices()).map(|list| list.invoices)
+        self.get::<InvoiceList>(&self.url.invoices())
+            .map(|list| list.invoices)
     }
 
     fn invoice_pdf(&mut self, invoice_number: &str) -> Result<String> {
-        self.get::<Pdf>(&self.url.invoice_pdf(invoice_number)).map(|item| item.pdf)
+        self.get::<Pdf>(&self.url.invoice_pdf(invoice_number))
+            .map(|item| item.pdf)
     }
 }

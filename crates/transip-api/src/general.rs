@@ -1,6 +1,9 @@
+use crate::{
+    api_client::{ApiClient, Url},
+    Result,
+};
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::{ApiClient, Url}};
 
 const API_TEST: &str = "api-test";
 const AVAILABILITY_ZONES: &str = "availability-zones";
@@ -17,15 +20,15 @@ trait UrlGeneral {
 /// [General](https://api.transip.nl/rest/docs.html#general)
 pub trait TransipApiGeneral {
     /// See <https://api.transip.nl/rest/docs.html#general-apitest-get>
-    /// 
+    ///
     /// The result of this method should always be `pong` if successfull.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```rust
     /// let ping_result: String = client.api_test()?;
     /// ```
-    /// 
+    ///
     fn api_test(&mut self) -> Result<String>;
 
     /// See <https://api.transip.nl/rest/docs.html#general-availabilityzone-get>
@@ -63,7 +66,7 @@ pub struct Product {
     pub name: String,
     pub description: String,
     pub price: u32,
-    pub recurring_price: u32,   
+    pub recurring_price: u32,
 }
 
 impl Display for Product {
@@ -81,7 +84,11 @@ pub struct ProductElement {
 
 impl Display for ProductElement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Element: {}, {} = {}", self.name, self.description, self.amount)
+        write!(
+            f,
+            "Element: {}, {} = {}",
+            self.name, self.description, self.amount
+        )
     }
 }
 
@@ -136,14 +143,17 @@ impl TransipApiGeneral for ApiClient {
     }
 
     fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>> {
-        self.get::<AvailabilityZones>(&self.url.availability_zones()).map(|a| a.availability_zones)
+        self.get::<AvailabilityZones>(&self.url.availability_zones())
+            .map(|a| a.availability_zones)
     }
 
     fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>> {
-        self.get::<ProductElements>(&self.url.product_elements(name)).map(|list| list.product_elements)
+        self.get::<ProductElements>(&self.url.product_elements(name))
+            .map(|list| list.product_elements)
     }
 
     fn products(&mut self) -> Result<Products> {
-        self.get::<ProductList>(&self.url.products()).map(|list| list.products)
+        self.get::<ProductList>(&self.url.products())
+            .map(|list| list.products)
     }
 }

@@ -15,5 +15,5 @@ pub enum Error {
     IO(#[from] io::Error),
 
     #[error("Resolve: {0}")]
-    Resolve(#[from] ResolveError)
+    Resolve(#[from] ResolveError),
 }

@@ -1,6 +1,9 @@
+use crate::{
+    api_client::{ApiClient, Url},
+    Result,
+};
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::{ApiClient, Url}};
 
 const VPS: &str = "vps";
 

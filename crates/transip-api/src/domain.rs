@@ -1,6 +1,9 @@
+use crate::{
+    api_client::{ApiClient, Url},
+    Result,
+};
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
-use crate::{Result, api_client::{ApiClient, Url}};
 
 const DOMAINS: &str = "domains";
 const DOMAINS_INCLUDES: &str = "?include=nameservers,contacts";
@@ -22,7 +25,9 @@ pub trait TransipApiDomain {
     /// See <https://api.transip.nl/rest/docs.html#domains-dns-delete>
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
     /// Delete all entries which comply to Filter F
-    fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()> where F: Fn(&DnsEntry) -> bool;
+    fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()>
+    where
+        F: Fn(&DnsEntry) -> bool;
     /// See <https://api.transip.nl/rest/docs.html#domains-dns-get>
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
     /// See <https://api.transip.nl/rest/docs.html#domains-dns-post>
@@ -30,8 +35,6 @@ pub trait TransipApiDomain {
     /// See <https://api.transip.nl/rest/docs.html#domains-nameservers-get>
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
 }
-
-
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -115,20 +118,18 @@ pub struct DnsEntry {
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DnsEntryList {
-    pub dns_entries: Vec<DnsEntry>
+    pub dns_entries: Vec<DnsEntry>,
 }
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DnsEntryItem {
-    pub dns_entry: DnsEntry
+    pub dns_entry: DnsEntry,
 }
 
 impl From<DnsEntry> for DnsEntryItem {
     fn from(dns_entry: DnsEntry) -> Self {
-        Self {
-            dns_entry
-        }
+        Self { dns_entry }
     }
 }
 
@@ -146,20 +147,29 @@ impl UrlDomain for Url {
     }
 
     fn domains(&self, includes: bool) -> String {
-        format!("{}{}{}", self.prefix, DOMAINS, if includes { DOMAINS_INCLUDES } else { "" })
+        format!(
+            "{}{}{}",
+            self.prefix,
+            DOMAINS,
+            if includes { DOMAINS_INCLUDES } else { "" }
+        )
     }
 }
 
 impl TransipApiDomain for ApiClient {
     fn domain_list(&mut self) -> Result<Vec<Domain>> {
-        self.get::<DomainList>(&self.url.domains(true)).map(|list| list.domains)
+        self.get::<DomainList>(&self.url.domains(true))
+            .map(|list| list.domains)
     }
 
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
         self.delete::<DnsEntryItem>(&self.url.domain_dns(domain_name), entry.into())
     }
 
-    fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()> where F: Fn(&DnsEntry) -> bool {
+    fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()>
+    where
+        F: Fn(&DnsEntry) -> bool,
+    {
         for dns_entry in self.dns_entry_list(domain_name)?.into_iter().filter(f) {
             self.dns_entry_delete(domain_name, dns_entry)?;
         }
@@ -168,17 +178,15 @@ impl TransipApiDomain for ApiClient {
 
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {
         self.get::<DnsEntryList>(&self.url.domain_dns(domain_name))
-        .map(|list| list.dns_entries)
+            .map(|list| list.dns_entries)
     }
 
     fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
-        self.post::<DnsEntryItem>(
-            &self.url.domain_dns(domain_name),
-            entry.into()
-        )
+        self.post::<DnsEntryItem>(&self.url.domain_dns(domain_name), entry.into())
     }
 
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>> {
-        self.get::<NameServerList>(&self.url.domain_nameservers(domain_name)).map(|list| list.nameservers)
+        self.get::<NameServerList>(&self.url.domain_nameservers(domain_name))
+            .map(|list| list.nameservers)
     }
 }

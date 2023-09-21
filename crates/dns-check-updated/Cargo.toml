@@ -1,9 +1,9 @@
 [package]
 name = "dns-check-updated"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
 thiserror = "1"
 tracing = "0.1"
-trust-dns-resolver = "0.22"
+trust-dns-resolver = "0.23"

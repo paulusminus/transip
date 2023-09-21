@@ -33,16 +33,16 @@ transip-api = "0.3"
 
 */
 
-pub use error::Error;
-pub use crate::account::{TransipApiAccount};
-pub use crate::domain::{DnsEntry, TransipApiDomain};
-pub use crate::general::{TransipApiGeneral};
-pub use crate::vps::TransipApiVps;
+pub use crate::account::TransipApiAccount;
 pub use crate::api_client::{default_account, ApiClient, WriteWrapper};
+pub use crate::domain::{DnsEntry, TransipApiDomain};
+pub use crate::general::TransipApiGeneral;
+pub use crate::vps::TransipApiVps;
+pub use error::Error;
 
 mod account;
-mod authentication;
 mod api_client;
+mod authentication;
 mod domain;
 mod error;
 mod general;

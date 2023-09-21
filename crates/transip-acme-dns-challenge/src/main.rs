@@ -1,15 +1,15 @@
-use std::sync::{Mutex};
+use std::sync::Mutex;
 
-use tracing::{Level};
-use tracing_subscriber::{prelude::*};
-use tracing_subscriber::filter::LevelFilter;
-use transip_api::*;
 use trace::VecExt;
+use tracing::Level;
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::prelude::*;
+use transip_api::*;
 
 pub const ACME_CHALLENGE: &str = "_acme-challenge";
 
 fn is_acme_challenge(entry: &DnsEntry) -> bool {
-    entry.name == *ACME_CHALLENGE && entry.entry_type == *"TXT"    
+    entry.name == *ACME_CHALLENGE && entry.entry_type == *"TXT"
 }
 
 fn main() -> Result<()> {
@@ -17,20 +17,19 @@ fn main() -> Result<()> {
     let filter_layer = LevelFilter::from_level(Level::INFO);
 
     match tracing_journald::layer() {
-        Ok(layer) => { 
+        Ok(layer) => {
             tracing_subscriber::registry::Registry::default()
-            .with(layer)
-            .with(filter_layer)
-            .init(); 
-        },
+                .with(layer)
+                .with(filter_layer)
+                .init();
+        }
         Err(_) => {
             tracing_subscriber::fmt()
-            .with_writer(Mutex::new(log_file))
-            .with_max_level(Level::INFO)
-            .init();
-        },
+                .with_writer(Mutex::new(log_file))
+                .with_max_level(Level::INFO)
+                .init();
+        }
     }
-
 
     let validation_config = certbot::ValidationConfig::new();
     tracing::info!("Certbot environment: {:#?}", validation_config);
@@ -45,27 +44,25 @@ fn main() -> Result<()> {
             client.dns_entry_delete_all(&domain, is_acme_challenge)?;
             tracing::info!("Alle acme challenges deleted from domain {}", domain);
         }
-    }
-    else if let Some(challenge) = validation_config.validation() {
+    } else if let Some(challenge) = validation_config.validation() {
         if let Some(domain) = validation_config.domain() {
             client.dns_entry_delete_all(&domain, is_acme_challenge)?;
-            
-            let dns_entry = DnsEntry { 
-                name: ACME_CHALLENGE.into(), 
+
+            let dns_entry = DnsEntry {
+                name: ACME_CHALLENGE.into(),
                 expire: 60,
                 entry_type: "TXT".into(),
-                content: challenge, 
+                content: challenge,
             };
             client.dns_entry_insert(&domain, dns_entry)?;
-                
-            let name_servers = 
-                client
+
+            let name_servers = client
                 .nameserver_list(&domain)?
                 .into_iter()
                 .map(|nameserver| nameserver.hostname)
                 .collect::<Vec<String>>();
             name_servers.trace();
-    
+
             match dns_check_updated::servers_have_acme_challenge(
                 name_servers.iter(),
                 &domain,
@@ -74,23 +71,20 @@ fn main() -> Result<()> {
                 Ok(_) => {
                     tracing::info!("Dns servers updated");
                     println!("OK");
-                },
+                }
                 Err(_) => {
                     tracing::error!("Updated Dns servers not verified");
                     println!("ERR");
-                },
+                }
             };
-        }                
-        else {
+        } else {
             tracing::error!("Domain not specified in environment");
             println!("ERR");
         }
-    }
-    else {
+    } else {
         tracing::error!("Challenge not specified in environment");
         println!("ERR");
-    }    
-    
+    }
 
     Ok(())
 }
@@ -101,16 +95,22 @@ mod trace {
     pub trait VecExt {
         fn trace(&self);
     }
-    
-    impl<T> VecExt for Vec<T> where T: Display {
+
+    impl<T> VecExt for Vec<T>
+    where
+        T: Display,
+    {
         fn trace(&self) {
             self.iter().for_each(trace_object)
         }
     }
-    
-    fn trace_object<T>(t: T) where T: Display {
+
+    fn trace_object<T>(t: T)
+    where
+        T: Display,
+    {
         tracing::info!("{}", t)
-    }    
+    }
 }
 
 mod certbot {
@@ -126,7 +126,6 @@ mod certbot {
         cerbot_all_domains: Option<String>,
         cerbot_auth_output: Option<String>,
     }
-
 
     impl ValidationConfig {
         pub fn new() -> Self {

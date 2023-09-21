@@ -1,4 +1,4 @@
-use std::{time::SystemTimeError, net::AddrParseError, str::Utf8Error, num::ParseIntError};
+use std::{net::AddrParseError, num::ParseIntError, str::Utf8Error, time::SystemTimeError};
 
 use base64::DecodeError;
 use ring::error::Unspecified;
