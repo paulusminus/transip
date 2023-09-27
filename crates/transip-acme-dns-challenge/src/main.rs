@@ -31,60 +31,66 @@ fn main() -> Result<()> {
         }
     }
 
-    let validation_config = certbot::ValidationConfig::new();
-    tracing::info!("Certbot environment: {:#?}", validation_config);
-
-    if client.api_test()?.as_str() != "pong" {
-        return Err(Error::ApiTest);
-    }
-
-    if let Some(auth_output) = validation_config.auth_output() {
-        tracing::info!("Auth output: {}", auth_output);
-        if let Some(domain) = validation_config.domain() {
-            client.dns_entry_delete_all(&domain, is_acme_challenge)?;
-            tracing::info!("Alle acme challenges deleted from domain {}", domain);
+    if let Ok(transip_domain) = std::env::var("TRANSIP_DOMAIN_NAME") {
+        let validation_config = certbot::ValidationConfig::new();
+        tracing::info!("Certbot environment: {:#?}", validation_config);
+    
+        if client.api_test()?.as_str() != "pong" {
+            return Err(Error::ApiTest);
         }
-    } else if let Some(challenge) = validation_config.validation() {
-        if let Some(domain) = validation_config.domain() {
-            client.dns_entry_delete_all(&domain, is_acme_challenge)?;
-
-            let dns_entry = DnsEntry {
-                name: ACME_CHALLENGE.into(),
-                expire: 60,
-                entry_type: "TXT".into(),
-                content: challenge,
-            };
-            client.dns_entry_insert(&domain, dns_entry)?;
-
-            let name_servers = client
-                .nameserver_list(&domain)?
-                .into_iter()
-                .map(|nameserver| nameserver.hostname)
-                .collect::<Vec<String>>();
-            name_servers.trace();
-
-            match dns_check_updated::servers_have_acme_challenge(
-                name_servers.iter(),
-                &domain,
-                ACME_CHALLENGE,
-            ) {
-                Ok(_) => {
-                    tracing::info!("Dns servers updated");
-                    println!("OK");
-                }
-                Err(_) => {
-                    tracing::error!("Updated Dns servers not verified");
-                    println!("ERR");
-                }
-            };
+    
+        if let Some(auth_output) = validation_config.auth_output() {
+            tracing::info!("Auth output: {}", auth_output);
+            if let Some(domain) = validation_config.domain() {
+                client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
+                tracing::info!("Alle acme challenges deleted from domain {}", domain);
+            }
+        } else if let Some(challenge) = validation_config.validation() {
+            if let Some(domain) = validation_config.domain() {
+                client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
+    
+                let dns_entry = DnsEntry {
+                    name: ACME_CHALLENGE.into(),
+                    expire: 60,
+                    entry_type: "TXT".into(),
+                    content: challenge,
+                };
+                client.dns_entry_insert(&transip_domain, dns_entry)?;
+    
+                let name_servers = client
+                    .nameserver_list(&domain)?
+                    .into_iter()
+                    .map(|nameserver| nameserver.hostname)
+                    .collect::<Vec<String>>();
+                name_servers.trace();
+    
+                match dns_check_updated::servers_have_acme_challenge(
+                    name_servers.iter(),
+                    &transip_domain,
+                    ACME_CHALLENGE,
+                ) {
+                    Ok(_) => {
+                        tracing::info!("Dns servers updated");
+                        println!("OK");
+                    }
+                    Err(_) => {
+                        tracing::error!("Updated Dns servers not verified");
+                        println!("ERR");
+                    }
+                };
+            } else {
+                tracing::error!("Domain not specified in environment");
+                println!("ERR");
+            }
         } else {
-            tracing::error!("Domain not specified in environment");
+            tracing::error!("Challenge not specified in environment");
             println!("ERR");
-        }
-    } else {
-        tracing::error!("Challenge not specified in environment");
-        println!("ERR");
+        }    
     }
+    else {
+        eprintln!("Environment variable TRANSIP_DOMAIN_NAME not set");
+    }
+
 
     Ok(())
 }
