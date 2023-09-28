@@ -26,10 +26,8 @@ lazy_static! {
         std::env::var("TRANSIP_KEYS_DIR")
             .map(PathBuf::from)
             .ok()
-            .or(
-                directories::ProjectDirs::from("nl", "paulmin", "transip")
-                    .map(|proj_dir| proj_dir.config_dir().to_path_buf())
-            )
+            .or(directories::ProjectDirs::from("nl", "paulmin", "transip")
+                .map(|proj_dir| proj_dir.config_dir().to_path_buf()))
             .unwrap()
     };
 }

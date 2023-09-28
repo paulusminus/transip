@@ -34,11 +34,11 @@ fn main() -> Result<()> {
     if let Ok(transip_domain) = std::env::var("TRANSIP_DOMAIN_NAME") {
         let validation_config = certbot::ValidationConfig::new();
         tracing::info!("Certbot environment: {:#?}", validation_config);
-    
+
         if client.api_test()?.as_str() != "pong" {
             return Err(Error::ApiTest);
         }
-    
+
         if let Some(auth_output) = validation_config.auth_output() {
             tracing::info!("Auth output: {}", auth_output);
             if let Some(domain) = validation_config.domain() {
@@ -48,7 +48,7 @@ fn main() -> Result<()> {
         } else if let Some(challenge) = validation_config.validation() {
             if let Some(domain) = validation_config.domain() {
                 client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
-    
+
                 let dns_entry = DnsEntry {
                     name: ACME_CHALLENGE.into(),
                     expire: 60,
@@ -56,14 +56,14 @@ fn main() -> Result<()> {
                     content: challenge,
                 };
                 client.dns_entry_insert(&transip_domain, dns_entry)?;
-    
+
                 let name_servers = client
                     .nameserver_list(&domain)?
                     .into_iter()
                     .map(|nameserver| nameserver.hostname)
                     .collect::<Vec<String>>();
                 name_servers.trace();
-    
+
                 match dns_check_updated::servers_have_acme_challenge(
                     name_servers.iter(),
                     &transip_domain,
@@ -85,12 +85,10 @@ fn main() -> Result<()> {
         } else {
             tracing::error!("Challenge not specified in environment");
             println!("ERR");
-        }    
-    }
-    else {
+        }
+    } else {
         eprintln!("Environment variable TRANSIP_DOMAIN_NAME not set");
     }
-
 
     Ok(())
 }
