@@ -7,6 +7,7 @@ use std::{io::BufReader, path::Path};
 use chrono::Utc;
 use ring::signature::{self, RsaKeyPair};
 use serde::{de::DeserializeOwned, Serialize};
+use tracing::info;
 use ureq::{Agent, AgentBuilder};
 
 use crate::authentication::{
@@ -52,7 +53,7 @@ where
     P: AsRef<Path>,
 {
     let file = File::open(path.as_ref())?;
-    tracing::info!("Key file {} opened", path.as_ref().to_string_lossy());
+    info!("Key file {} opened", path.as_ref().to_string_lossy());
     let mut buf_reader = BufReader::new(file);
     let keys = rustls_pemfile::pkcs8_private_keys(&mut buf_reader)?;
     if keys.is_empty() {
@@ -141,7 +142,6 @@ impl ApiClient {
                 .send_bytes(json.as_slice())
                 .map_err(Box::new)?
                 .into_json::<TokenResponse>()?;
-            println!("Raw token: {}", &token_response.token);
             let timestamp = token_expiration_timestamp(&token_response.token)?;
             self.token = Some(Token {
                 raw: token_response.token,

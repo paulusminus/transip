@@ -46,7 +46,6 @@ pub use error::Error;
 mod account;
 mod api_client;
 mod authentication;
-mod configuration;
 mod domain;
 mod environment;
 mod error;
@@ -57,8 +56,5 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 pub trait Configuration {
     fn user_name(&self) -> String;
-    fn log_dir(&self) -> String;
-    fn log_name(&self) -> String;
     fn private_key(&self) -> String;
-    fn token_file(&self) -> String;
 }

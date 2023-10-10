@@ -3,7 +3,6 @@ use std::process::exit;
 use trace::VecExt;
 use tracing::Level;
 use tracing_log::LogTracer;
-use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::prelude::*;
 use transip_api::{
     configuration_from_environment, ApiClient, DnsEntry, Error, Result, TransipApiDomain,
@@ -11,13 +10,14 @@ use transip_api::{
 };
 
 pub const ACME_CHALLENGE: &str = "_acme-challenge";
+pub const TRANSIP_DOMAIN_NAME: &str = "TRANSIP_DOMAIN_NAME";
 
 fn is_acme_challenge(entry: &DnsEntry) -> bool {
     entry.name == *ACME_CHALLENGE && entry.entry_type == *"TXT"
 }
 
 fn update_dns() -> Result<()> {
-    let transip_domain = std::env::var("TRANSIP_DOMAIN_NAME")?;
+    let transip_domain = std::env::var(TRANSIP_DOMAIN_NAME)?;
     let validation_config = certbot::ValidationConfig::new();
     tracing::info!("Certbot environment: {:#?}", validation_config);
 
@@ -59,17 +59,26 @@ fn update_dns() -> Result<()> {
 }
 
 fn main() {
-    if let Err(error) = LogTracer::init() {
+    if let Err(error) = LogTracer::init_with_filter(tracing_log::log::LevelFilter::Debug) {
         eprint!("Error: {}", error);
         exit(1);
     }
-    let filter_layer = LevelFilter::from_level(Level::DEBUG);
 
-    if let Ok(layer) = tracing_journald::layer() {
-        tracing_subscriber::registry::Registry::default()
-            .with(layer)
-            .with(filter_layer)
-            .init();
+    let filter_layer = tracing::level_filters::LevelFilter::from_level(Level::DEBUG);
+
+    match tracing_journald::layer() {
+        Ok(layer) => {
+            let subscriber = tracing_subscriber::registry::Registry::default()
+                .with(layer)
+                .with(filter_layer);
+            tracing::subscriber::set_global_default(subscriber).unwrap();
+        }
+        Err(_) => {
+            let subscriber = tracing_subscriber::registry()
+                .with(tracing_subscriber::fmt::layer())
+                .with(filter_layer);
+                tracing::subscriber::set_global_default(subscriber).unwrap();
+        }
     }
 
     match update_dns() {
