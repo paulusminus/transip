@@ -27,8 +27,10 @@ transip-api = "0.3"
 # Example
 
 ```
-    let (file, mut client): (Result<File>, ApiClient) = default_account()?.into();
+    # use transip_api::{configuration_from_environment, ApiClient, Error};
+    mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
     assert_eq!(client.api_test()?.as_str(), "pong");
+    # Ok::<(), Error>(())
 ```
 
 */
