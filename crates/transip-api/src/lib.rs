@@ -34,7 +34,8 @@ transip-api = "0.3"
 */
 
 pub use crate::account::TransipApiAccount;
-pub use crate::api_client::{default_account, ApiClient, WriteWrapper};
+pub use crate::api_client::ApiClient;
+pub use crate::configuration::configuration_from_environment;
 pub use crate::domain::{DnsEntry, TransipApiDomain};
 pub use crate::general::TransipApiGeneral;
 pub use crate::vps::TransipApiVps;
@@ -44,6 +45,7 @@ mod account;
 mod api_client;
 mod authentication;
 mod domain;
+mod configuration;
 mod error;
 mod general;
 mod vps;

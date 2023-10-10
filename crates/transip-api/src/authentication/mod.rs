@@ -4,13 +4,17 @@ use base64::engine::general_purpose::STANDARD as base64;
 use base64::Engine;
 use ring::signature::RsaKeyPair;
 use ring::{rand, signature};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::api_client::Url;
 use crate::error::Error;
 use crate::Result;
 
+pub use token::{token_expiration_timestamp, TokenResponse};
+mod token;
+
 const AUTH: &str = "auth";
+
 
 pub trait UrlAuthentication {
     fn auth(&self) -> String;
@@ -43,18 +47,13 @@ impl AuthRequest {
             label: hostname::get()
                 .map(|hostname| format!("{}-{}", hostname.to_string_lossy(), now))
                 .unwrap_or_default(),
-            global_key: false,
+            global_key: true,
         }
     }
 
     pub fn json(&self) -> Vec<u8> {
         ureq::serde_json::to_vec(self).unwrap()
     }
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct TokenResponse {
-    pub token: String,
 }
 
 fn milliseconds_since_epoch() -> String {
