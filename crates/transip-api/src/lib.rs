@@ -35,8 +35,8 @@ transip-api = "0.3"
 
 pub use crate::account::TransipApiAccount;
 pub use crate::api_client::ApiClient;
-pub use crate::configuration::configuration_from_environment;
 pub use crate::domain::{DnsEntry, TransipApiDomain};
+pub use crate::environment::configuration_from_environment;
 pub use crate::general::TransipApiGeneral;
 pub use crate::vps::TransipApiVps;
 pub use error::Error;
@@ -44,10 +44,19 @@ pub use error::Error;
 mod account;
 mod api_client;
 mod authentication;
-mod domain;
 mod configuration;
+mod domain;
+mod environment;
 mod error;
 mod general;
 mod vps;
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+pub trait Configuration {
+    fn user_name(&self) -> String;
+    fn log_dir(&self) -> String;
+    fn log_name(&self) -> String;
+    fn private_key(&self) -> String;
+    fn token_file(&self) -> String;
+}

@@ -15,7 +15,6 @@ mod token;
 
 const AUTH: &str = "auth";
 
-
 pub trait UrlAuthentication {
     fn auth(&self) -> String;
 }

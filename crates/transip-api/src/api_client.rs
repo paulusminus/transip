@@ -9,9 +9,10 @@ use ring::signature::{self, RsaKeyPair};
 use serde::{de::DeserializeOwned, Serialize};
 use ureq::{Agent, AgentBuilder};
 
-use crate::authentication::{sign, token_expiration_timestamp, AuthRequest, TokenResponse, UrlAuthentication};
-use crate::configuration::Configuration;
-use crate::{Error, Result};
+use crate::authentication::{
+    sign, token_expiration_timestamp, AuthRequest, TokenResponse, UrlAuthentication,
+};
+use crate::{Configuration, Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
 const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Hours(2);
@@ -67,7 +68,9 @@ pub struct Url {
 
 impl From<&str> for Url {
     fn from(prefix: &str) -> Self {
-        Self { prefix: prefix.to_owned() }
+        Self {
+            prefix: prefix.to_owned(),
+        }
     }
 }
 
@@ -100,8 +103,7 @@ impl TokenExpired for Option<Token> {
     fn token_expired(&self) -> bool {
         if self.is_some() {
             self.as_ref().unwrap().token_expired()
-        }
-        else {
+        } else {
             true
         }
     }
@@ -110,15 +112,14 @@ impl TokenExpired for Option<Token> {
 impl TryFrom<Box<dyn Configuration>> for ApiClient {
     type Error = Error;
     fn try_from(configuration: Box<dyn Configuration>) -> std::result::Result<Self, Self::Error> {
-        read_rsa_key_pair_from_pem(configuration.private_key())
-        .map(|key| {
-            ApiClient {
-                url: TRANSIP_API_PREFIX.into(),
-                key,
-                configuration,
-                agent: AgentBuilder::new().timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS)).build(),
-                token: None,
-            }
+        read_rsa_key_pair_from_pem(configuration.private_key()).map(|key| ApiClient {
+            url: TRANSIP_API_PREFIX.into(),
+            key,
+            configuration,
+            agent: AgentBuilder::new()
+                .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
+                .build(),
+            token: None,
         })
     }
 }
@@ -142,12 +143,10 @@ impl ApiClient {
                 .into_json::<TokenResponse>()?;
             println!("Raw token: {}", &token_response.token);
             let timestamp = token_expiration_timestamp(&token_response.token)?;
-            self.token = Some(
-                Token {
-                    raw: token_response.token,
-                    expired: timestamp,
-                }
-            );
+            self.token = Some(Token {
+                raw: token_response.token,
+                expired: timestamp,
+            });
         }
         Ok(())
     }
@@ -210,23 +209,19 @@ mod test {
 
     #[test]
     fn expired_if_some() {
-        let token: Option<Token> = Some(
-            Token {
-                raw: Default::default(),
-                expired: Utc::now().timestamp(),
-            }
-        );
+        let token: Option<Token> = Some(Token {
+            raw: Default::default(),
+            expired: Utc::now().timestamp(),
+        });
         assert!(token.token_expired());
     }
 
     #[test]
     fn not_expired_if_some() {
-        let token: Option<Token> = Some(
-            Token {
-                raw: Default::default(),
-                expired: Utc::now().timestamp() + 10,
-            }
-        );
+        let token: Option<Token> = Some(Token {
+            raw: Default::default(),
+            expired: Utc::now().timestamp() + 10,
+        });
         assert!(!token.token_expired());
     }
 }

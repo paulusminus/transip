@@ -8,8 +8,7 @@ pub fn token_expiration_timestamp<S>(token: S) -> Result<i64>
 where
     S: AsRef<str>,
 {
-    TokenResponseMeta::try_from(token.as_ref())
-    .map(|token_meta| token_meta.exp)
+    TokenResponseMeta::try_from(token.as_ref()).map(|token_meta| token_meta.exp)
 }
 
 #[derive(Deserialize, Serialize)]
@@ -34,13 +33,11 @@ struct TokenResponseMeta {
 impl<'a> TryFrom<EncodedTokenMeta<'a>> for TokenResponseMeta {
     type Error = Error;
     fn try_from(encoded_token_meta: EncodedTokenMeta) -> std::result::Result<Self, Self::Error> {
-        engine::general_purpose::STANDARD_NO_PAD.decode(encoded_token_meta.expiration())
+        engine::general_purpose::STANDARD_NO_PAD
+            .decode(encoded_token_meta.expiration())
             .map_err(Error::from)
             .map(Cursor::new)
-            .and_then(|cursor| 
-                ureq::serde_json::from_reader(cursor)
-                    .map_err(Error::from)
-            )
+            .and_then(|cursor| ureq::serde_json::from_reader(cursor).map_err(Error::from))
     }
 }
 
@@ -52,12 +49,10 @@ impl<'a> EncodedTokenMeta<'a> {
     }
 }
 
-
 impl TryFrom<&str> for TokenResponseMeta {
     type Error = Error;
     fn try_from(token: &str) -> std::result::Result<Self, Self::Error> {
-        EncodedTokenMeta::try_from(token)
-            .and_then(TokenResponseMeta::try_from)
+        EncodedTokenMeta::try_from(token).and_then(TokenResponseMeta::try_from)
     }
 }
 
@@ -67,11 +62,8 @@ impl<'a> TryFrom<&'a str> for EncodedTokenMeta<'a> {
         let splitted = token.split('.').collect::<Vec<&str>>();
 
         if splitted.len() == 3 {
-            Ok(
-                EncodedTokenMeta(splitted[1])
-            )
-        }
-        else {
+            Ok(EncodedTokenMeta(splitted[1]))
+        } else {
             Err(Error::Token)
         }
     }
@@ -79,9 +71,9 @@ impl<'a> TryFrom<&'a str> for EncodedTokenMeta<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::str::from_utf8;
-    use base64::{engine::general_purpose, Engine};
     use super::EncodedTokenMeta;
+    use base64::{engine::general_purpose, Engine};
+    use std::str::from_utf8;
 
     const RAW_TOKEN: &str = include_str!("raw_token.txt");
     const TOKEN_META_JSON: &str = include_str!("token_meta.json");
@@ -96,8 +88,12 @@ mod tests {
     #[test]
     fn decode() {
         let encoded_metadata = EncodedTokenMeta::try_from(RAW_TOKEN).unwrap();
-        assert!(general_purpose::STANDARD_NO_PAD.decode(encoded_metadata.expiration()).is_ok());
-        let token_meta = general_purpose::STANDARD_NO_PAD.decode(encoded_metadata.expiration()).unwrap();
+        assert!(general_purpose::STANDARD_NO_PAD
+            .decode(encoded_metadata.expiration())
+            .is_ok());
+        let token_meta = general_purpose::STANDARD_NO_PAD
+            .decode(encoded_metadata.expiration())
+            .unwrap();
         let s = from_utf8(token_meta.as_slice()).unwrap();
         assert_eq!(s, TOKEN_META_JSON);
     }
