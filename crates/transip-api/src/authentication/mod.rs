@@ -65,7 +65,7 @@ fn milliseconds_since_epoch() -> String {
 
 pub fn sign(body: &[u8], key_pair: &RsaKeyPair) -> Result<String> {
     let rng = rand::SystemRandom::new();
-    let mut signature = vec![0; key_pair.public_modulus_len()];
+    let mut signature = vec![0; key_pair.public().modulus_len()];
     key_pair
         .sign(&signature::RSA_PKCS1_SHA512, &rng, body, &mut signature)
         .map_err(Error::Sign)?;
