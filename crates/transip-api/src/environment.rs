@@ -5,10 +5,7 @@ use crate::{Configuration, Error, Result};
 const TRANSIP_API_PRIVATE_KEY: &str = "TRANSIP_API_PRIVATE_KEY";
 const TRANSIP_API_USERNAME: &str = "TRANSIP_API_USERNAME";
 
-const ENVIRONMENT_VARIABLES: [&str; 2] = [
-    TRANSIP_API_USERNAME,
-    TRANSIP_API_PRIVATE_KEY,
-];
+const ENVIRONMENT_VARIABLES: [&str; 2] = [TRANSIP_API_USERNAME, TRANSIP_API_PRIVATE_KEY];
 
 struct Environment {
     user_name: String,

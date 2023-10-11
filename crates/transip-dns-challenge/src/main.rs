@@ -78,7 +78,7 @@ fn main() {
             let subscriber = tracing_subscriber::registry()
                 .with(tracing_subscriber::fmt::layer())
                 .with(filter_layer);
-                tracing::subscriber::set_global_default(subscriber).unwrap();
+            tracing::subscriber::set_global_default(subscriber).unwrap();
         }
     }
 
