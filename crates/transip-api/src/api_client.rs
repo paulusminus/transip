@@ -8,7 +8,7 @@ use chrono::Utc;
 use ring::signature::{self, RsaKeyPair};
 use serde::{de::DeserializeOwned, Serialize};
 use tracing::info;
-use ureq::{Agent, AgentBuilder};
+use ureq::{serde_json, Agent, AgentBuilder};
 
 use crate::authentication::{
     sign, token_expiration_timestamp, AuthRequest, TokenResponse, UrlAuthentication,
@@ -128,6 +128,7 @@ impl TryFrom<Box<dyn Configuration>> for ApiClient {
 impl ApiClient {
     fn refresh_token_if_needed(&mut self) -> Result<()> {
         if self.token.token_expired() {
+            info!("New of refresh token needed");
             let auth_request = AuthRequest::new(
                 &self.configuration.user_name(),
                 &TOKEN_EXPIRATION_TIME.to_string(),
@@ -147,6 +148,7 @@ impl ApiClient {
                 raw: token_response.token,
                 expired: timestamp,
             });
+            info!("New or refresh token succeeded");
         }
         Ok(())
     }
@@ -157,6 +159,7 @@ impl ApiClient {
     {
         self.refresh_token_if_needed()?;
         let token = self.token.as_ref().ok_or(Error::Token)?;
+        info!("get {} calling", url);
         let json = self
             .agent
             .get(url)
@@ -164,6 +167,7 @@ impl ApiClient {
             .call()
             .map_err(Box::new)?
             .into_json::<T>()?;
+        info!("get {} called successfully", url);
         Ok(json)
     }
 
@@ -173,11 +177,13 @@ impl ApiClient {
     {
         self.refresh_token_if_needed()?;
         let token = self.token.as_ref().ok_or(Error::Token)?;
+        info!("delete {} calling", url);
         self.agent
             .delete(url)
             .set("Authorization", &format!("Bearer {}", &token.raw))
             .send_json(t)
             .map_err(Box::new)?;
+        info!("delete {} called successfully", url);
         Ok(())
     }
 
@@ -187,11 +193,13 @@ impl ApiClient {
     {
         self.refresh_token_if_needed()?;
         let token = self.token.as_ref().ok_or(Error::Token)?;
+        info!("post {} calling with {}", url, serde_json::to_string(&t)?);
         self.agent
             .post(url)
             .set("Authorization", &format!("Bearer {}", &token.raw))
             .send_json(t)
             .map_err(Box::new)?;
+        info!("post {} called successfully", url);
         Ok(())
     }
 }

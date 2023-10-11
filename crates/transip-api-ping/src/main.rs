@@ -1,8 +1,7 @@
 use std::{io::stdout, process::exit};
 
 use tracing_subscriber::{
-    filter::LevelFilter, fmt::writer::BoxMakeWriter, layer::SubscriberExt, EnvFilter, Layer,
-    Registry,
+    filter::LevelFilter, fmt::writer::BoxMakeWriter, layer::SubscriberExt, EnvFilter,
 };
 use transip_api::{configuration_from_environment, ApiClient, TransipApiGeneral};
 
@@ -19,16 +18,6 @@ fn rolling_or_stdout() -> BoxMakeWriter {
         }
     } else {
         out()
-    }
-}
-
-fn choose_layer() -> Box<dyn Layer<Registry> + Send + Sync> {
-    if let Ok(journald_layer) = tracing_journald::layer() {
-        journald_layer.boxed()
-    } else {
-        tracing_subscriber::fmt::layer()
-            .with_writer(rolling_or_stdout())
-            .boxed()
     }
 }
 
@@ -58,7 +47,7 @@ fn main() {
         .from_env_lossy();
 
     let subscriber = tracing_subscriber::registry()
-        .with(choose_layer())
+        .with(tracing_subscriber::fmt::layer().with_writer(rolling_or_stdout()))
         .with(env_filter);
 
     if let Err(error) = tracing::subscriber::set_global_default(subscriber) {
