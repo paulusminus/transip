@@ -22,7 +22,8 @@ fn update_dns() -> Result<()> {
     tracing::info!("Certbot environment: {:#?}", validation_config);
 
     let mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
-    if client.api_test()?.as_str() != "pong" {
+    let ping = client.api_test()?;
+    if ping.as_str() != "pong" {
         return Err(Error::ApiTest);
     }
 

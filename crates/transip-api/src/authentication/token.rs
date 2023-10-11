@@ -33,7 +33,7 @@ struct TokenResponseMeta {
 impl<'a> TryFrom<EncodedTokenMeta<'a>> for TokenResponseMeta {
     type Error = Error;
     fn try_from(encoded_token_meta: EncodedTokenMeta) -> std::result::Result<Self, Self::Error> {
-        engine::general_purpose::STANDARD_NO_PAD
+        engine::general_purpose::URL_SAFE_NO_PAD
             .decode(encoded_token_meta.expiration())
             .map_err(Error::from)
             .map(Cursor::new)
@@ -80,20 +80,20 @@ mod tests {
 
     #[test]
     fn encoded_token_meta_try_from() {
-        assert!(EncodedTokenMeta::try_from(RAW_TOKEN).is_ok());
-        let encoded_metadata = EncodedTokenMeta::try_from(RAW_TOKEN).unwrap();
-        assert_eq!(encoded_metadata.expiration(), "eyJpc3MiOiJhcGkudHJhbnNpcC5ubCIsImF1ZCI6ImFwaS50cmFuc2lwLm5sIiwianRpIjoiI3UlMnI0cmwlbz9Za1I2cHRITnUiLCJpYXQiOjE2OTY5MTQ0MzAsIm5iZiI6MTY5NjkxNDQzMCwiZXhwIjoxNjk2OTIxNjMwLCJjaWQiOjEwMTkxNCwicm8iOmZhbHNlLCJnayI6ZmFsc2UsImt2Ijp0cnVlfQ");
+        let encoded = EncodedTokenMeta::try_from(RAW_TOKEN);
+        assert!(encoded.is_ok());
+        assert_eq!(
+            encoded.unwrap().expiration(),
+            "eyJpc3MiOiJhcGkudHJhbnNpcC5ubCIsImF1ZCI6ImFwaS50cmFuc2lwLm5sIiwianRpIjoiI3UlMnI0cmwlbz9Za1I2cHRITnUiLCJpYXQiOjE2OTY5MTQ0MzAsIm5iZiI6MTY5NjkxNDQzMCwiZXhwIjoxNjk2OTIxNjMwLCJjaWQiOjEwMTkxNCwicm8iOmZhbHNlLCJnayI6ZmFsc2UsImt2Ijp0cnVlfQ"
+        );
     }
 
     #[test]
     fn decode() {
         let encoded_metadata = EncodedTokenMeta::try_from(RAW_TOKEN).unwrap();
-        assert!(general_purpose::STANDARD_NO_PAD
-            .decode(encoded_metadata.expiration())
-            .is_ok());
-        let token_meta = general_purpose::STANDARD_NO_PAD
-            .decode(encoded_metadata.expiration())
-            .unwrap();
+        let decoded = general_purpose::STANDARD_NO_PAD.decode(encoded_metadata.expiration());
+        assert!(decoded.is_ok());
+        let token_meta = decoded.unwrap();
         let s = from_utf8(token_meta.as_slice()).unwrap();
         assert_eq!(s, TOKEN_META_JSON);
     }
