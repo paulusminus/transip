@@ -1,6 +1,6 @@
 [package]
 edition.workspace = true
-name = "transip-acme-dns-challenge"
+name = "transip-dns-challenge"
 version.workspace = true
 
 [dependencies]
