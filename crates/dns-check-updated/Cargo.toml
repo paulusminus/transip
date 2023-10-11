@@ -1,7 +1,10 @@
 [package]
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
 name = "dns-check-updated"
-version = "0.1.1"
-edition = "2021"
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 thiserror = "1"

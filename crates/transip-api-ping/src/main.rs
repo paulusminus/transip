@@ -1,13 +1,27 @@
-use std::process::exit;
+use std::{process::exit, io::stdout};
 
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Layer, Registry};
+use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Layer, Registry, fmt::writer::BoxMakeWriter, filter::LevelFilter};
 use transip_api::{configuration_from_environment, ApiClient, TransipApiGeneral};
+
+fn out() -> BoxMakeWriter {
+    BoxMakeWriter::new(stdout)
+}
+
+fn rolling_or_stdout() -> BoxMakeWriter {
+    if let Ok(dir) = std::env::var("TRANSIP_API_LOG_DIR") {
+        if std::fs::create_dir_all(dir.as_str()).is_ok() {
+            return BoxMakeWriter::new(tracing_appender::rolling::daily(dir, "api.log"));
+        }
+        return out();
+    }
+    return out();
+}
 
 fn choose_layer() -> Box<dyn Layer<Registry> + Send + Sync> {
     if let Ok(journald_layer) = tracing_journald::layer() {
         journald_layer.boxed()
     } else {
-        tracing_subscriber::fmt::layer().boxed()
+        tracing_subscriber::fmt::layer().with_writer(rolling_or_stdout()).boxed()
     }
 }
 
@@ -32,7 +46,7 @@ fn main() {
         exit(1);
     }
 
-    let env_filter = EnvFilter::from_default_env();
+    let env_filter = EnvFilter::builder().with_default_directive(LevelFilter::DEBUG.into()).from_env_lossy();
 
     let subscriber = tracing_subscriber::registry()
         .with(choose_layer())

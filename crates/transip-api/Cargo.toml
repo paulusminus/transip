@@ -1,6 +1,9 @@
 [package]
+authors.workspace = true
 edition.workspace = true
+license.workspace = true
 name = "transip-api"
+repository.workspace = true
 version.workspace = true
 
 [dependencies]
