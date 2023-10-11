@@ -16,7 +16,7 @@ use crate::authentication::{
 use crate::{Configuration, Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
-const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Hours(2);
+const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Minutes(5);
 const AGENT_TIMEOUT_SECONDS: u64 = 30;
 
 trait TokenExpired {
