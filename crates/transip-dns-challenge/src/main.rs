@@ -44,7 +44,7 @@ fn update_dns() -> Result<(), error::Error> {
             name: constant::ACME_CHALLENGE.into(),
             expire: 60,
             entry_type: "TXT".into(),
-            content: challenge,
+            content: challenge.clone(),
         };
         client.dns_entry_insert(&transip_domain, dns_entry)?;
 
@@ -59,6 +59,7 @@ fn update_dns() -> Result<(), error::Error> {
             name_servers.iter(),
             &transip_domain,
             constant::ACME_CHALLENGE,
+            &challenge,
         )
         .map_err(|error| error::Error::Dns(Box::new(error)))
     } else {
@@ -110,12 +111,12 @@ fn main() {
     let start = Instant::now();
     match run() {
         Ok(_) => {
-            info!("{} seconds elapsed", start.elapsed().as_millis());
+            info!("{} seconds elapsed", start.elapsed().as_secs());
             println!("ok");
         }
         Err(error) => {
             error!("{}", error);
-            info!("{} seconds elapsed", start.elapsed().as_millis());
+            info!("{} seconds elapsed", start.elapsed().as_secs());
             println!("err");
             exit(1);
         }

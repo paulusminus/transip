@@ -40,14 +40,17 @@ where
     }
 }
 
-fn has_acme_challenge_domain(record_name: &str) -> impl Fn(&Resolver) -> bool + '_ {
+fn has_acme_challenge_domain(record_name: &str, value: String) -> impl Fn(&Resolver) -> bool + '_ {
     move |resolver| match resolver.txt_lookup(record_name) {
         Ok(result) => {
-            result
-                .as_lookup()
-                .record_iter()
-                .for_each(|record| tracing::info!("{}", record));
-            !result.as_lookup().records().to_vec().is_empty()
+            let answers = result.as_lookup().record_iter().filter(|r| {
+                r.data().is_some()
+                    && r.data().unwrap().as_txt().is_some()
+                    && r.data().unwrap().as_txt().unwrap().to_string() == value
+            });
+            // answers.for_each(|record| tracing::info!("{}", record));
+            answers.count() > 0
+            // !result.as_lookup().records().to_vec().is_empty()
         }
         Err(_) => false,
     }
@@ -65,6 +68,7 @@ pub fn servers_have_acme_challenge<I, S>(
     nameservers: I,
     domain_name: &str,
     acme_challenge: &str,
+    challenge: &str,
 ) -> Result<()>
 where
     I: Iterator<Item = S>,
@@ -78,7 +82,7 @@ where
     let record_name = format!("{}.{}.", acme_challenge, domain_name);
     while !resolvers
         .iter()
-        .all(has_acme_challenge_domain(&record_name))
+        .all(has_acme_challenge_domain(&record_name, challenge.into()))
         && i < 60
     {
         i += 1;
