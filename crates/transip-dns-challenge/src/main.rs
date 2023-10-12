@@ -33,11 +33,6 @@ fn update_dns() -> Result<(), error::Error> {
     let mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
     let _ping = client.api_test()?;
 
-    client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
-    info!(
-        "Alle acme challenges deleted from domain {}",
-        &transip_domain
-    );
     if let Some(challenge) = validation_config.validation() {
         info!("Acme challenge {} detected", &challenge);
         let dns_entry = DnsEntry {
