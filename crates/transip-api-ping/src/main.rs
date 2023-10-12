@@ -15,7 +15,10 @@ fn out() -> BoxMakeWriter {
 fn rolling_or_stdout() -> BoxMakeWriter {
     if let Ok(dir) = std::env::var(constant::VAR_TRANSIP_API_LOG_DIR) {
         if std::fs::create_dir_all(dir.as_str()).is_ok() {
-            BoxMakeWriter::new(tracing_appender::rolling::daily(dir, constant::LOG_FILENAME_PREFIX))
+            BoxMakeWriter::new(tracing_appender::rolling::daily(
+                dir,
+                constant::LOG_FILENAME_PREFIX,
+            ))
         } else {
             out()
         }
