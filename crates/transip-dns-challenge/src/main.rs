@@ -1,41 +1,47 @@
-use std::process::exit;
+use std::{io::stdout, process::exit};
 
 use trace::VecExt;
-use tracing::Level;
+use tracing::info;
 use tracing_log::LogTracer;
-use tracing_subscriber::prelude::*;
+use tracing_subscriber::{
+    filter::LevelFilter,
+    fmt::{time::LocalTime, writer::BoxMakeWriter},
+    prelude::*,
+    EnvFilter,
+};
 use transip_api::{
-    configuration_from_environment, ApiClient, DnsEntry, Error, Result, TransipApiDomain,
-    TransipApiGeneral,
+    configuration_from_environment, ApiClient, DnsEntry, Error, TransipApiDomain, TransipApiGeneral,
 };
 
-pub const ACME_CHALLENGE: &str = "_acme-challenge";
-pub const TRANSIP_DOMAIN_NAME: &str = "TRANSIP_DOMAIN_NAME";
+mod constant;
+mod error;
 
 fn is_acme_challenge(entry: &DnsEntry) -> bool {
-    entry.name == *ACME_CHALLENGE && entry.entry_type == *"TXT"
+    entry.name == *constant::ACME_CHALLENGE && entry.entry_type == *"TXT"
 }
 
-fn update_dns() -> Result<()> {
-    let transip_domain = std::env::var(TRANSIP_DOMAIN_NAME)?;
+fn update_dns() -> Result<(), error::Error> {
     let validation_config = certbot::ValidationConfig::new();
     tracing::info!("Certbot environment: {}", validation_config);
 
+    let transip_domain = validation_config
+        .domain()
+        .ok_or(Error::EnvironmentVariable(
+            constant::CERTBOT_DOMAIN.to_owned(),
+        ))?;
+
     let mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
-    let ping = client.api_test()?;
-    if ping.as_str() != "pong" {
-        return Err(Error::ApiTest);
-    }
+    let _ping = client.api_test()?;
 
-    let auth_output = validation_config.auth_output().ok_or(Error::AcmeChallege)?;
-
-    tracing::info!("Auth output: {}", auth_output);
-    let domain = validation_config.domain().ok_or(Error::AcmeChallege)?;
     client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
-    tracing::info!("Alle acme challenges deleted from domain {}", domain);
+    tracing::info!(
+        "Alle acme challenges deleted from domain {}",
+        &transip_domain
+    );
     if let Some(challenge) = validation_config.validation() {
+        info!("Acme challenge {} detected", &challenge);
         let dns_entry = DnsEntry {
-            name: ACME_CHALLENGE.into(),
+            name: constant::ACME_CHALLENGE.into(),
             expire: 60,
             entry_type: "TXT".into(),
             content: challenge,
@@ -43,7 +49,7 @@ fn update_dns() -> Result<()> {
         client.dns_entry_insert(&transip_domain, dns_entry)?;
 
         let name_servers = client
-            .nameserver_list(&domain)?
+            .nameserver_list(&transip_domain)?
             .into_iter()
             .map(|nameserver| nameserver.hostname)
             .collect::<Vec<String>>();
@@ -52,37 +58,56 @@ fn update_dns() -> Result<()> {
         dns_check_updated::servers_have_acme_challenge(
             name_servers.iter(),
             &transip_domain,
-            ACME_CHALLENGE,
+            constant::ACME_CHALLENGE,
         )
-        .map_err(|_| Error::AcmeChallege)?;
+        .map_err(|error| error::Error::Dns(Box::new(error)))
+    } else {
+        info!("Deleting all _acme_challenge records");
+        client
+            .dns_entry_delete_all(&transip_domain, is_acme_challenge)
+            .map_err(error::Error::from)
     }
-    Ok(())
+}
+
+fn out() -> BoxMakeWriter {
+    BoxMakeWriter::new(stdout)
+}
+
+fn rolling_or_stdout() -> BoxMakeWriter {
+    if let Ok(dir) = std::env::var(constant::VAR_TRANSIP_API_LOG_DIR) {
+        if std::fs::create_dir_all(dir.as_str()).is_ok() {
+            BoxMakeWriter::new(tracing_appender::rolling::daily(
+                dir,
+                constant::LOG_FILENAME_PREFIX,
+            ))
+        } else {
+            out()
+        }
+    } else {
+        out()
+    }
+}
+
+fn run() -> Result<(), error::Error> {
+    LogTracer::init_with_filter(tracing_log::log::LevelFilter::Debug)?;
+
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::DEBUG.into())
+        .from_env_lossy();
+
+    let layer = tracing_subscriber::fmt::layer()
+        .with_writer(rolling_or_stdout())
+        .with_timer(LocalTime::rfc_3339());
+
+    let subscriber = tracing_subscriber::registry().with(layer).with(env_filter);
+
+    tracing::subscriber::set_global_default(subscriber)?;
+
+    update_dns()
 }
 
 fn main() {
-    if let Err(error) = LogTracer::init_with_filter(tracing_log::log::LevelFilter::Debug) {
-        eprint!("Error: {}", error);
-        exit(1);
-    }
-
-    let filter_layer = tracing::level_filters::LevelFilter::from_level(Level::DEBUG);
-
-    match tracing_journald::layer() {
-        Ok(layer) => {
-            let subscriber = tracing_subscriber::registry::Registry::default()
-                .with(layer)
-                .with(filter_layer);
-            tracing::subscriber::set_global_default(subscriber).unwrap();
-        }
-        Err(_) => {
-            let subscriber = tracing_subscriber::registry()
-                .with(tracing_subscriber::fmt::layer())
-                .with(filter_layer);
-            tracing::subscriber::set_global_default(subscriber).unwrap();
-        }
-    }
-
-    match update_dns() {
+    match run() {
         Ok(_) => {
             println!("ok");
         }
@@ -119,69 +144,53 @@ mod trace {
 }
 
 mod certbot {
-    use std::{env::var, fmt::Display};
+    use crate::constant::*;
+    use std::{collections::HashMap, env::var, fmt::Display};
 
     #[allow(dead_code)]
     #[derive(Debug)]
-    pub struct ValidationConfig {
-        certbot_domain: Option<String>,
-        cerbot_validation: Option<String>,
-        cerbot_token: Option<String>,
-        certbot_remaining_challenges: Option<String>,
-        cerbot_all_domains: Option<String>,
-        cerbot_auth_output: Option<String>,
-    }
+    pub struct ValidationConfig(HashMap<&'static str, String>);
 
     impl Display for ValidationConfig {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            let mapper = |name: &'static str| move |value: &String| (name, value.clone());
-            let values = [
-                self.certbot_domain.as_ref().map(mapper("CERTBOT_DOMAIN")),
-                self.cerbot_validation
-                    .as_ref()
-                    .map(mapper("CERTBOT_VALIDATION")),
-                self.cerbot_token.as_ref().map(mapper("CERTBOT_TOKEN")),
-                self.certbot_remaining_challenges
-                    .as_ref()
-                    .map(mapper("CERTBOT_REMAINING_CHALLENGES")),
-                self.cerbot_all_domains
-                    .as_ref()
-                    .map(mapper("CERTBOT_ALL_DOMAINS")),
-                self.cerbot_auth_output
-                    .as_ref()
-                    .map(mapper("CERTBOT_AUTH_OUTPUT")),
-            ]
-            .into_iter()
-            .flatten()
-            .map(|s| format!("{}={}", s.0, s.1))
-            .collect::<Vec<_>>()
-            .join(", ");
+            let values = self
+                .0
+                .iter()
+                .map(|s| format!("{}={}", s.0, s.1))
+                .collect::<Vec<_>>()
+                .join(", ");
             write!(f, "{}", values)
         }
     }
 
     impl ValidationConfig {
         pub fn new() -> Self {
-            Self {
-                certbot_domain: var("CERTBOT_DOMAIN").ok(),
-                cerbot_validation: var("CERTBOT_VALIDATION").ok(),
-                cerbot_token: var("CERTBOT_TOKEN").ok(),
-                certbot_remaining_challenges: var("CERTBOT_REMAINING_CHALLENGENS").ok(),
-                cerbot_all_domains: var("CERTBOT_ALL_DOMAINS").ok(),
-                cerbot_auth_output: var("CERTBOT_AUTH_OUTPUT").ok(),
-            }
+            let mut hash_map = HashMap::new();
+            let mut add_if_ok = |name: &'static str| {
+                if let Ok(value) = var(name) {
+                    hash_map.insert(name, value);
+                }
+            };
+            add_if_ok(CERTBOT_DOMAIN);
+            add_if_ok(CERTBOT_VALIDATION);
+            add_if_ok(CERTBOT_TOKEN);
+            add_if_ok(CERTBOT_REMAINING_CHALLENGES);
+            add_if_ok(CERTBOT_ALL_DOMAINS);
+            add_if_ok(CERTBOT_AUTH_OUTPUT);
+            Self(hash_map)
         }
 
         pub fn validation(&self) -> Option<String> {
-            self.cerbot_validation.clone()
+            self.0.get(CERTBOT_VALIDATION).cloned()
         }
 
         pub fn domain(&self) -> Option<String> {
-            self.certbot_domain.clone()
+            self.0.get(CERTBOT_DOMAIN).cloned()
         }
 
+        #[allow(dead_code)]
         pub fn auth_output(&self) -> Option<String> {
-            self.cerbot_auth_output.clone()
+            self.0.get(CERTBOT_AUTH_OUTPUT).cloned()
         }
     }
 }
