@@ -4,6 +4,6 @@ pub const CERTBOT_TOKEN: &str = "CERTBOT_TOKEN";
 pub const CERTBOT_REMAINING_CHALLENGES: &str = "CERTBOT_REMAINING_CHALLENGENS";
 pub const CERTBOT_ALL_DOMAINS: &str = "CERTBOT_ALL_DOMAINS";
 pub const CERTBOT_AUTH_OUTPUT: &str = "CERTBOT_AUTH_OUTPUT";
-pub const VAR_TRANSIP_API_LOG_DIR: &str = "TRANSIP_LOG_DIR";
+pub const TRANSIP_API_LOG_DIR: &str = "TRANSIP_API_LOG_DIR";
 pub const LOG_FILENAME_PREFIX: &str = "dns-challenge";
 pub const ACME_CHALLENGE: &str = "_acme-challenge";

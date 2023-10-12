@@ -1,7 +1,7 @@
-use std::{io::stdout, process::exit};
+use std::{io::stdout, process::exit, time::Instant};
 
 use trace::VecExt;
-use tracing::info;
+use tracing::{error, info};
 use tracing_log::LogTracer;
 use tracing_subscriber::{
     filter::LevelFilter,
@@ -22,7 +22,7 @@ fn is_acme_challenge(entry: &DnsEntry) -> bool {
 
 fn update_dns() -> Result<(), error::Error> {
     let validation_config = certbot::ValidationConfig::new();
-    tracing::info!("Certbot environment: {}", validation_config);
+    info!("Certbot environment: {}", validation_config);
 
     let transip_domain = validation_config
         .domain()
@@ -34,7 +34,7 @@ fn update_dns() -> Result<(), error::Error> {
     let _ping = client.api_test()?;
 
     client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
-    tracing::info!(
+    info!(
         "Alle acme challenges deleted from domain {}",
         &transip_domain
     );
@@ -74,7 +74,7 @@ fn out() -> BoxMakeWriter {
 }
 
 fn rolling_or_stdout() -> BoxMakeWriter {
-    if let Ok(dir) = std::env::var(constant::VAR_TRANSIP_API_LOG_DIR) {
+    if let Ok(dir) = std::env::var(constant::TRANSIP_API_LOG_DIR) {
         if std::fs::create_dir_all(dir.as_str()).is_ok() {
             BoxMakeWriter::new(tracing_appender::rolling::daily(
                 dir,
@@ -107,12 +107,15 @@ fn run() -> Result<(), error::Error> {
 }
 
 fn main() {
+    let start = Instant::now();
     match run() {
         Ok(_) => {
+            info!("{} seconds elapsed", start.elapsed().as_millis());
             println!("ok");
         }
         Err(error) => {
-            tracing::error!("{}", error);
+            error!("{}", error);
+            info!("{} seconds elapsed", start.elapsed().as_millis());
             println!("err");
             exit(1);
         }
