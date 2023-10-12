@@ -19,7 +19,7 @@ fn is_acme_challenge(entry: &DnsEntry) -> bool {
 fn update_dns() -> Result<()> {
     let transip_domain = std::env::var(TRANSIP_DOMAIN_NAME)?;
     let validation_config = certbot::ValidationConfig::new();
-    tracing::info!("Certbot environment: {:#?}", validation_config);
+    tracing::info!("Certbot environment: {}", validation_config);
 
     let mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
     let ping = client.api_test()?;
@@ -119,7 +119,7 @@ mod trace {
 }
 
 mod certbot {
-    use std::env::var;
+    use std::{env::var, fmt::Display};
 
     #[allow(dead_code)]
     #[derive(Debug)]
@@ -130,6 +130,34 @@ mod certbot {
         certbot_remaining_challenges: Option<String>,
         cerbot_all_domains: Option<String>,
         cerbot_auth_output: Option<String>,
+    }
+
+    impl Display for ValidationConfig {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let mapper = |name: &'static str| move |value: &String| (name, value.clone());
+            let values = [
+                self.certbot_domain.as_ref().map(mapper("CERTBOT_DOMAIN")),
+                self.cerbot_validation
+                    .as_ref()
+                    .map(mapper("CERTBOT_VALIDATION")),
+                self.cerbot_token.as_ref().map(mapper("CERTBOT_TOKEN")),
+                self.certbot_remaining_challenges
+                    .as_ref()
+                    .map(mapper("CERTBOT_REMAINING_CHALLENGES")),
+                self.cerbot_all_domains
+                    .as_ref()
+                    .map(mapper("CERTBOT_ALL_DOMAINS")),
+                self.cerbot_auth_output
+                    .as_ref()
+                    .map(mapper("CERTBOT_AUTH_OUTPUT")),
+            ]
+            .into_iter()
+            .flatten()
+            .map(|s| format!("{}={}", s.0, s.1))
+            .collect::<Vec<_>>()
+            .join(", ");
+            write!(f, "{}", values)
+        }
     }
 
     impl ValidationConfig {

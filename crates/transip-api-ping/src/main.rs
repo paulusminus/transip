@@ -5,14 +5,17 @@ use tracing_subscriber::{
 };
 use transip_api::{configuration_from_environment, ApiClient, TransipApiGeneral};
 
+mod constant;
+mod messages;
+
 fn out() -> BoxMakeWriter {
     BoxMakeWriter::new(stdout)
 }
 
 fn rolling_or_stdout() -> BoxMakeWriter {
-    if let Ok(dir) = std::env::var("TRANSIP_API_LOG_DIR") {
+    if let Ok(dir) = std::env::var(constant::VAR_TRANSIP_API_LOG_DIR) {
         if std::fs::create_dir_all(dir.as_str()).is_ok() {
-            BoxMakeWriter::new(tracing_appender::rolling::daily(dir, "api.log"))
+            BoxMakeWriter::new(tracing_appender::rolling::daily(dir, constant::LOG_FILENAME_PREFIX))
         } else {
             out()
         }
@@ -25,20 +28,20 @@ fn api_test(mut client: ApiClient) {
     match client.api_test() {
         Ok(ping) => {
             if ping == *"pong" {
-                tracing::info!("Received the right result from transip api test");
+                messages::transip_api_test_pong_received();
             } else {
-                tracing::error!("Wrong result from transip api test: {}", &ping);
+                messages::transip_api_test_other_received(&ping);
             }
         }
         Err(error) => {
-            tracing::error!("Transip api test failed: {}", error);
+            messages::transip_api_test_failed(error);
         }
     }
 }
 
 fn main() {
     if let Err(error) = tracing_log::LogTracer::init() {
-        eprintln!("Failed initializing logger: {}", error);
+        messages::failed_initializing_logger(error);
         exit(1);
     }
 
@@ -51,12 +54,12 @@ fn main() {
         .with(env_filter);
 
     if let Err(error) = tracing::subscriber::set_global_default(subscriber) {
-        eprint!("Failed to set subscriber for log events: {}", error);
+        messages::failed_set_subscriber(error);
         exit(1);
     }
 
     match configuration_from_environment().and_then(ApiClient::try_from) {
         Ok(client) => api_test(client),
-        Err(error) => tracing::error!("Api client initialisation failed: {}", error),
+        Err(error) => messages::failed_initializing_api_client(error),
     }
 }
