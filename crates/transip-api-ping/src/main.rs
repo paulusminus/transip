@@ -1,12 +1,16 @@
-use std::{io::stdout, process::exit};
+use std::{io::stdout, process::exit, time::Instant};
 
+use tracing::{error, info};
 use tracing_subscriber::{
-    filter::LevelFilter, fmt::writer::BoxMakeWriter, layer::SubscriberExt, EnvFilter,
+    filter::LevelFilter, fmt::time::LocalTime, fmt::writer::BoxMakeWriter, layer::SubscriberExt,
+    EnvFilter,
 };
 use transip_api::{configuration_from_environment, ApiClient, TransipApiGeneral};
 
+use crate::error::Error;
+
 mod constant;
-mod messages;
+mod error;
 
 fn out() -> BoxMakeWriter {
     BoxMakeWriter::new(stdout)
@@ -27,42 +31,44 @@ fn rolling_or_stdout() -> BoxMakeWriter {
     }
 }
 
-fn api_test(mut client: ApiClient) {
-    match client.api_test() {
-        Ok(ping) => {
-            if ping == *"pong" {
-                messages::transip_api_test_pong_received();
-            } else {
-                messages::transip_api_test_other_received(&ping);
-            }
-        }
-        Err(error) => {
-            messages::transip_api_test_failed(error);
-        }
+fn api_test(mut client: ApiClient) -> Result<(), Error> {
+    let ping = client.api_test()?;
+    if ping != *"pong" {
+        Err(Error::Ping(ping))
+    } else {
+        Ok(())
     }
 }
 
-fn main() {
-    if let Err(error) = tracing_log::LogTracer::init() {
-        messages::failed_initializing_logger(error);
-        exit(1);
-    }
+fn run() -> Result<(), Error> {
+    tracing_log::LogTracer::init()?;
 
     let env_filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::DEBUG.into())
         .from_env_lossy();
 
-    let subscriber = tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer().with_writer(rolling_or_stdout()))
-        .with(env_filter);
+    let layer = tracing_subscriber::fmt::layer()
+        .with_writer(rolling_or_stdout())
+        .with_timer(LocalTime::rfc_3339());
 
-    if let Err(error) = tracing::subscriber::set_global_default(subscriber) {
-        messages::failed_set_subscriber(error);
-        exit(1);
-    }
+    let subscriber = tracing_subscriber::registry().with(layer).with(env_filter);
 
-    match configuration_from_environment().and_then(ApiClient::try_from) {
-        Ok(client) => api_test(client),
-        Err(error) => messages::failed_initializing_api_client(error),
+    tracing::subscriber::set_global_default(subscriber)?;
+
+    let client = configuration_from_environment().and_then(ApiClient::try_from)?;
+    api_test(client)
+}
+
+fn main() {
+    let start = Instant::now();
+    match run() {
+        Ok(_) => {
+            info!("{} milliseconds elapsed", start.elapsed().as_millis());
+        }
+        Err(error) => {
+            error!("{}", error);
+            info!("{} milliseconds elapsed", start.elapsed().as_millis());
+            exit(1);
+        }
     }
 }
