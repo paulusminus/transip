@@ -35,6 +35,9 @@ fn update_dns() -> Result<(), error::Error> {
 
     if let Some(challenge) = validation_config.validation() {
         info!("Acme challenge {} detected", &challenge);
+        client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
+        info!("All _acme-challenge records deleted");
+
         let dns_entry = DnsEntry {
             name: constant::ACME_CHALLENGE.into(),
             expire: 60,
