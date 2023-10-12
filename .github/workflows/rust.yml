@@ -15,7 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install extra packages
-      run: apt install -y musl-dev
+      run: |
+        sudo apt update
+        sudo apt install -y musl-dev
     - name: Add musl target
       run: rustup target add x86_64-unknown-linux-musl
     - name: Format
