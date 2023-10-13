@@ -10,3 +10,6 @@ version.workspace = true
 thiserror = "1"
 tracing = "0.1"
 trust-dns-resolver = "0.23"
+
+[dev-dependencies]
+tracing-subscriber = "0.3"

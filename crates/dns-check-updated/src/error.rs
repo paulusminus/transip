@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, net::AddrParseError};
 
 use thiserror::Error;
 use trust_dns_resolver::error::ResolveError;
@@ -16,4 +16,10 @@ pub enum Error {
 
     #[error("Resolve: {0}")]
     Resolve(#[from] ResolveError),
+
+    #[error("")]
+    Parse(#[from] AddrParseError),
+
+    #[error("Multiple acme challenges")]
+    MultipleAcme,
 }
