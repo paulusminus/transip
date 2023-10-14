@@ -143,7 +143,7 @@ mod test {
         )
     }
 
-    #[test]
+    #[allow(dead_code)]
     fn has_acme_challenge() {
         let resolvers = {
             RecursiveIpv6Resolver::try_new()
