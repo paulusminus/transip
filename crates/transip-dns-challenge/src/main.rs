@@ -33,38 +33,38 @@ fn update_dns() -> Result<(), error::Error> {
     let mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
     let _ping = client.api_test()?;
 
-    if let Some(challenge) = validation_config.validation() {
-        info!("Acme challenge {} detected", &challenge);
-        client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
-        info!("All _acme-challenge records deleted");
-
-        let dns_entry = DnsEntry {
-            name: constant::ACME_CHALLENGE.into(),
-            expire: 60,
-            entry_type: "TXT".into(),
-            content: challenge.clone(),
-        };
-        client.dns_entry_insert(&transip_domain, dns_entry)?;
-
-        let name_servers = client
-            .nameserver_list(&transip_domain)?
-            .into_iter()
-            .map(|nameserver| nameserver.hostname)
-            .collect::<Vec<String>>();
-        name_servers.trace();
-
-        dns_check_updated::servers_have_acme_challenge(
-            name_servers.iter(),
-            &transip_domain,
-            constant::ACME_CHALLENGE,
-            &challenge,
-        )
-        .map_err(|error| error::Error::Dns(Box::new(error)))
-    } else {
+    if let Some(auth_output) = validation_config.auth_output() {
+        info!("auth-hook result = {}", auth_output);
         info!("Deleting all _acme_challenge records");
         client
             .dns_entry_delete_all(&transip_domain, is_acme_challenge)
             .map_err(error::Error::from)
+    } else {
+        if let Some(challenge) = validation_config.validation() {
+            info!("Acme challenge {} detected", &challenge);
+            client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
+            info!("All _acme-challenge records deleted");
+
+            let dns_entry = DnsEntry {
+                name: constant::ACME_CHALLENGE.into(),
+                expire: 60,
+                entry_type: "TXT".into(),
+                content: challenge.clone(),
+            };
+            client.dns_entry_insert(&transip_domain, dns_entry)?;
+
+            let name_servers = client
+                .nameserver_list(&transip_domain)?
+                .into_iter()
+                .map(|nameserver| nameserver.hostname)
+                .collect::<Vec<String>>();
+            name_servers.trace();
+
+            dns_check_updated::has_acme_challenge(format!("{transip_domain}."), challenge)
+                .map_err(|error| error::Error::Dns(Box::new(error)))
+        } else {
+            Err(error::Error::Missing(constant::CERTBOT_VALIDATION.into()))
+        }
     }
 }
 

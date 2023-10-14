@@ -14,4 +14,7 @@ pub enum Error {
 
     #[error("Subscriber {0}")]
     Suscriber(#[from] SetGlobalDefaultError),
+
+    #[error("{0} not found")]
+    Missing(String),
 }

@@ -10,11 +10,12 @@ const CHALLENGE: &str = "JaJaNeeNee";
 fn main() {
     let start = Instant::now();
     tracing_subscriber::fmt().init();
-    tracing::info!("Checking for acme challenge {} in domain {}", CHALLENGE, DOMAIN_NAME);
-    match has_acme_challenge(
-        DOMAIN_NAME.into(),
-        CHALLENGE.into(),
-    ) {
+    tracing::info!(
+        "Checking for acme challenge {} in domain {}",
+        CHALLENGE,
+        DOMAIN_NAME
+    );
+    match has_acme_challenge(DOMAIN_NAME.into(), CHALLENGE.into()) {
         Ok(_) => {
             tracing::info!("Checking took {} seconds", start.elapsed().as_secs());
         }
