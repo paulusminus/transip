@@ -15,7 +15,7 @@ fn main() {
         CHALLENGE,
         DOMAIN_NAME
     );
-    match has_acme_challenge(DOMAIN_NAME.into(), CHALLENGE.into()) {
+    match has_acme_challenge(DOMAIN_NAME, CHALLENGE) {
         Ok(_) => {
             tracing::info!("Checking took {} seconds", start.elapsed().as_secs());
         }

@@ -59,7 +59,17 @@ fn run() -> Result<(), Error> {
     api_test(client)
 }
 
+
+fn args_has_version() -> bool {
+    let mut vars = std::env::args();
+    vars.len() > 1 && vars.any(|s| s == "-v" || s == "--version")
+}
+
 fn main() {
+    if args_has_version() {
+        println!("{} {}", constant::NAME, constant::VERSION);
+        return;
+    }
     let start = Instant::now();
     match run() {
         Ok(_) => {

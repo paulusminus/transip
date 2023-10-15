@@ -1,6 +1,6 @@
 use std::net::IpAddr;
 
-use trust_dns_resolver::{
+use hickory_resolver::{
     config::{LookupIpStrategy, NameServerConfigGroup, ResolverConfig, ResolverOpts},
     error::ResolveErrorKind,
     lookup::Ipv6Lookup,
@@ -40,15 +40,24 @@ fn ipv6_resolver(group: NameServerConfigGroup, recursion: bool) -> Result<Resolv
 
 pub struct RecursiveIpv6Resolver(Resolver);
 
-impl RecursiveIpv6Resolver {
-    pub fn try_new() -> Result<Self, Error> {
-        crate::google_resolver_ipv6_only().map(Self)
+impl From<Resolver> for RecursiveIpv6Resolver {
+    fn from(resolver: Resolver) -> Self {
+        Self(resolver)
     }
+}
 
-    pub fn authoritive_ipv6_resolvers(
+impl RecursiveIpv6Resolver {
+    // pub fn try_new() -> Result<Self, Error> {
+    //     crate::google_resolver_ipv6_only().map(Self)
+    // }
+
+    pub fn authoritive_ipv6_resolvers<S>(
         &self,
-        domain_name: String,
-    ) -> Result<Vec<AuthoritiveIpv6Resolver>, Error> {
+        domain_name: S,
+    ) -> Result<Vec<AuthoritiveIpv6Resolver>, Error>
+    where
+        S: AsRef<str>,
+    {
         self.nameservers(domain_name).and_then(|nameserver| {
             nameserver
                 .into_iter()
@@ -57,19 +66,25 @@ impl RecursiveIpv6Resolver {
         })
     }
 
-    pub fn nameservers(&self, domain_name: String) -> Result<Vec<String>, Error> {
+    pub fn nameservers<S>(&self, domain_name: S) -> Result<Vec<String>, Error>
+    where
+        S: AsRef<str>,
+    {
         self.0
-            .ns_lookup(domain_name)
+            .ns_lookup(domain_name.as_ref())
             .map_err(Error::from)
             .map(|lookup| lookup.into_iter().map(|ns| ns.to_string()).collect())
     }
 
-    pub fn authoritive_ipv6_resolver(
+    pub fn authoritive_ipv6_resolver<S>(
         &self,
-        host_name: String,
-    ) -> Result<AuthoritiveIpv6Resolver, Error> {
+        host_name: S,
+    ) -> Result<AuthoritiveIpv6Resolver, Error>
+    where
+        S: AsRef<str>,
+    {
         self.0
-            .ipv6_lookup(host_name)
+            .ipv6_lookup(host_name.as_ref())
             .map_err(Error::from)
             .map(aaaa_mapper(aaaa_to_ipv6))
             .and_then(|result| {
@@ -83,18 +98,23 @@ impl RecursiveIpv6Resolver {
 }
 
 /// Authoritive nameserver Resolver
-pub struct AuthoritiveIpv6Resolver(trust_dns_resolver::Resolver);
+pub struct AuthoritiveIpv6Resolver(hickory_resolver::Resolver);
 
 impl AuthoritiveIpv6Resolver {
-    pub fn has_single_acme(&self, domain_name: String, challenge: String) -> Result<bool, Error> {
+    pub fn has_single_acme<S>(&self, domain_name: S, challenge: S) -> Result<bool, Error>
+    where
+        S: AsRef<str>,
+    {
         match self
             .0
-            .txt_lookup(format!("_acme-challenge.{}", domain_name))
+            .txt_lookup(format!("_acme-challenge.{}", domain_name.as_ref()))
         {
             Ok(lookup) => {
                 let count = lookup.iter().count();
                 if count == 1 {
-                    Ok(lookup.iter().any(|txt| txt.to_string() == challenge))
+                    Ok(lookup
+                        .iter()
+                        .any(|txt| txt.to_string() == challenge.as_ref()))
                 } else {
                     Err(Error::MultipleAcme)
                 }
@@ -114,7 +134,7 @@ impl AuthoritiveIpv6Resolver {
 mod test {
     use std::convert::identity;
 
-    use crate::error::Error;
+    use crate::{error::Error, google_resolver_ipv6_only};
 
     use super::RecursiveIpv6Resolver;
 
@@ -122,15 +142,17 @@ mod test {
 
     #[test]
     fn google_nameserver() {
-        let resolver = RecursiveIpv6Resolver::try_new();
+        let resolver = google_resolver_ipv6_only().map(RecursiveIpv6Resolver::from);
         assert!(resolver.is_ok());
     }
 
     #[test]
     fn paul_min_nl() {
-        let resolver = RecursiveIpv6Resolver::try_new().unwrap();
+        let resolver = google_resolver_ipv6_only()
+            .map(RecursiveIpv6Resolver::from)
+            .unwrap();
 
-        let mut names = resolver.nameservers(DOMAIN_NAME.into()).unwrap();
+        let mut names = resolver.nameservers(DOMAIN_NAME).unwrap();
         names.sort();
 
         assert_eq!(
@@ -145,16 +167,15 @@ mod test {
 
     #[allow(dead_code)]
     fn has_acme_challenge() {
-        let resolvers = {
-            RecursiveIpv6Resolver::try_new()
-                .unwrap()
-                .authoritive_ipv6_resolvers(DOMAIN_NAME.into())
-                .unwrap()
-        };
+        let resolvers = google_resolver_ipv6_only()
+            .map(RecursiveIpv6Resolver::from)
+            .unwrap()
+            .authoritive_ipv6_resolvers(DOMAIN_NAME)
+            .unwrap();
 
         let result = resolvers
             .iter()
-            .map(|resolver| resolver.has_single_acme(DOMAIN_NAME.into(), "JaJaNeeNee".into()))
+            .map(|resolver| resolver.has_single_acme(DOMAIN_NAME, "JaJaNeeNee".into()))
             .collect::<Result<Vec<bool>, Error>>()
             .unwrap()
             .into_iter()

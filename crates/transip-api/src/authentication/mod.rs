@@ -1,7 +1,6 @@
+use crate::base64::Base64;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use base64::engine::general_purpose::STANDARD as base64;
-use base64::Engine;
 use ring::signature::RsaKeyPair;
 use ring::{rand, signature};
 use serde::Serialize;
@@ -70,5 +69,5 @@ pub fn sign(body: &[u8], key_pair: &RsaKeyPair) -> Result<String> {
         .sign(&signature::RSA_PKCS1_SHA512, &rng, body, &mut signature)
         .map_err(Error::Sign)?;
 
-    Ok(base64.encode(signature.as_slice()))
+    Ok(signature.as_slice().base64_encode())
 }

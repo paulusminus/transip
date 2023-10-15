@@ -1,5 +1,6 @@
+use resolver::RecursiveIpv6Resolver;
 use std::{convert::identity, net::IpAddr, thread::sleep, time::Duration};
-use trust_dns_resolver::{
+use hickory_resolver::{
     config::{LookupIpStrategy, NameServerConfigGroup, ResolverConfig, ResolverOpts, GOOGLE_IPS},
     Resolver,
 };
@@ -87,17 +88,19 @@ fn google_resolver_ipv6_only() -> Result<Resolver> {
 //     }
 // }
 
-pub fn has_acme_challenge(domain_name: String, challenge: String) -> Result<()> {
-    let resolvers = {
-        resolver::RecursiveIpv6Resolver::try_new()
-            .and_then(|resolver| resolver.authoritive_ipv6_resolvers(domain_name.clone()))
-    }?;
+pub fn has_acme_challenge<S>(domain_name: S, challenge: S) -> Result<()>
+where
+    S: AsRef<str>,
+{
+    let resolvers = google_resolver_ipv6_only()
+        .map(RecursiveIpv6Resolver::from)
+        .and_then(|resolver| resolver.authoritive_ipv6_resolvers(domain_name.as_ref()))?;
 
     let mut i: u128 = 0;
 
     while !resolvers
         .iter()
-        .map(|resolver| resolver.has_single_acme(domain_name.clone(), challenge.clone()))
+        .map(|resolver| resolver.has_single_acme(domain_name.as_ref(), challenge.as_ref()))
         .collect::<Result<Vec<_>>>()?
         .into_iter()
         .all(identity)
@@ -153,7 +156,7 @@ pub fn has_acme_challenge(domain_name: String, challenge: String) -> Result<()> 
 mod tests {
     use std::{fmt::Display, net::IpAddr};
 
-    use trust_dns_resolver::{
+    use hickory_resolver::{
         lookup::{Ipv6Lookup, NsLookup},
         proto::rr::rdata::{AAAA, NS},
         Resolver,

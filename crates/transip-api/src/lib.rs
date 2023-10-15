@@ -46,6 +46,7 @@ pub use error::Error;
 mod account;
 mod api_client;
 mod authentication;
+mod base64;
 mod domain;
 mod environment;
 mod error;

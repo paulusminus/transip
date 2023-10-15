@@ -1,7 +1,7 @@
 use crate::{Error, Result};
 use std::io::Cursor;
 
-use base64::{engine, Engine};
+use crate::base64::Base64;
 use serde::{Deserialize, Serialize};
 
 pub fn token_expiration_timestamp<S>(token: S) -> Result<i64>
@@ -33,9 +33,9 @@ struct TokenResponseMeta {
 impl<'a> TryFrom<EncodedTokenMeta<'a>> for TokenResponseMeta {
     type Error = Error;
     fn try_from(encoded_token_meta: EncodedTokenMeta) -> std::result::Result<Self, Self::Error> {
-        engine::general_purpose::URL_SAFE_NO_PAD
-            .decode(encoded_token_meta.expiration())
-            .map_err(Error::from)
+        encoded_token_meta
+            .expiration()
+            .base64_decode()
             .map(Cursor::new)
             .and_then(|cursor| ureq::serde_json::from_reader(cursor).map_err(Error::from))
     }
@@ -72,7 +72,7 @@ impl<'a> TryFrom<&'a str> for EncodedTokenMeta<'a> {
 #[cfg(test)]
 mod tests {
     use super::EncodedTokenMeta;
-    use base64::{engine::general_purpose, Engine};
+    use crate::base64::Base64;
     use std::str::from_utf8;
 
     const RAW_TOKEN: &str = include_str!("raw_token.txt");
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn decode() {
         let encoded_metadata = EncodedTokenMeta::try_from(RAW_TOKEN).unwrap();
-        let decoded = general_purpose::STANDARD_NO_PAD.decode(encoded_metadata.expiration());
+        let decoded = encoded_metadata.expiration().base64_decode();
         assert!(decoded.is_ok());
         let token_meta = decoded.unwrap();
         let s = from_utf8(token_meta.as_slice()).unwrap();
