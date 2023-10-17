@@ -88,7 +88,7 @@ impl ApiClient {
         if self.token.token_expired() {
             info!("New or refresh token needed");
             let auth_request = AuthRequest::new(
-                &self.configuration.user_name(),
+                self.configuration.user_name(),
                 &TOKEN_EXPIRATION_TIME.to_string(),
             );
             let json = auth_request.json();
