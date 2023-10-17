@@ -10,7 +10,9 @@ use tracing_subscriber::{
     EnvFilter,
 };
 use transip_api::{
-    configuration_from_environment, ApiClient, domain::{DnsEntry, TransipApiDomain}, Error, TransipApiGeneral,
+    configuration_from_environment,
+    domain::{DnsEntry, TransipApiDomain},
+    ApiClient, Error, TransipApiGeneral,
 };
 
 mod constant;
