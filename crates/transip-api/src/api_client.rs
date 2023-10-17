@@ -12,6 +12,7 @@ use crate::{Configuration, Error, Result};
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
 const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Seconds(120);
 const AGENT_TIMEOUT_SECONDS: u64 = 30;
+const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
 
 pub struct Url {
     pub prefix: String,
@@ -46,6 +47,7 @@ impl ApiClient {
             key: None,
             agent: AgentBuilder::new()
                 .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
+                .user_agent(USER_AGENT)
                 .build(),
             token: Some(Token::demo()),
             configuration: crate::environment::demo_configuration(),
@@ -60,6 +62,7 @@ impl TryFrom<Box<dyn Configuration>> for ApiClient {
             url: TRANSIP_API_PREFIX.into(),
             key: Some(key),
             agent: AgentBuilder::new()
+                .user_agent(USER_AGENT)
                 .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
                 .build(),
             token: Token::try_from_file(configuration.token_path()).ok(),
@@ -68,16 +71,17 @@ impl TryFrom<Box<dyn Configuration>> for ApiClient {
     }
 }
 
-#[cfg(not(test))]
 impl Drop for ApiClient {
     fn drop(&mut self) {
-        if let Some(token) = self.token.take() {
-            if let Err(error) = std::fs::write(self.configuration.token_path(), token.raw()) {
-                tracing::error!(
-                    "Error {} writing token to {}",
-                    error,
-                    self.configuration.token_path()
-                );
+        if self.key.is_some() {
+            if let Some(token) = self.token.take() {
+                if let Err(error) = token.try_to_write_file(self.configuration.token_path()) {
+                    tracing::error!(
+                        "Error {} writing token to {}",
+                        error,
+                        self.configuration.token_path()
+                    );
+                }
             }
         }
     }
@@ -90,6 +94,8 @@ impl ApiClient {
             let auth_request = AuthRequest::new(
                 self.configuration.user_name(),
                 &TOKEN_EXPIRATION_TIME.to_string(),
+                self.configuration.read_only(),
+                self.configuration.whitelisted_only(),
             );
             let json = auth_request.json();
             let signature = self.key.as_ref().unwrap().sign(&json)?;

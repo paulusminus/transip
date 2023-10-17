@@ -1,7 +1,7 @@
 use crate::{Error, Result};
 use std::{
     fs::OpenOptions,
-    io::{Cursor, Read},
+    io::{Cursor, Read, Write},
     path::Path,
 };
 
@@ -37,6 +37,25 @@ impl Token {
         let mut s = String::default();
         reader.read_to_string(&mut s)?;
         Token::try_from(s)
+    }
+
+    pub fn try_to_write<W>(&self, mut writer: W) -> Result<()>
+    where
+        W: Write,
+    {
+        writer.write_all(self.raw.as_bytes()).map_err(Into::into)
+    }
+
+    pub fn try_to_write_file<P>(&self, path: P) -> Result<()>
+    where
+        P: AsRef<Path>,
+    {
+        OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(path)
+            .map_err(Into::into)
+            .and_then(|file| self.try_to_write(file))
     }
 
     pub fn try_from_file<P>(path: P) -> Result<Self>

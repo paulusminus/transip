@@ -1,4 +1,4 @@
-use std::env::VarError;
+use std::{env::VarError, str::ParseBoolError};
 
 use thiserror::Error;
 
@@ -59,4 +59,7 @@ pub enum Error {
 
     #[error("No IP")]
     NoIp,
+
+    #[error("Parse: {0}")]
+    ParseBoolean(#[from] ParseBoolError),
 }

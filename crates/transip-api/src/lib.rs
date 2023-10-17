@@ -29,7 +29,8 @@ transip-api = "0.3"
 ```
     # use transip_api::{configuration_from_environment, ApiClient, Error};
     mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
-    assert_eq!(client.api_test().unwrap().as_str(), "pong");
+    let pong = client.api_test()?;
+    assert_eq!(pong.as_str(), "pong");
     # Ok::<(), Error>(())
 ```
 
@@ -37,21 +38,19 @@ transip-api = "0.3"
 
 pub use crate::account::TransipApiAccount;
 pub use crate::api_client::ApiClient;
-pub use crate::domain::{DnsEntry, TransipApiDomain};
 pub use crate::environment::configuration_from_environment;
 pub use crate::general::TransipApiGeneral;
-pub use crate::vps::TransipApiVps;
 pub use error::Error;
 
 mod account;
 mod api_client;
 mod authentication;
 mod base64;
-mod domain;
+pub mod domain;
 mod environment;
 mod error;
 mod general;
-mod vps;
+pub mod vps;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -59,13 +58,15 @@ pub trait Configuration {
     fn user_name(&self) -> &str;
     fn private_key_pem_file(&self) -> &str;
     fn token_path(&self) -> &str;
+    fn whitelisted_only(&self) -> bool;
+    fn read_only(&self) -> bool;
 }
 
-pub trait HasName {
+trait HasName {
     fn name(&self) -> &str;
 }
 
-pub trait HasNames {
+trait HasNames {
     fn names(&self) -> Vec<&str>;
 }
 

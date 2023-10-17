@@ -1,4 +1,7 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    ffi::OsString,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use serde::Serialize;
 
@@ -35,23 +38,41 @@ pub struct AuthRequest {
 }
 
 impl AuthRequest {
-    pub fn new(username: &str, expiration_time: &str) -> Self {
-        let now = chrono::offset::Local::now().format("%Y%m%dT%H%M");
+    pub fn new(
+        username: &str,
+        expiration_time: &str,
+        read_only: bool,
+        whitelisted_only: bool,
+    ) -> Self {
         Self {
             login: username.into(),
             nonce: milliseconds_since_epoch(),
-            read_only: false,
+            read_only,
             expiration_time: expiration_time.into(),
-            label: hostname::get()
-                .map(|hostname| format!("{}-{}", hostname.to_string_lossy(), now))
-                .unwrap_or_default(),
-            global_key: true,
+            label: create_label(),
+            global_key: !whitelisted_only,
         }
     }
 
     pub fn json(&self) -> Vec<u8> {
         ureq::serde_json::to_vec(self).unwrap()
     }
+}
+
+fn hostname_timestamp(hostname: OsString) -> String {
+    format!(
+        "{}-{}",
+        hostname.to_string_lossy(),
+        chrono::offset::Local::now().format("%Y%m%dT%H%M%S"),
+    )
+}
+
+fn create_label() -> String {
+    hostname::get().map(hostname_timestamp).unwrap_or(format!(
+        "{} {}",
+        env!("CARGO_PKG_NAME"),
+        milliseconds_since_epoch(),
+    ))
 }
 
 fn milliseconds_since_epoch() -> String {
