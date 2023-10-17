@@ -56,6 +56,23 @@ mod vps;
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub trait Configuration {
-    fn user_name(&self) -> String;
-    fn private_key(&self) -> String;
+    fn user_name(&self) -> &str;
+    fn private_key_pem_file(&self) -> &str;
+    fn token_path(&self) -> &str;
+}
+
+pub trait HasName {
+    fn name(&self) -> &str; 
+}
+
+pub trait HasNames {
+    fn names(&self) -> Vec<&str>;
+}
+
+impl<T: HasName> HasNames for Vec<T> {
+    fn names(&self) -> Vec<&str> {
+        self.iter()
+            .map(|t| t.name())
+            .collect::<Vec<_>>()
+    }
 }

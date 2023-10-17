@@ -7,3 +7,6 @@ pub const CERTBOT_AUTH_OUTPUT: &str = "CERTBOT_AUTH_OUTPUT";
 pub const TRANSIP_API_LOG_DIR: &str = "TRANSIP_API_LOG_DIR";
 pub const LOG_FILENAME_PREFIX: &str = "dns-challenge";
 pub const ACME_CHALLENGE: &str = "_acme-challenge";
+
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const NAME: &str = env!("CARGO_PKG_NAME");

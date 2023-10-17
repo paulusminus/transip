@@ -105,6 +105,7 @@ impl AuthoritiveIpv6Resolver {
     where
         S: AsRef<str>,
     {
+        self.0.clear_cache();
         match self
             .0
             .txt_lookup(format!("_acme-challenge.{}", domain_name.as_ref()))

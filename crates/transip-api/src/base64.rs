@@ -1,21 +1,27 @@
-use crate::Error;
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use crate::Result;
+use base64::engine::general_purpose::{URL_SAFE_NO_PAD, STANDARD};
 use base64::Engine;
 
 pub trait Base64 {
-    fn base64_decode(&self) -> Result<Vec<u8>, Error>;
-    fn base64_encode(&self) -> String;
+    fn base64_decode_url_safe(&self) -> Result<Vec<u8>>;
+    fn base64_encode_url_safe(&self) -> String;
+    fn base64_encode_standard_padding(&self) -> String;
 }
 
 impl<T> Base64 for T
 where
     T: AsRef<[u8]>,
 {
-    fn base64_decode(&self) -> Result<Vec<u8>, Error> {
-        URL_SAFE_NO_PAD.decode(self).map_err(Error::from)
+    fn base64_decode_url_safe(&self) -> Result<Vec<u8>> {
+        URL_SAFE_NO_PAD.decode(self).map_err(Into::into)
     }
-    fn base64_encode(&self) -> String {
+
+    fn base64_encode_url_safe(&self) -> String {
         URL_SAFE_NO_PAD.encode(self)
+    }
+
+    fn base64_encode_standard_padding(&self) -> String {
+        STANDARD.encode(self)
     }
 }
 
@@ -30,13 +36,19 @@ mod test {
 
     #[test]
     fn encode() {
-        assert_eq!(TEST_STRING.base64_encode(), TEST_STRING_ENCODED,);
+        assert_eq!(TEST_STRING.base64_encode_url_safe(), TEST_STRING_ENCODED,);
     }
 
     #[test]
     fn decode() {
         assert_eq!(
-            from_utf8(TEST_STRING_ENCODED.base64_decode().unwrap().as_slice()).unwrap(),
+            from_utf8(
+                TEST_STRING_ENCODED
+                    .base64_decode_url_safe()
+                    .unwrap()
+                    .as_slice()
+            )
+            .unwrap(),
             TEST_STRING,
         )
     }

@@ -1,7 +1,7 @@
 use std::{io, net::AddrParseError};
 
-use thiserror::Error;
 use hickory_resolver::error::ResolveError;
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {

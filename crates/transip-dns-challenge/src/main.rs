@@ -33,8 +33,7 @@ fn update_dns() -> Result<(), error::Error> {
     let mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
     let _ping = client.api_test()?;
 
-    if let Some(auth_output) = validation_config.auth_output() {
-        info!("auth-hook result = {}", auth_output);
+    if args_is_cleanup() {
         info!("Deleting all _acme_challenge records");
         client
             .dns_entry_delete_all(&transip_domain, is_acme_challenge)
@@ -103,8 +102,27 @@ fn run() -> Result<(), error::Error> {
     update_dns()
 }
 
+fn args_has_version() -> bool {
+    std::env::args()
+        .enumerate()
+        .filter(|(i, _)| *i != 0usize)
+        .any(|(_, s)| s == "-v" || s == "--version")
+}
+
+fn args_is_cleanup() -> bool {
+    std::env::args()
+        .enumerate()
+        .filter(|(i, _)| *i != 0)
+        .any(|(_, s)| s == "--cleanup")
+}
+
 fn main() {
     let start = Instant::now();
+    if args_has_version() {
+        println!("{} {}", constant::NAME, constant::VERSION);
+        return;
+    }
+
     match run() {
         Ok(_) => {
             info!("{} seconds elapsed", start.elapsed().as_secs());

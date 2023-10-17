@@ -1,16 +1,16 @@
-use crate::base64::Base64;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use ring::signature::RsaKeyPair;
-use ring::{rand, signature};
 use serde::Serialize;
 
 use crate::api_client::Url;
-use crate::error::Error;
-use crate::Result;
 
-pub use token::{token_expiration_timestamp, TokenResponse};
+pub use key_pair::KeyPair;
+pub use token::{token_expiration_timestamp, Token, TokenResponse, TokenExpired};
+pub use token_expiration::TokenExpiration;
+
+mod key_pair;
 mod token;
+mod token_expiration;
 
 const AUTH: &str = "auth";
 
@@ -60,14 +60,4 @@ fn milliseconds_since_epoch() -> String {
         .unwrap()
         .as_millis()
         .to_string()
-}
-
-pub fn sign(body: &[u8], key_pair: &RsaKeyPair) -> Result<String> {
-    let rng = rand::SystemRandom::new();
-    let mut signature = vec![0; key_pair.public().modulus_len()];
-    key_pair
-        .sign(&signature::RSA_PKCS1_SHA512, &rng, body, &mut signature)
-        .map_err(Error::Sign)?;
-
-    Ok(signature.as_slice().base64_encode())
 }

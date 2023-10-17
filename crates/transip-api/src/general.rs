@@ -1,6 +1,6 @@
 use crate::{
     api_client::{ApiClient, Url},
-    Result,
+    Result, HasName,
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
@@ -51,7 +51,7 @@ struct ProductList {
     pub products: Products,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Products {
     pub vps: Vec<Product>,
@@ -60,7 +60,7 @@ pub struct Products {
     pub private_networks: Vec<Product>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Product {
     pub name: String,
@@ -75,11 +75,23 @@ impl Display for Product {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+impl HasName for Product {
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+}
+
+#[derive(Deserialize, Serialize, PartialEq)]
 pub struct ProductElement {
     pub name: String,
     pub description: String,
     pub amount: u64,
+}
+
+impl HasName for ProductElement {
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
 }
 
 impl Display for ProductElement {
@@ -99,12 +111,18 @@ pub struct ProductElements {
 }
 
 /// What is Availability
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AvailabilityZone {
     pub name: String,
     pub country: String,
     pub is_default: bool,
+}
+
+impl HasName for AvailabilityZone {
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
 }
 
 impl Display for AvailabilityZone {
@@ -155,5 +173,86 @@ impl TransipApiGeneral for ApiClient {
     fn products(&mut self) -> Result<Products> {
         self.get::<ProductList>(&self.url.products())
             .map(|list| list.products)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{api_client::ApiClient, general::Product};
+    use super::TransipApiGeneral;
+    use crate::HasNames;
+
+    #[test]
+    fn api_test() {
+        let ping = ApiClient::demo().api_test().unwrap();
+        assert_eq!(ping, "pong".to_owned());
+    }
+
+    #[test]
+    fn availability_zones() {
+        let zones = ApiClient::demo().availability_zones().unwrap();
+        let names = zones.names();
+        assert_eq!(
+            names,
+            vec![
+                "ams0",
+                "rtm0",
+            ],
+        );
+    }
+
+    #[test]
+    fn vps_products() {
+        let products = ApiClient::demo().products().unwrap().vps;
+        let names = products.names();
+        assert_eq!(
+            names,
+            vec![
+                "vps-bladevps-xs",
+                "vps-bladevps-x2",
+                "vps-bladevps-x4",
+                "vps-bladevps-x8",
+                "vps-bladevps-pro-x16",
+                "vps-bladevps-pro-x24",
+                "vps-bladevps-pro-x64",
+                "vps-performance-c2",
+                "vps-performance-c4",
+                "vps-performance-c8",
+                "vps-performance-c16",
+                "vps-performance-c32",
+                "vps-sandbox-d1",
+                "vps-sandbox-d2",
+                "vps-sandbox-d3",
+            ]
+        );
+    }
+
+    #[test]
+    fn haip_products() {
+        let products: Vec<Product> = ApiClient::demo()
+            .products()
+            .unwrap()
+            .haip;
+        let names = products.names();
+
+        assert_eq!(names, vec![
+            "haip-basic-contract",
+            "haip-pro-contract",
+        ]);
+    }
+
+    #[test]
+    fn haip_basic_product_elements() {
+        let elements = ApiClient::demo()
+            .product_elements("haip-basic-contract")
+            .unwrap();
+        let names = elements.names();
+
+        assert_eq!(
+            names,
+            vec![
+                "haip-load-balancing",
+            ]
+        );
     }
 }

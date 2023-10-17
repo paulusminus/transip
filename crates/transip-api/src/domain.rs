@@ -1,6 +1,6 @@
 use crate::{
     api_client::{ApiClient, Url},
-    Result,
+    Result, HasName,
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
@@ -101,6 +101,12 @@ impl Display for Domain {
     }
 }
 
+impl HasName for Domain {
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct DomainList {
     domains: Vec<Domain>,
@@ -113,6 +119,12 @@ pub struct DnsEntry {
     #[serde(rename = "type")]
     pub entry_type: String,
     pub content: String,
+}
+
+impl HasName for DnsEntry {
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -188,5 +200,49 @@ impl TransipApiDomain for ApiClient {
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>> {
         self.get::<NameServerList>(&self.url.domain_nameservers(domain_name))
             .map(|list| list.nameservers)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{ApiClient, HasNames};
+    use super::TransipApiDomain;
+
+
+    #[test]
+    fn domains() {
+        let domains = ApiClient::demo().domain_list().unwrap();
+        let names = domains.names();
+        assert_eq!(
+            names,
+            vec![
+                "transipdemo.be",
+                "transipdemo.de",
+                "transipdemo.net",
+                "transipdemonstratie.com",
+                "transipdemonstratie.nl",
+            ]);
+    }
+
+    #[test]
+    fn domain_entry_list() {
+        let entry_list = ApiClient::demo().dns_entry_list("transipdemo.be").unwrap();
+        let names = entry_list.names();
+
+        assert_eq!(
+            names,
+            vec![
+                "*",
+                "*",
+                "@",
+                "@",
+                "@",
+                "@",
+                "transip-A._domainkey",
+                "transip-B._domainkey",
+                "transip-C._domainkey",
+                "_dmarc",
+            ],
+        );
     }
 }

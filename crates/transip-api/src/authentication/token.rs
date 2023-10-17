@@ -1,8 +1,80 @@
 use crate::{Error, Result};
-use std::io::Cursor;
+use std::{io::{Cursor, Read}, path::Path, fs::OpenOptions};
 
 use crate::base64::Base64;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
+
+#[cfg(test)]
+pub const DEMO_TOKEN: &str = include_str!("demo_token.txt");
+
+pub trait TokenExpired {
+    fn token_expired(&self) -> bool;
+}
+
+pub struct Token {
+    raw: String,
+    expired: i64,
+}
+
+impl Token {
+    #[cfg(test)]
+    pub fn demo() -> Self {
+        Self {
+            raw: DEMO_TOKEN.to_owned(),
+            expired: i64::MAX,
+        }
+    }
+
+    pub fn try_from_reader<R>(mut reader: R) -> Result<Self>
+    where
+        R: Read,
+    {
+        let mut s = String::default();
+        reader.read_to_string(&mut s)?;
+        Token::try_from(s)
+    }
+
+    pub fn try_from_file<P>(path: P) -> Result<Self> 
+    where
+        P: AsRef<Path>,
+    {
+        OpenOptions::new().read(true).open(path)
+            .map_err(Into::into)
+            .and_then(Token::try_from_reader)
+    }
+
+    pub fn raw(&self) -> &str {
+        self.raw.as_str()
+    }
+}
+
+impl TryFrom<String> for Token {
+    type Error = Error;
+    fn try_from(raw: String) -> Result<Self> {
+        token_expiration_timestamp(raw.clone())
+            .map(|expired| Token {
+                raw,
+                expired,
+            })
+    }
+}
+
+impl TokenExpired for Token {
+    fn token_expired(&self) -> bool {
+        self.expired < Utc::now().timestamp() + 2
+    }
+}
+
+impl TokenExpired for Option<Token> {
+    fn token_expired(&self) -> bool {
+        if self.is_some() {
+            self.as_ref().unwrap().token_expired()
+        } else {
+            true
+        }
+    }
+}
 
 pub fn token_expiration_timestamp<S>(token: S) -> Result<i64>
 where
@@ -32,12 +104,15 @@ struct TokenResponseMeta {
 
 impl<'a> TryFrom<EncodedTokenMeta<'a>> for TokenResponseMeta {
     type Error = Error;
-    fn try_from(encoded_token_meta: EncodedTokenMeta) -> std::result::Result<Self, Self::Error> {
+    fn try_from(encoded_token_meta: EncodedTokenMeta) -> Result<Self> {
         encoded_token_meta
             .expiration()
-            .base64_decode()
+            .base64_decode_url_safe()
             .map(Cursor::new)
-            .and_then(|cursor| ureq::serde_json::from_reader(cursor).map_err(Error::from))
+            .and_then(|cursor| 
+                ureq::serde_json::from_reader(cursor)
+                    .map_err(Into::into)
+            )
     }
 }
 
@@ -51,14 +126,14 @@ impl<'a> EncodedTokenMeta<'a> {
 
 impl TryFrom<&str> for TokenResponseMeta {
     type Error = Error;
-    fn try_from(token: &str) -> std::result::Result<Self, Self::Error> {
+    fn try_from(token: &str) -> Result<Self> {
         EncodedTokenMeta::try_from(token).and_then(TokenResponseMeta::try_from)
     }
 }
 
 impl<'a> TryFrom<&'a str> for EncodedTokenMeta<'a> {
     type Error = Error;
-    fn try_from(token: &'a str) -> std::result::Result<Self, Self::Error> {
+    fn try_from(token: &'a str) -> Result<Self> {
         let splitted = token.split('.').collect::<Vec<&str>>();
 
         if splitted.len() == 3 {
@@ -74,6 +149,8 @@ mod tests {
     use super::EncodedTokenMeta;
     use crate::base64::Base64;
     use std::str::from_utf8;
+    use super::{Token, TokenExpired};
+    use chrono::Utc;
 
     const RAW_TOKEN: &str = include_str!("raw_token.txt");
     const TOKEN_META_JSON: &str = include_str!("token_meta.json");
@@ -91,10 +168,54 @@ mod tests {
     #[test]
     fn decode() {
         let encoded_metadata = EncodedTokenMeta::try_from(RAW_TOKEN).unwrap();
-        let decoded = encoded_metadata.expiration().base64_decode();
+        let decoded = encoded_metadata.expiration().base64_decode_url_safe();
         assert!(decoded.is_ok());
         let token_meta = decoded.unwrap();
         let s = from_utf8(token_meta.as_slice()).unwrap();
         assert_eq!(s, TOKEN_META_JSON);
     }
+
+    #[test]
+    fn expired_if_none() {
+        let token: Option<Token> = None;
+        assert!(token.token_expired());
+    }
+
+    #[test]
+    fn expired_if_some() {
+        let token: Option<Token> = Some(Token {
+            raw: Default::default(),
+            expired: Utc::now().timestamp(),
+        });
+        assert!(token.token_expired());
+    }
+
+    #[test]
+    fn not_expired_if_some() {
+        let token: Option<Token> = Some(Token {
+            raw: Default::default(),
+            expired: Utc::now().timestamp() + 10,
+        });
+        assert!(!token.token_expired());
+    }
+
+    #[test]
+    fn try_token_from_not_existing_file() {
+        let result = Token::try_from_file("asdlkjfie3847");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn try_token_from_existing_file() {
+        let filename = "src/authentication/raw_token.txt";
+        let result = Token::try_from_file(filename);
+        assert!(result.is_ok());
+        assert!(result.unwrap().token_expired());
+    }
+
+    #[test]
+    fn try_demo_token() {
+        assert!(!Token::demo().token_expired());
+    }
 }
+

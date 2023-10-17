@@ -1,9 +1,9 @@
-use resolver::RecursiveIpv6Resolver;
-use std::{convert::identity, net::IpAddr, thread::sleep, time::Duration};
 use hickory_resolver::{
     config::{LookupIpStrategy, NameServerConfigGroup, ResolverConfig, ResolverOpts, GOOGLE_IPS},
     Resolver,
 };
+use resolver::RecursiveIpv6Resolver;
+use std::{convert::identity, net::IpAddr, thread::sleep, time::Duration};
 
 use crate::error::Error;
 
@@ -11,6 +11,9 @@ mod error;
 mod resolver;
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+const MAX_RETRIES: usize = 720;
+const WAIT_SECONDS: u64 = 5;
 
 fn google_nameservers_ipv6() -> Vec<IpAddr> {
     GOOGLE_IPS
@@ -35,59 +38,6 @@ fn google_resolver_ipv6_only() -> Result<Resolver> {
     ipv6_resolver(group, true)
 }
 
-// fn default_resolver() -> Result<Resolver> {
-//     Resolver::from_system_conf().map_err(Error::from)
-// }
-
-// fn resolve_hostname<S>(hostname: S, resolver: &Resolver) -> Result<Vec<IpAddr>>
-// where
-//     S: AsRef<str>,
-// {
-//     resolver
-//         .lookup_ip(hostname.as_ref())
-//         .map_err(Error::from)
-//         .map(|response| response.into_iter().collect())
-// }
-
-// fn to_resolver_by_resolver<S>(resolver: Resolver) -> impl Fn(S) -> Result<Resolver>
-// where
-//     S: AsRef<str>,
-// {
-//     move |nameserver| {
-//         let ip_addresses = resolve_hostname(nameserver, &resolver)?;
-//         let nameserver_config_group =
-//             NameServerConfigGroup::from_ips_clear(&ip_addresses, 53, false);
-//         let resolver_config = ResolverConfig::from_parts(None, vec![], nameserver_config_group);
-//         let mut options = ResolverOpts::default();
-//         options.recursion_desired = false;
-//         options.use_hosts_file = false;
-//         Resolver::new(resolver_config, options).map_err(Error::from)
-//     }
-// }
-
-// fn has_acme_challenge_domain(record_name: &str, value: String) -> impl Fn(&Resolver) -> bool + '_ {
-//     move |resolver| match resolver.txt_lookup(record_name) {
-//         Ok(result) => {
-//             let answers = result.as_lookup().record_iter().filter(|r| {
-//                 r.data().is_some()
-//                     && r.data().unwrap().as_txt().is_some()
-//                     && r.data().unwrap().as_txt().unwrap().to_string() == value
-//             });
-//             // answers.for_each(|record| tracing::info!("{}", record));
-//             answers.count() > 0
-//             // !result.as_lookup().records().to_vec().is_empty()
-//         }
-//         Err(_) => false,
-//     }
-// }
-
-// fn no_acme_challenge(resolver: &Resolver) -> bool {
-//     match resolver.txt_lookup("_acme-challenge.paulmin.nl.") {
-//         Ok(result) => result.as_lookup().records().to_vec().is_empty(),
-//         Err(_) => false,
-//     }
-// }
-
 pub fn has_acme_challenge<S>(domain_name: S, challenge: S) -> Result<()>
 where
     S: AsRef<str>,
@@ -96,7 +46,7 @@ where
         .map(RecursiveIpv6Resolver::from)
         .and_then(|resolver| resolver.authoritive_ipv6_resolvers(domain_name.as_ref()))?;
 
-    let mut i: u128 = 0;
+    let mut i: usize = 0;
 
     while !resolvers
         .iter()
@@ -104,13 +54,13 @@ where
         .collect::<Result<Vec<_>>>()?
         .into_iter()
         .all(identity)
-        && i < 60
+        && i < MAX_RETRIES
     {
         i += 1;
         tracing::warn!("Attempt {} failed", i);
-        sleep(Duration::from_secs(60));
+        sleep(Duration::from_secs(WAIT_SECONDS));
     }
-    if i >= 60 {
+    if i >= MAX_RETRIES {
         tracing::error!("Timeout checking acme challenge record");
         Err(Error::AcmeChallege)
     } else {
