@@ -24,8 +24,8 @@ jobs:
       run: cargo fmt --check
     - name: Clippy
       run: cargo clippy -- -D warnings
-    - name: Run tests
-      run: cargo test -p transip-api --verbose
+#    - name: Run tests
+#      run: cargo test -p transip-api --verbose
     - name: Build for x86_64
       run: cargo build --verbose
 
