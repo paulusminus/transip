@@ -6,7 +6,11 @@ const TRANSIP_API_PRIVATE_KEY: &str = "TRANSIP_API_PRIVATE_KEY";
 const TRANSIP_API_USERNAME: &str = "TRANSIP_API_USERNAME";
 const TRANSIP_API_TOKEN_PATH: &str = "TRANSIP_API_TOKEN_PATH";
 
-const ENVIRONMENT_VARIABLES: [&str; 3] = [TRANSIP_API_USERNAME, TRANSIP_API_PRIVATE_KEY, TRANSIP_API_TOKEN_PATH];
+const ENVIRONMENT_VARIABLES: [&str; 3] = [
+    TRANSIP_API_USERNAME,
+    TRANSIP_API_PRIVATE_KEY,
+    TRANSIP_API_TOKEN_PATH,
+];
 
 struct Environment {
     user_name: String,
@@ -34,8 +38,7 @@ fn var(name: &'static str) -> Result<String> {
 
 fn check_environment() -> Result<()> {
     for variable in ENVIRONMENT_VARIABLES {
-        std::env::var(variable)
-            .map_err(|_| Error::EnvironmentVariable(variable.to_owned()))?;
+        std::env::var(variable).map_err(|_| Error::EnvironmentVariable(variable.to_owned()))?;
     }
     if Path::new(&std::env::var(TRANSIP_API_PRIVATE_KEY).unwrap())
         .try_exists()
@@ -59,11 +62,9 @@ pub fn configuration_from_environment() -> Result<Box<dyn Configuration>> {
 
 #[cfg(test)]
 pub fn demo_configuration() -> Box<dyn Configuration> {
-    Box::new(
-        Environment {
-            user_name: Default::default(),
-            private_key: Default::default(),
-            token_path: Default::default(),
-        }
-    )
+    Box::new(Environment {
+        user_name: Default::default(),
+        private_key: Default::default(),
+        token_path: Default::default(),
+    })
 }

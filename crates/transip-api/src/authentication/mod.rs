@@ -5,7 +5,7 @@ use serde::Serialize;
 use crate::api_client::Url;
 
 pub use key_pair::KeyPair;
-pub use token::{token_expiration_timestamp, Token, TokenResponse, TokenExpired};
+pub use token::{token_expiration_timestamp, Token, TokenExpired, TokenResponse};
 pub use token_expiration::TokenExpiration;
 
 mod key_pair;

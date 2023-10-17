@@ -5,7 +5,7 @@ use tracing::info;
 use ureq::{serde_json, Agent, AgentBuilder};
 
 use crate::authentication::{
-    AuthRequest, TokenResponse, UrlAuthentication, KeyPair, Token, TokenExpiration, TokenExpired,
+    AuthRequest, KeyPair, Token, TokenExpiration, TokenExpired, TokenResponse, UrlAuthentication,
 };
 use crate::{Configuration, Error, Result};
 
@@ -56,16 +56,15 @@ impl ApiClient {
 impl TryFrom<Box<dyn Configuration>> for ApiClient {
     type Error = Error;
     fn try_from(configuration: Box<dyn Configuration>) -> Result<Self> {
-        KeyPair::try_from_file(configuration.private_key_pem_file())
-            .map(|key| ApiClient {
-                url: TRANSIP_API_PREFIX.into(),
-                key: Some(key),
-                agent: AgentBuilder::new()
-                    .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
-                    .build(),
-                token: Token::try_from_file(configuration.token_path()).ok(),
-                configuration,
-            })
+        KeyPair::try_from_file(configuration.private_key_pem_file()).map(|key| ApiClient {
+            url: TRANSIP_API_PREFIX.into(),
+            key: Some(key),
+            agent: AgentBuilder::new()
+                .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
+                .build(),
+            token: Token::try_from_file(configuration.token_path()).ok(),
+            configuration,
+        })
     }
 }
 
@@ -74,7 +73,11 @@ impl Drop for ApiClient {
     fn drop(&mut self) {
         if let Some(token) = self.token.take() {
             if let Err(error) = std::fs::write(self.configuration.token_path(), token.raw()) {
-                tracing::error!("Error {} writing token to {}", error, self.configuration.token_path());
+                tracing::error!(
+                    "Error {} writing token to {}",
+                    error,
+                    self.configuration.token_path()
+                );
             }
         }
     }
@@ -155,4 +158,3 @@ impl ApiClient {
         Ok(())
     }
 }
-

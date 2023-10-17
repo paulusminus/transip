@@ -7,7 +7,6 @@ pub enum Error {
     #[error("Key: {0}")]
     Key(&'static str),
 
-
     #[error("Rejected: {0}")]
     Rejected(String),
 

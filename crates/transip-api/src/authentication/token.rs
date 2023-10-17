@@ -1,5 +1,9 @@
 use crate::{Error, Result};
-use std::{io::{Cursor, Read}, path::Path, fs::OpenOptions};
+use std::{
+    fs::OpenOptions,
+    io::{Cursor, Read},
+    path::Path,
+};
 
 use crate::base64::Base64;
 use chrono::Utc;
@@ -35,11 +39,13 @@ impl Token {
         Token::try_from(s)
     }
 
-    pub fn try_from_file<P>(path: P) -> Result<Self> 
+    pub fn try_from_file<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
     {
-        OpenOptions::new().read(true).open(path)
+        OpenOptions::new()
+            .read(true)
+            .open(path)
             .map_err(Into::into)
             .and_then(Token::try_from_reader)
     }
@@ -52,11 +58,7 @@ impl Token {
 impl TryFrom<String> for Token {
     type Error = Error;
     fn try_from(raw: String) -> Result<Self> {
-        token_expiration_timestamp(raw.clone())
-            .map(|expired| Token {
-                raw,
-                expired,
-            })
+        token_expiration_timestamp(raw.clone()).map(|expired| Token { raw, expired })
     }
 }
 
@@ -109,10 +111,7 @@ impl<'a> TryFrom<EncodedTokenMeta<'a>> for TokenResponseMeta {
             .expiration()
             .base64_decode_url_safe()
             .map(Cursor::new)
-            .and_then(|cursor| 
-                ureq::serde_json::from_reader(cursor)
-                    .map_err(Into::into)
-            )
+            .and_then(|cursor| ureq::serde_json::from_reader(cursor).map_err(Into::into))
     }
 }
 
@@ -147,10 +146,10 @@ impl<'a> TryFrom<&'a str> for EncodedTokenMeta<'a> {
 #[cfg(test)]
 mod tests {
     use super::EncodedTokenMeta;
-    use crate::base64::Base64;
-    use std::str::from_utf8;
     use super::{Token, TokenExpired};
+    use crate::base64::Base64;
     use chrono::Utc;
+    use std::str::from_utf8;
 
     const RAW_TOKEN: &str = include_str!("raw_token.txt");
     const TOKEN_META_JSON: &str = include_str!("token_meta.json");
@@ -218,4 +217,3 @@ mod tests {
         assert!(!Token::demo().token_expired());
     }
 }
-

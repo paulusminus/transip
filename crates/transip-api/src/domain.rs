@@ -1,6 +1,6 @@
 use crate::{
     api_client::{ApiClient, Url},
-    Result, HasName,
+    HasName, Result,
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
@@ -205,9 +205,8 @@ impl TransipApiDomain for ApiClient {
 
 #[cfg(test)]
 mod test {
-    use crate::{ApiClient, HasNames};
     use super::TransipApiDomain;
-
+    use crate::{ApiClient, HasNames};
 
     #[test]
     fn domains() {
@@ -221,7 +220,8 @@ mod test {
                 "transipdemo.net",
                 "transipdemonstratie.com",
                 "transipdemonstratie.nl",
-            ]);
+            ]
+        );
     }
 
     #[test]

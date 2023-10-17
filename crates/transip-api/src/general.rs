@@ -1,6 +1,6 @@
 use crate::{
     api_client::{ApiClient, Url},
-    Result, HasName,
+    HasName, Result,
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
@@ -178,9 +178,9 @@ impl TransipApiGeneral for ApiClient {
 
 #[cfg(test)]
 mod tests {
-    use crate::{api_client::ApiClient, general::Product};
     use super::TransipApiGeneral;
     use crate::HasNames;
+    use crate::{api_client::ApiClient, general::Product};
 
     #[test]
     fn api_test() {
@@ -192,13 +192,7 @@ mod tests {
     fn availability_zones() {
         let zones = ApiClient::demo().availability_zones().unwrap();
         let names = zones.names();
-        assert_eq!(
-            names,
-            vec![
-                "ams0",
-                "rtm0",
-            ],
-        );
+        assert_eq!(names, vec!["ams0", "rtm0",],);
     }
 
     #[test]
@@ -229,16 +223,10 @@ mod tests {
 
     #[test]
     fn haip_products() {
-        let products: Vec<Product> = ApiClient::demo()
-            .products()
-            .unwrap()
-            .haip;
+        let products: Vec<Product> = ApiClient::demo().products().unwrap().haip;
         let names = products.names();
 
-        assert_eq!(names, vec![
-            "haip-basic-contract",
-            "haip-pro-contract",
-        ]);
+        assert_eq!(names, vec!["haip-basic-contract", "haip-pro-contract",]);
     }
 
     #[test]
@@ -248,11 +236,6 @@ mod tests {
             .unwrap();
         let names = elements.names();
 
-        assert_eq!(
-            names,
-            vec![
-                "haip-load-balancing",
-            ]
-        );
+        assert_eq!(names, vec!["haip-load-balancing",]);
     }
 }

@@ -1,6 +1,12 @@
-use std::{path::Path, io::{Read, BufReader}, fs::OpenOptions};
-
-use ring::{signature::{RsaKeyPair, self}, rand};
+use ring::{
+    rand,
+    signature::{self, RsaKeyPair},
+};
+use std::{
+    fs::OpenOptions,
+    io::{BufReader, Read},
+    path::Path,
+};
 
 use crate::base64::Base64;
 use crate::{Error, Result};
@@ -11,7 +17,9 @@ pub struct KeyPair {
 
 impl From<RsaKeyPair> for KeyPair {
     fn from(rsa_key_pair: RsaKeyPair) -> Self {
-        Self { inner: rsa_key_pair }
+        Self {
+            inner: rsa_key_pair,
+        }
     }
 }
 
@@ -28,30 +36,36 @@ impl KeyPair {
                 .map_err(|error| Error::Rejected(error.to_string()))
                 .map(KeyPair::from)
         }
-    
     }
 
     pub fn try_from_file<P>(path: P) -> Result<KeyPair>
     where
         P: AsRef<Path>,
     {
-        OpenOptions::new().read(true).open(path)
+        OpenOptions::new()
+            .read(true)
+            .open(path)
             .map_err(Into::into)
             .and_then(KeyPair::try_from_reader)
     }
 
-    pub fn sign<S>(&self, data: S) -> Result<String> 
+    pub fn sign<S>(&self, data: S) -> Result<String>
     where
         S: AsRef<[u8]>,
     {
         let rng = rand::SystemRandom::new();
         let mut signature = vec![0; self.inner.public().modulus_len()];
         self.inner
-            .sign(&signature::RSA_PKCS1_SHA512, &rng, data.as_ref(), &mut signature)
+            .sign(
+                &signature::RSA_PKCS1_SHA512,
+                &rng,
+                data.as_ref(),
+                &mut signature,
+            )
             .map_err(Error::Sign)?;
-    
-        Ok(signature.as_slice().base64_encode_standard_padding())    
-    }    
+
+        Ok(signature.as_slice().base64_encode_standard_padding())
+    }
 }
 
 #[cfg(test)]

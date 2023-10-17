@@ -29,7 +29,7 @@ transip-api = "0.3"
 ```
     # use transip_api::{configuration_from_environment, ApiClient, Error};
     mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
-    assert_eq!(client.api_test()?.as_str(), "pong");
+    assert_eq!(client.api_test().unwrap().as_str(), "pong");
     # Ok::<(), Error>(())
 ```
 
@@ -62,7 +62,7 @@ pub trait Configuration {
 }
 
 pub trait HasName {
-    fn name(&self) -> &str; 
+    fn name(&self) -> &str;
 }
 
 pub trait HasNames {
@@ -71,8 +71,6 @@ pub trait HasNames {
 
 impl<T: HasName> HasNames for Vec<T> {
     fn names(&self) -> Vec<&str> {
-        self.iter()
-            .map(|t| t.name())
-            .collect::<Vec<_>>()
+        self.iter().map(|t| t.name()).collect::<Vec<_>>()
     }
 }
