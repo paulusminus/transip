@@ -8,12 +8,25 @@ use ureq::{Agent, AgentBuilder};
 use crate::authentication::{
     AuthRequest, KeyPair, Token, TokenExpiration, TokenExpired, TokenResponse, UrlAuthentication,
 };
-use crate::{timeit, Configuration, Error, Result};
+use crate::{Configuration, Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
 const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Seconds(120);
 const AGENT_TIMEOUT_SECONDS: u64 = 30;
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
+
+macro_rules! timeit {
+    ($code:block) => {{
+        let start = std::time::Instant::now();
+        let t = $code;
+        if t.is_err() {
+            tracing::error!("error after {} milliseconds", start.elapsed().as_millis());
+        } else {
+            tracing::info!("result after {} milliseconds", start.elapsed().as_millis());
+        };
+        t
+    }};
+}
 
 #[derive(Debug)]
 pub struct Url {
@@ -143,7 +156,7 @@ impl ApiClient {
     }
 
     #[instrument(skip(self))]
-    pub(crate) fn delete<T>(&mut self, url: &str, t: T) -> Result<()>
+    pub(crate) fn delete<T>(&mut self, url: &str, object: T) -> Result<()>
     where
         T: Serialize + Debug,
     {
@@ -153,14 +166,14 @@ impl ApiClient {
             self.agent
                 .delete(url)
                 .set("Authorization", &format!("Bearer {}", token.raw()))
-                .send_json(t)
+                .send_json(object)
                 .map_err(Box::new)?;
             Ok(())
         })
     }
 
     #[instrument(skip(self))]
-    pub(crate) fn post<T>(&mut self, url: &str, t: T) -> Result<()>
+    pub(crate) fn post<T>(&mut self, url: &str, body: T) -> Result<()>
     where
         T: Serialize + Debug,
     {
@@ -170,7 +183,7 @@ impl ApiClient {
             self.agent
                 .post(url)
                 .set("Authorization", &format!("Bearer {}", token.raw()))
-                .send_json(t)
+                .send_json(body)
                 .map_err(Box::new)?;
             Ok(())
         })

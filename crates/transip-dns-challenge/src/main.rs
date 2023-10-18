@@ -1,6 +1,6 @@
 use std::{io::stdout, process::exit, time::Instant};
 
-use trace::VecExt;
+// use trace::VecExt;
 use tracing::{error, info};
 use tracing_log::LogTracer;
 use tracing_subscriber::{
@@ -53,12 +53,12 @@ fn update_dns() -> Result<(), error::Error> {
         };
         client.dns_entry_insert(&transip_domain, dns_entry)?;
 
-        let name_servers = client
-            .nameserver_list(&transip_domain)?
-            .into_iter()
-            .map(|nameserver| nameserver.hostname)
-            .collect::<Vec<String>>();
-        name_servers.trace();
+        // let name_servers = client
+        //     .nameserver_list(&transip_domain)?
+        //     .into_iter()
+        //     .map(|nameserver| nameserver.hostname)
+        //     .collect::<Vec<String>>();
+        // name_servers.trace();
 
         dns_check_updated::has_acme_challenge(format!("{transip_domain}."), challenge)
             .map_err(|error| error::Error::Dns(Box::new(error)))
@@ -139,29 +139,29 @@ fn main() {
     }
 }
 
-mod trace {
-    use core::fmt::Display;
+// mod trace {
+//     use core::fmt::Display;
 
-    pub trait VecExt {
-        fn trace(&self);
-    }
+//     pub trait VecExt {
+//         fn trace(&self);
+//     }
 
-    impl<T> VecExt for Vec<T>
-    where
-        T: Display,
-    {
-        fn trace(&self) {
-            self.iter().for_each(trace_object)
-        }
-    }
+//     impl<T> VecExt for Vec<T>
+//     where
+//         T: Display,
+//     {
+//         fn trace(&self) {
+//             self.iter().for_each(trace_object)
+//         }
+//     }
 
-    fn trace_object<T>(t: T)
-    where
-        T: Display,
-    {
-        tracing::info!("{}", t)
-    }
-}
+//     fn trace_object<T>(t: T)
+//     where
+//         T: Display,
+//     {
+//         tracing::info!("{}", t)
+//     }
+// }
 
 mod certbot {
     use crate::constant::*;

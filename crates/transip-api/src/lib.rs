@@ -42,19 +42,15 @@ pub use crate::general::TransipApiGeneral;
 use authentication::TokenExpiration;
 pub use error::Error;
 
-#[macro_use]
 pub mod account;
 mod api_client;
 mod authentication;
 mod base64;
-#[macro_use]
 pub mod domain;
 mod environment;
 mod error;
 mod general;
 pub mod vps;
-
-pub mod timeit;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
