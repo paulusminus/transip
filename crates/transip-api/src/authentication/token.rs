@@ -170,8 +170,8 @@ mod tests {
     use chrono::Utc;
     use std::str::from_utf8;
 
-    const RAW_TOKEN: &str = include_str!("raw_token.txt");
-    const TOKEN_META_JSON: &str = include_str!("token_meta.json");
+    const RAW_TOKEN: &str = include_str!("/home/paul/transip/expired_token.txt");
+    const TOKEN_META_JSON: &str = include_str!("/home/paul/transip/token_meta.json");
 
     #[test]
     fn encoded_token_meta_try_from() {
@@ -225,7 +225,7 @@ mod tests {
 
     #[test]
     fn try_token_from_existing_file() {
-        let filename = "src/authentication/raw_token.txt";
+        let filename = "/home/paul/transip/expired_token.txt";
         let result = Token::try_from_file(filename);
         assert!(result.is_ok());
         assert!(result.unwrap().token_expired());

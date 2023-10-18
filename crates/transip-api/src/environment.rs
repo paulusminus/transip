@@ -1,19 +1,21 @@
-use std::path::Path;
+use std::{path::Path, str::FromStr};
 
-use crate::{Configuration, Error, Result};
+use crate::{authentication::TokenExpiration, Configuration, Error, Result};
 
 const TRANSIP_API_PRIVATE_KEY: &str = "TRANSIP_API_PRIVATE_KEY";
 const TRANSIP_API_USERNAME: &str = "TRANSIP_API_USERNAME";
 const TRANSIP_API_TOKEN_PATH: &str = "TRANSIP_API_TOKEN_PATH";
 const TRANSIP_API_WHITELISTED_ONLY: &str = "TRANSIP_API_WHITELISTED_ONLY";
 const TRANSIP_API_READONLY: &str = "TRANSIP_API_READONLY";
+const TRANSIP_API_TOKEN_EXPIRATION: &str = "TRANSIP_API_TOKEN_EXPIRATION";
 
-const ENVIRONMENT_VARIABLES: [&str; 5] = [
+const ENVIRONMENT_VARIABLES: [&str; 6] = [
     TRANSIP_API_USERNAME,
     TRANSIP_API_PRIVATE_KEY,
     TRANSIP_API_TOKEN_PATH,
     TRANSIP_API_WHITELISTED_ONLY,
     TRANSIP_API_READONLY,
+    TRANSIP_API_TOKEN_EXPIRATION,
 ];
 
 struct Environment {
@@ -22,6 +24,7 @@ struct Environment {
     token_path: String,
     whitelisted_only: bool,
     read_only: bool,
+    token_expiration: TokenExpiration,
 }
 
 impl Configuration for Environment {
@@ -43,6 +46,10 @@ impl Configuration for Environment {
 
     fn read_only(&self) -> bool {
         self.read_only
+    }
+
+    fn token_expiration(&self) -> TokenExpiration {
+        self.token_expiration.clone()
     }
 }
 
@@ -87,14 +94,24 @@ pub fn configuration_from_environment() -> Result<Box<dyn Configuration>> {
         user_name: var(TRANSIP_API_USERNAME)?,
         private_key: var(TRANSIP_API_PRIVATE_KEY)?,
         token_path: var(TRANSIP_API_TOKEN_PATH)?,
-        whitelisted_only: var(TRANSIP_API_WHITELISTED_ONLY).and_then(parse_boolean)?,
-        read_only: var(TRANSIP_API_READONLY).and_then(parse_boolean)?,
+        whitelisted_only: var(TRANSIP_API_WHITELISTED_ONLY).and_then(parse::<bool, _>)?,
+        read_only: var(TRANSIP_API_READONLY).and_then(parse::<bool, _>)?,
+        token_expiration: var(TRANSIP_API_TOKEN_EXPIRATION)
+            .and_then(parse::<TokenExpiration, _>)?,
     }))
 }
 
-fn parse_boolean(s: String) -> Result<bool> {
-    s.parse::<bool>().map_err(Into::into)
+fn parse<T, E>(s: String) -> Result<T>
+where
+    T: FromStr<Err = E>,
+    E: Into<Error>,
+{
+    s.parse::<T>().map_err(Into::into)
 }
+
+// fn parse_boolean(s: String) -> Result<bool> {
+//     s.parse::<bool>().map_err(Into::into)
+// }
 
 #[cfg(test)]
 pub fn demo_configuration() -> Box<dyn Configuration> {
@@ -104,5 +121,6 @@ pub fn demo_configuration() -> Box<dyn Configuration> {
         token_path: Default::default(),
         read_only: false,
         whitelisted_only: false,
+        token_expiration: TokenExpiration::Hours(10),
     })
 }

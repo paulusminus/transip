@@ -48,6 +48,9 @@ pub enum Error {
     #[error("Parse Int: {0}")]
     ParseInt(#[from] std::num::ParseIntError),
 
+    #[error("Parse Expiration: {0}")]
+    ParseExpiration(&'static str),
+
     #[error("Environment variable not set: {0}")]
     EnvironmentVariable(String),
 

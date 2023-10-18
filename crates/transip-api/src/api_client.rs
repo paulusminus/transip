@@ -1,19 +1,21 @@
 use core::time::Duration;
+use std::fmt::Debug;
 
 use serde::{de::DeserializeOwned, Serialize};
-use tracing::info;
-use ureq::{serde_json, Agent, AgentBuilder};
+use tracing::instrument;
+use ureq::{Agent, AgentBuilder};
 
 use crate::authentication::{
     AuthRequest, KeyPair, Token, TokenExpiration, TokenExpired, TokenResponse, UrlAuthentication,
 };
-use crate::{Configuration, Error, Result};
+use crate::{timeit, Configuration, Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
 const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Seconds(120);
 const AGENT_TIMEOUT_SECONDS: u64 = 30;
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
 
+#[derive(Debug)]
 pub struct Url {
     pub prefix: String,
 }
@@ -37,6 +39,12 @@ pub struct ApiClient {
     key: Option<KeyPair>,
     agent: Agent,
     token: Option<Token>,
+}
+
+impl Debug for ApiClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.url.prefix)
+    }
 }
 
 #[cfg(test)]
@@ -90,77 +98,81 @@ impl Drop for ApiClient {
 impl ApiClient {
     fn refresh_token_if_needed(&mut self) -> Result<()> {
         if self.token.token_expired() {
-            info!("New or refresh token needed");
-            let auth_request = AuthRequest::new(
-                self.configuration.user_name(),
-                &TOKEN_EXPIRATION_TIME.to_string(),
-                self.configuration.read_only(),
-                self.configuration.whitelisted_only(),
-            );
-            let json = auth_request.json();
-            let signature = self.key.as_ref().unwrap().sign(&json)?;
-            tracing::info!("Json signing success");
-            let token_response = self
-                .agent
-                .post(&self.url.auth())
-                .set("Content-Type", "application/json")
-                .set("Signature", &signature)
-                .send_bytes(json.as_slice())
-                .map_err(Box::new)?
-                .into_json::<TokenResponse>()?;
-            self.token = Some(Token::try_from(token_response.token)?);
-            info!("New or refresh token succeeded");
+            let span = tracing::span!(tracing::Level::INFO, "token_refresh");
+            let _span_enter = span.enter();
+            let token_result = timeit!({
+                let auth_request = AuthRequest::new(
+                    self.configuration.user_name(),
+                    &TOKEN_EXPIRATION_TIME.to_string(),
+                    self.configuration.read_only(),
+                    self.configuration.whitelisted_only(),
+                );
+                let json = auth_request.json();
+                let signature = self.key.as_ref().unwrap().sign(&json)?;
+                let token_response = self
+                    .agent
+                    .post(&self.url.auth())
+                    .set("Content-Type", "application/json")
+                    .set("Signature", &signature)
+                    .send_bytes(json.as_slice())
+                    .map_err(Box::new)?
+                    .into_json::<TokenResponse>()?;
+                Token::try_from(token_response.token)
+            });
+            self.token = token_result.ok();
         }
         Ok(())
     }
 
+    #[instrument(skip(self))]
     pub(crate) fn get<T>(&mut self, url: &str) -> Result<T>
     where
         T: DeserializeOwned,
     {
-        self.refresh_token_if_needed()?;
-        let token = self.token.as_ref().ok_or(Error::Token)?;
-        info!("get {} calling", url);
-        let json = self
-            .agent
-            .get(url)
-            .set("Authorization", &format!("Bearer {}", token.raw()))
-            .call()
-            .map_err(Box::new)?
-            .into_json::<T>()?;
-        info!("get {} called successfully", url);
-        Ok(json)
+        timeit!({
+            self.refresh_token_if_needed()?;
+            let token = self.token.as_ref().ok_or(Error::Token)?;
+            self.agent
+                .get(url)
+                .set("Authorization", &format!("Bearer {}", token.raw()))
+                .call()
+                .map_err(Box::new)?
+                .into_json::<T>()
+                .map_err(Into::into)
+        })
     }
 
+    #[instrument(skip(self))]
     pub(crate) fn delete<T>(&mut self, url: &str, t: T) -> Result<()>
     where
-        T: Serialize,
+        T: Serialize + Debug,
     {
-        self.refresh_token_if_needed()?;
-        let token = self.token.as_ref().ok_or(Error::Token)?;
-        info!("delete {} calling", url);
-        self.agent
-            .delete(url)
-            .set("Authorization", &format!("Bearer {}", token.raw()))
-            .send_json(t)
-            .map_err(Box::new)?;
-        info!("delete {} called successfully", url);
-        Ok(())
+        timeit!({
+            self.refresh_token_if_needed()?;
+            let token = self.token.as_ref().ok_or(Error::Token)?;
+            self.agent
+                .delete(url)
+                .set("Authorization", &format!("Bearer {}", token.raw()))
+                .send_json(t)
+                .map_err(Box::new)?;
+            Ok(())
+        })
     }
 
+    #[instrument(skip(self))]
     pub(crate) fn post<T>(&mut self, url: &str, t: T) -> Result<()>
     where
-        T: Serialize,
+        T: Serialize + Debug,
     {
-        self.refresh_token_if_needed()?;
-        let token = self.token.as_ref().ok_or(Error::Token)?;
-        info!("post {} calling with {}", url, serde_json::to_string(&t)?);
-        self.agent
-            .post(url)
-            .set("Authorization", &format!("Bearer {}", token.raw()))
-            .send_json(t)
-            .map_err(Box::new)?;
-        info!("post {} called successfully", url);
-        Ok(())
+        timeit!({
+            self.refresh_token_if_needed()?;
+            let token = self.token.as_ref().ok_or(Error::Token)?;
+            self.agent
+                .post(url)
+                .set("Authorization", &format!("Bearer {}", token.raw()))
+                .send_json(t)
+                .map_err(Box::new)?;
+            Ok(())
+        })
     }
 }

@@ -7,7 +7,7 @@ authors = ["Paul Min"]
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/paulusminus/transip-api/"
-version = "0.3.34"
+version = "0.3.38"
 
 [profile.release]
 lto = true

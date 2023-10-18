@@ -4,6 +4,7 @@ use crate::{
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
+use tracing::instrument;
 
 const DOMAINS: &str = "domains";
 const DOMAINS_INCLUDES: &str = "?include=nameservers,contacts";
@@ -112,7 +113,7 @@ pub struct DomainList {
     domains: Vec<Domain>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct DnsEntry {
     pub name: String,
     pub expire: u32,
@@ -133,7 +134,7 @@ pub struct DnsEntryList {
     pub dns_entries: Vec<DnsEntry>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DnsEntryItem {
     pub dns_entry: DnsEntry,
@@ -169,15 +170,18 @@ impl UrlDomain for Url {
 }
 
 impl TransipApiDomain for ApiClient {
+    #[instrument]
     fn domain_list(&mut self) -> Result<Vec<Domain>> {
         self.get::<DomainList>(&self.url.domains(true))
             .map(|list| list.domains)
     }
 
+    #[instrument]
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
         self.delete::<DnsEntryItem>(&self.url.domain_dns(domain_name), entry.into())
     }
 
+    #[instrument(skip(f))]
     fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()>
     where
         F: Fn(&DnsEntry) -> bool,
@@ -188,15 +192,18 @@ impl TransipApiDomain for ApiClient {
         Ok(())
     }
 
+    #[instrument]
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {
         self.get::<DnsEntryList>(&self.url.domain_dns(domain_name))
             .map(|list| list.dns_entries)
     }
 
+    #[instrument]
     fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
         self.post::<DnsEntryItem>(&self.url.domain_dns(domain_name), entry.into())
     }
 
+    #[instrument]
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>> {
         self.get::<NameServerList>(&self.url.domain_nameservers(domain_name))
             .map(|list| list.nameservers)

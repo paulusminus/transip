@@ -36,21 +36,25 @@ transip-api = "0.3"
 
 */
 
-pub use crate::account::TransipApiAccount;
 pub use crate::api_client::ApiClient;
 pub use crate::environment::configuration_from_environment;
 pub use crate::general::TransipApiGeneral;
+use authentication::TokenExpiration;
 pub use error::Error;
 
-mod account;
+#[macro_use]
+pub mod account;
 mod api_client;
 mod authentication;
 mod base64;
+#[macro_use]
 pub mod domain;
 mod environment;
 mod error;
 mod general;
 pub mod vps;
+
+pub mod timeit;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -60,6 +64,7 @@ pub trait Configuration {
     fn token_path(&self) -> &str;
     fn whitelisted_only(&self) -> bool;
     fn read_only(&self) -> bool;
+    fn token_expiration(&self) -> TokenExpiration;
 }
 
 trait HasName {
