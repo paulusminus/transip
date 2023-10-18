@@ -2,7 +2,7 @@
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
-name = "transip-api"
+name = "transip"
 repository.workspace = true
 version.workspace = true
 

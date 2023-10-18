@@ -6,12 +6,11 @@ use tracing::instrument;
 use ureq::{Agent, AgentBuilder};
 
 use crate::authentication::{
-    AuthRequest, KeyPair, Token, TokenExpiration, TokenExpired, TokenResponse, UrlAuthentication,
+    AuthRequest, KeyPair, Token, TokenExpired, TokenResponse, UrlAuthentication,
 };
 use crate::{Configuration, Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
-const TOKEN_EXPIRATION_TIME: TokenExpiration = TokenExpiration::Seconds(120);
 const AGENT_TIMEOUT_SECONDS: u64 = 30;
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
 
@@ -46,7 +45,7 @@ impl From<&str> for Url {
 /// Each call starts with a check to see if we have a valid JWT token
 /// If the token is expired or non existant then the Transip API call for requesting a new token is called
 /// Tokens are persisted to disk on exit and reused if not expired on application startup
-pub struct ApiClient {
+pub struct Client {
     pub(crate) url: Url,
     configuration: Box<dyn Configuration>,
     key: Option<KeyPair>,
@@ -54,16 +53,16 @@ pub struct ApiClient {
     token: Option<Token>,
 }
 
-impl Debug for ApiClient {
+impl Debug for Client {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.url.prefix)
     }
 }
 
 #[cfg(test)]
-impl ApiClient {
+impl Client {
     pub fn demo() -> Self {
-        ApiClient {
+        Self {
             url: TRANSIP_API_PREFIX.into(),
             key: None,
             agent: AgentBuilder::new()
@@ -76,10 +75,10 @@ impl ApiClient {
     }
 }
 
-impl TryFrom<Box<dyn Configuration>> for ApiClient {
+impl TryFrom<Box<dyn Configuration>> for Client {
     type Error = Error;
     fn try_from(configuration: Box<dyn Configuration>) -> Result<Self> {
-        KeyPair::try_from_file(configuration.private_key_pem_file()).map(|key| ApiClient {
+        KeyPair::try_from_file(configuration.private_key_pem_file()).map(|key| Self {
             url: TRANSIP_API_PREFIX.into(),
             key: Some(key),
             agent: AgentBuilder::new()
@@ -92,7 +91,7 @@ impl TryFrom<Box<dyn Configuration>> for ApiClient {
     }
 }
 
-impl Drop for ApiClient {
+impl Drop for Client {
     fn drop(&mut self) {
         if self.key.is_some() {
             if let Some(token) = self.token.take() {
@@ -108,7 +107,7 @@ impl Drop for ApiClient {
     }
 }
 
-impl ApiClient {
+impl Client {
     fn refresh_token_if_needed(&mut self) -> Result<()> {
         if self.token.token_expired() {
             let span = tracing::span!(tracing::Level::INFO, "token_refresh");
@@ -116,7 +115,7 @@ impl ApiClient {
             let token_result = timeit!({
                 let auth_request = AuthRequest::new(
                     self.configuration.user_name(),
-                    &TOKEN_EXPIRATION_TIME.to_string(),
+                    self.configuration.token_expiration(),
                     self.configuration.read_only(),
                     self.configuration.whitelisted_only(),
                 );

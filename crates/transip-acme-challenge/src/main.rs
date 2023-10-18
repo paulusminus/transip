@@ -1,6 +1,5 @@
 use std::{io::stdout, process::exit, time::Instant};
 
-// use trace::VecExt;
 use tracing::{error, info};
 use tracing_log::LogTracer;
 use tracing_subscriber::{
@@ -9,10 +8,9 @@ use tracing_subscriber::{
     prelude::*,
     EnvFilter,
 };
-use transip_api::{
-    configuration_from_environment,
-    domain::{DnsEntry, TransipApiDomain},
-    ApiClient, Error, TransipApiGeneral,
+use transip::{
+    api::domain::{DnsEntry, DomainApi},
+    configuration_from_environment, Client, Error,
 };
 
 mod constant;
@@ -32,8 +30,7 @@ fn update_dns() -> Result<(), error::Error> {
             constant::CERTBOT_DOMAIN.to_owned(),
         ))?;
 
-    let mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
-    let _ping = client.api_test()?;
+    let mut client = configuration_from_environment().and_then(Client::try_from)?;
 
     if args_is_cleanup() {
         info!("Deleting all _acme_challenge records");
@@ -52,13 +49,6 @@ fn update_dns() -> Result<(), error::Error> {
             content: challenge.clone(),
         };
         client.dns_entry_insert(&transip_domain, dns_entry)?;
-
-        // let name_servers = client
-        //     .nameserver_list(&transip_domain)?
-        //     .into_iter()
-        //     .map(|nameserver| nameserver.hostname)
-        //     .collect::<Vec<String>>();
-        // name_servers.trace();
 
         dns_check_updated::has_acme_challenge(format!("{transip_domain}."), challenge)
             .map_err(|error| error::Error::Dns(Box::new(error)))
@@ -121,7 +111,7 @@ fn args_is_cleanup() -> bool {
 fn main() {
     let start = Instant::now();
     if args_has_version() {
-        println!("{} {}", constant::NAME, constant::VERSION);
+        println!("{}", constant::VERSION_INFO);
         return;
     }
 
@@ -138,30 +128,6 @@ fn main() {
         }
     }
 }
-
-// mod trace {
-//     use core::fmt::Display;
-
-//     pub trait VecExt {
-//         fn trace(&self);
-//     }
-
-//     impl<T> VecExt for Vec<T>
-//     where
-//         T: Display,
-//     {
-//         fn trace(&self) {
-//             self.iter().for_each(trace_object)
-//         }
-//     }
-
-//     fn trace_object<T>(t: T)
-//     where
-//         T: Display,
-//     {
-//         tracing::info!("{}", t)
-//     }
-// }
 
 mod certbot {
     use crate::constant::*;
@@ -186,17 +152,22 @@ mod certbot {
     impl ValidationConfig {
         pub fn new() -> Self {
             let mut hash_map = HashMap::new();
-            let mut add_if_ok = |name: &'static str| {
+
+            [
+                CERTBOT_DOMAIN,
+                CERTBOT_VALIDATION,
+                CERTBOT_TOKEN,
+                CERTBOT_REMAINING_CHALLENGES,
+                CERTBOT_ALL_DOMAINS,
+                CERTBOT_AUTH_OUTPUT,
+            ]
+            .into_iter()
+            .for_each(|name| {
                 if let Ok(value) = var(name) {
                     hash_map.insert(name, value);
                 }
-            };
-            add_if_ok(CERTBOT_DOMAIN);
-            add_if_ok(CERTBOT_VALIDATION);
-            add_if_ok(CERTBOT_TOKEN);
-            add_if_ok(CERTBOT_REMAINING_CHALLENGES);
-            add_if_ok(CERTBOT_ALL_DOMAINS);
-            add_if_ok(CERTBOT_AUTH_OUTPUT);
+            });
+
             Self(hash_map)
         }
 

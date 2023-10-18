@@ -4,7 +4,7 @@ use tracing_log::log_tracer::SetLoggerError;
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Api {0}")]
-    Api(#[from] transip_api::Error),
+    Api(#[from] transip::Error),
 
     #[error("Log {0}")]
     Log(#[from] SetLoggerError),

@@ -1,5 +1,5 @@
 use crate::{
-    api_client::{ApiClient, Url},
+    client::{Client, Url},
     Result,
 };
 use core::fmt::Display;
@@ -65,7 +65,7 @@ impl UrlVps for Url {
     }
 }
 
-impl TransipApiVps for ApiClient {
+impl TransipApiVps for Client {
     fn vps_list(&mut self) -> Result<Vec<Vps>> {
         self.get::<VpsList>(&self.url.vps()).map(|list| list.vpss)
     }

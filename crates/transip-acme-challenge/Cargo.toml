@@ -1,15 +1,13 @@
 [package]
-authors.workspace = true
 edition.workspace = true
-license.workspace = true
-name = "transip-api-ping"
-repository.workspace = true
+name = "transip-acme-challenge"
 version.workspace = true
 
 [dependencies]
+dns-check-updated = { path = "../dns-check-updated" }
 thiserror = "1.0.49"
 tracing = "0.1"
 tracing-appender = "0.2.2"
 tracing-log = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "local-time"] }
-transip-api = { version = "0.3.0", path = "../transip-api" }
+transip = { path = "../transip" }

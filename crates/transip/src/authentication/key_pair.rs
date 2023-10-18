@@ -3,12 +3,12 @@ use ring::{
     signature::{self, RsaKeyPair},
 };
 use std::{
-    fs::OpenOptions,
     io::{BufReader, Read},
     path::Path,
 };
 
 use crate::base64::Base64;
+use crate::fs::FileSystem;
 use crate::{Error, Result};
 
 pub struct KeyPair {
@@ -42,11 +42,7 @@ impl KeyPair {
     where
         P: AsRef<Path>,
     {
-        OpenOptions::new()
-            .read(true)
-            .open(path)
-            .map_err(Into::into)
-            .and_then(KeyPair::try_from_reader)
+        path.reader().and_then(KeyPair::try_from_reader)
     }
 
     pub fn sign<S>(&self, data: S) -> Result<String>

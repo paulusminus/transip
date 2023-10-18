@@ -5,7 +5,7 @@ use tracing_subscriber::{
     filter::LevelFilter, fmt::time::LocalTime, fmt::writer::BoxMakeWriter, layer::SubscriberExt,
     EnvFilter,
 };
-use transip_api::{configuration_from_environment, ApiClient, TransipApiGeneral};
+use transip::{api::general::GeneralApi, configuration_from_environment, Client};
 
 use crate::error::Error;
 
@@ -31,7 +31,7 @@ fn rolling_or_stdout() -> BoxMakeWriter {
     }
 }
 
-fn api_test(mut client: ApiClient) -> Result<(), Error> {
+fn api_test(mut client: Client) -> Result<(), Error> {
     let ping = client.api_test()?;
     if ping != *"pong" {
         Err(Error::Ping(ping))
@@ -55,7 +55,7 @@ fn run() -> Result<(), Error> {
 
     tracing::subscriber::set_global_default(subscriber)?;
 
-    let client = configuration_from_environment().and_then(ApiClient::try_from)?;
+    let client = configuration_from_environment().and_then(Client::try_from)?;
     api_test(client)
 }
 

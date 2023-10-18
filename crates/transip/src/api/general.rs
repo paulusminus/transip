@@ -1,5 +1,5 @@
 use crate::{
-    api_client::{ApiClient, Url},
+    client::{Client, Url},
     HasName, Result,
 };
 use core::fmt::Display;
@@ -18,7 +18,7 @@ trait UrlGeneral {
 }
 
 /// [General](https://api.transip.nl/rest/docs.html#general)
-pub trait TransipApiGeneral {
+pub trait GeneralApi {
     /// See <https://api.transip.nl/rest/docs.html#general-apitest-get>
     ///
     /// The result of this method should always be `pong` if successfull.
@@ -155,7 +155,7 @@ impl UrlGeneral for Url {
     }
 }
 
-impl TransipApiGeneral for ApiClient {
+impl GeneralApi for Client {
     fn api_test(&mut self) -> Result<String> {
         self.get::<Ping>(&self.url.api_test()).map(|p| p.ping)
     }
@@ -178,26 +178,26 @@ impl TransipApiGeneral for ApiClient {
 
 #[cfg(test)]
 mod tests {
-    use super::TransipApiGeneral;
+    use super::{GeneralApi, Product};
+    use crate::client::Client;
     use crate::HasNames;
-    use crate::{api_client::ApiClient, general::Product};
 
     #[test]
     fn api_test() {
-        let ping = ApiClient::demo().api_test().unwrap();
+        let ping = Client::demo().api_test().unwrap();
         assert_eq!(ping, "pong".to_owned());
     }
 
     #[test]
     fn availability_zones() {
-        let zones = ApiClient::demo().availability_zones().unwrap();
+        let zones = Client::demo().availability_zones().unwrap();
         let names = zones.names();
         assert_eq!(names, vec!["ams0", "rtm0",],);
     }
 
     #[test]
     fn vps_products() {
-        let products = ApiClient::demo().products().unwrap().vps;
+        let products = Client::demo().products().unwrap().vps;
         let names = products.names();
         assert_eq!(
             names,
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn haip_products() {
-        let products: Vec<Product> = ApiClient::demo().products().unwrap().haip;
+        let products: Vec<Product> = Client::demo().products().unwrap().haip;
         let names = products.names();
 
         assert_eq!(names, vec!["haip-basic-contract", "haip-pro-contract",]);
@@ -231,7 +231,7 @@ mod tests {
 
     #[test]
     fn haip_basic_product_elements() {
-        let elements = ApiClient::demo()
+        let elements = Client::demo()
             .product_elements("haip-basic-contract")
             .unwrap();
         let names = elements.names();

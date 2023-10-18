@@ -10,6 +10,12 @@ pub enum TokenExpiration {
     Hours(u8),
 }
 
+impl Default for TokenExpiration {
+    fn default() -> Self {
+        Self::Minutes(5)
+    }
+}
+
 fn fmt(count: &u8, unit: &'static str) -> String {
     format!("{} {}", count, unit) + if count <= &1 { "" } else { "s" }
 }

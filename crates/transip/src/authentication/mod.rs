@@ -5,7 +5,7 @@ use std::{
 
 use serde::Serialize;
 
-use crate::api_client::Url;
+use crate::client::Url;
 
 pub use key_pair::KeyPair;
 pub use token::{token_expiration_timestamp, Token, TokenExpired, TokenResponse};
@@ -40,7 +40,7 @@ pub struct AuthRequest {
 impl AuthRequest {
     pub fn new(
         username: &str,
-        expiration_time: &str,
+        expiration_time: TokenExpiration,
         read_only: bool,
         whitelisted_only: bool,
     ) -> Self {
@@ -48,7 +48,7 @@ impl AuthRequest {
             login: username.into(),
             nonce: milliseconds_since_epoch(),
             read_only,
-            expiration_time: expiration_time.into(),
+            expiration_time: expiration_time.to_string(),
             label: create_label(),
             global_key: !whitelisted_only,
         }

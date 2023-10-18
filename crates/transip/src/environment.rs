@@ -94,24 +94,19 @@ pub fn configuration_from_environment() -> Result<Box<dyn Configuration>> {
         user_name: var(TRANSIP_API_USERNAME)?,
         private_key: var(TRANSIP_API_PRIVATE_KEY)?,
         token_path: var(TRANSIP_API_TOKEN_PATH)?,
-        whitelisted_only: var(TRANSIP_API_WHITELISTED_ONLY).and_then(parse::<bool, _>)?,
-        read_only: var(TRANSIP_API_READONLY).and_then(parse::<bool, _>)?,
-        token_expiration: var(TRANSIP_API_TOKEN_EXPIRATION)
-            .and_then(parse::<TokenExpiration, _>)?,
+        whitelisted_only: var(TRANSIP_API_WHITELISTED_ONLY).and_then(parse::<bool>)?,
+        read_only: var(TRANSIP_API_READONLY).and_then(parse::<bool>)?,
+        token_expiration: var(TRANSIP_API_TOKEN_EXPIRATION).and_then(parse::<TokenExpiration>)?,
     }))
 }
 
-fn parse<T, E>(s: String) -> Result<T>
+fn parse<T>(s: String) -> Result<T>
 where
-    T: FromStr<Err = E>,
-    E: Into<Error>,
+    T: FromStr,
+    <T as FromStr>::Err: Into<Error>,
 {
     s.parse::<T>().map_err(Into::into)
 }
-
-// fn parse_boolean(s: String) -> Result<bool> {
-//     s.parse::<bool>().map_err(Into::into)
-// }
 
 #[cfg(test)]
 pub fn demo_configuration() -> Box<dyn Configuration> {

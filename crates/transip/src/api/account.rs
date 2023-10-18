@@ -1,5 +1,5 @@
 use crate::{
-    api_client::{ApiClient, Url},
+    client::{Client, Url},
     Result,
 };
 use core::fmt::Display;
@@ -17,7 +17,7 @@ trait UrlAccount {
 }
 
 /// [Account](https://api.transip.nl/rest/docs.html#account)
-pub trait TransipApiAccount {
+pub trait AccountApi {
     /// See <https://api.transip.nl/rest/docs.html#account-invoices-get-1>
     fn invoice(&mut self, invoice_number: &str) -> Result<Invoice>;
     /// See <https://api.transip.nl/rest/docs.html#account-invoiceitems-get>
@@ -107,7 +107,7 @@ impl UrlAccount for Url {
     }
 }
 
-impl TransipApiAccount for ApiClient {
+impl AccountApi for Client {
     fn invoice(&mut self, invoice_number: &str) -> Result<Invoice> {
         self.get::<InvoiceResponse>(&self.url.invoice(invoice_number))
             .map(|item| item.invoice)

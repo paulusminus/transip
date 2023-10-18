@@ -13,7 +13,7 @@ This type of challenge is needed to get wildcard certificates.
 # Usage
 
 This crate is [`on crates.io`] and can
-be used by adding `transip-api` to your depencies in your projects `Cargo.toml`.
+be used by adding `transip` to your depencies in your projects `Cargo.toml`.
 Before running a program using this library a private key should be download from the
 Transip control panel and stored in the user config directory `transip`.
 
@@ -27,8 +27,8 @@ transip-api = "0.3"
 # Example
 
 ```
-    # use transip_api::{configuration_from_environment, ApiClient, Error};
-    mut client = configuration_from_environment().and_then(ApiClient::try_from)?;
+    # use transip::{configuration_from_environment, Client, Error};
+    mut client = configuration_from_environment().and_then(Client::try_from)?;
     let pong = client.api_test()?;
     assert_eq!(pong.as_str(), "pong");
     # Ok::<(), Error>(())
@@ -36,20 +36,18 @@ transip-api = "0.3"
 
 */
 
-pub use crate::api_client::ApiClient;
+pub use crate::client::Client;
 pub use crate::environment::configuration_from_environment;
-pub use crate::general::TransipApiGeneral;
 use authentication::TokenExpiration;
 pub use error::Error;
 
-pub mod account;
-mod api_client;
+pub mod api;
 mod authentication;
 mod base64;
-pub mod domain;
+mod client;
 mod environment;
 mod error;
-mod general;
+mod fs;
 pub mod vps;
 
 pub type Result<T> = std::result::Result<T, Error>;

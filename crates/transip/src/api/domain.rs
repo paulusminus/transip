@@ -1,5 +1,5 @@
 use crate::{
-    api_client::{ApiClient, Url},
+    client::{Client, Url},
     HasName, Result,
 };
 use core::fmt::Display;
@@ -19,7 +19,7 @@ trait UrlDomain {
 
 /// [Domains](https://api.transip.nl/rest/docs.html#domains)
 ///  
-pub trait TransipApiDomain {
+pub trait DomainApi {
     /// See <https://api.transip.nl/rest/docs.html#domains-domains-get>
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
     /// See <https://api.transip.nl/rest/docs.html#domains-dns-delete>
@@ -168,7 +168,7 @@ impl UrlDomain for Url {
     }
 }
 
-impl TransipApiDomain for ApiClient {
+impl DomainApi for Client {
     fn domain_list(&mut self) -> Result<Vec<Domain>> {
         self.get::<DomainList>(&self.url.domains(true))
             .map(|list| list.domains)
@@ -205,12 +205,12 @@ impl TransipApiDomain for ApiClient {
 
 #[cfg(test)]
 mod test {
-    use super::TransipApiDomain;
-    use crate::{ApiClient, HasNames};
+    use super::DomainApi;
+    use crate::{Client, HasNames};
 
     #[test]
     fn domains() {
-        let domains = ApiClient::demo().domain_list().unwrap();
+        let domains = Client::demo().domain_list().unwrap();
         let names = domains.names();
         assert_eq!(
             names,
@@ -226,7 +226,7 @@ mod test {
 
     #[test]
     fn domain_entry_list() {
-        let entry_list = ApiClient::demo().dns_entry_list("transipdemo.be").unwrap();
+        let entry_list = Client::demo().dns_entry_list("transipdemo.be").unwrap();
         let names = entry_list.names();
 
         assert_eq!(

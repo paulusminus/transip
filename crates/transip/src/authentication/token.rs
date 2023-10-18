@@ -1,11 +1,11 @@
 use crate::{Error, Result};
 use std::{
-    fs::OpenOptions,
     io::{Cursor, Read, Write},
     path::Path,
 };
 
 use crate::base64::Base64;
+use crate::fs::FileSystem;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
@@ -50,23 +50,14 @@ impl Token {
     where
         P: AsRef<Path>,
     {
-        OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(path)
-            .map_err(Into::into)
-            .and_then(|file| self.try_to_write(file))
+        path.writer().and_then(|file| self.try_to_write(file))
     }
 
     pub fn try_from_file<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
     {
-        OpenOptions::new()
-            .read(true)
-            .open(path)
-            .map_err(Into::into)
-            .and_then(Token::try_from_reader)
+        path.reader().and_then(Token::try_from_reader)
     }
 
     pub fn raw(&self) -> &str {
