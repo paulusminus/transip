@@ -1,6 +1,6 @@
 use crate::{
     client::{Client, Url},
-    Result,
+    Result, HasName,
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
@@ -28,7 +28,7 @@ pub trait AccountApi {
     fn invoice_pdf(&mut self, invoice_number: &str) -> Result<String>;
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Invoice {
     pub invoice_number: String,
@@ -39,6 +39,12 @@ pub struct Invoice {
     pub currency: String,
     pub total_amount: u64,
     pub total_amount_incl_vat: u64,
+}
+
+impl HasName for Invoice {
+    fn name(&self) -> &str {
+        self.invoice_number.as_str()
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -126,5 +132,21 @@ impl AccountApi for Client {
     fn invoice_pdf(&mut self, invoice_number: &str) -> Result<String> {
         self.get::<Pdf>(&self.url.invoice_pdf(invoice_number))
             .map(|item| item.pdf)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{Client, HasNames};
+    use super::AccountApi;
+
+
+    #[test]
+    fn list() {
+        let mut client = Client::demo();
+        let list = client.invoice_list().unwrap();
+        let names = list.names();
+        let expected: Vec<String> = vec![];
+        assert_eq!(names, expected);
     }
 }

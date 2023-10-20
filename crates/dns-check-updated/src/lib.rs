@@ -1,11 +1,11 @@
 use hickory_resolver::{
-    config::{LookupIpStrategy, NameServerConfigGroup, ResolverConfig, ResolverOpts, GOOGLE_IPS},
+    config::{LookupIpStrategy, NameServerConfigGroup, ResolverConfig, ResolverOpts},
     Resolver,
 };
-use resolver::RecursiveIpv6Resolver;
 use std::{convert::identity, net::IpAddr, thread::sleep, time::Duration};
 
 use crate::error::Error;
+pub use resolver::ResolverType;
 
 mod error;
 mod resolver;
@@ -15,39 +15,37 @@ pub type Result<T> = std::result::Result<T, Error>;
 const MAX_RETRIES: usize = 720;
 const WAIT_SECONDS: u64 = 5;
 
-fn google_nameservers_ipv6() -> Vec<IpAddr> {
-    GOOGLE_IPS
-        .iter()
-        .filter(|ip| ip.is_ipv6())
-        .cloned()
-        .collect()
-}
-
-fn ipv6_resolver(group: NameServerConfigGroup, recursion: bool) -> Result<Resolver> {
+fn ipv6_resolver(
+    group: NameServerConfigGroup,
+    recursion: bool,
+    ipv6_only: bool,
+) -> Result<Resolver> {
     let config = ResolverConfig::from_parts(None, vec![], group);
     let mut options = ResolverOpts::default();
-    options.ip_strategy = LookupIpStrategy::Ipv6Only;
+    if ipv6_only {
+        options.ip_strategy = LookupIpStrategy::Ipv6Only;
+    }
     options.recursion_desired = recursion;
     options.use_hosts_file = false;
     Resolver::new(config, options).map_err(Error::from)
 }
 
-fn google_resolver_ipv6_only() -> Result<Resolver> {
-    let group =
-        NameServerConfigGroup::from_ips_clear(google_nameservers_ipv6().as_slice(), 53, false);
-    ipv6_resolver(group, true)
+fn recursive_resolver(ips: &[IpAddr], ipv6_only: bool) -> Result<Resolver> {
+    let group = NameServerConfigGroup::from_ips_clear(ips, 53, false);
+    ipv6_resolver(group, true, ipv6_only)
 }
 
 pub fn has_acme_challenge<S>(domain_name: S, challenge: S) -> Result<()>
 where
     S: AsRef<str>,
 {
-    let resolvers = google_resolver_ipv6_only()
-        .map(RecursiveIpv6Resolver::from)
-        .and_then(|resolver| resolver.authoritive_ipv6_resolvers(domain_name.as_ref()))?;
+    let resolvers = ResolverType::Google
+        .recursive_resolver(true)
+        .and_then(|resolver| resolver.authoritive_resolvers(domain_name.as_ref()))?;
 
     let mut i: usize = 0;
 
+    sleep(Duration::from_secs(1));
     while !resolvers
         .iter()
         .map(|resolver| resolver.has_single_acme(domain_name.as_ref(), challenge.as_ref()))
@@ -112,7 +110,7 @@ mod tests {
         Resolver,
     };
 
-    use crate::{error::Error, google_resolver_ipv6_only};
+    use crate::{error::Error, ResolverType};
 
     fn to_string<D: Display>(d: D) -> String {
         d.to_string()
@@ -139,13 +137,15 @@ mod tests {
     }
 
     fn ipv6_address_lookup(name: &str) -> Result<Vec<IpAddr>, Error> {
-        google_resolver_ipv6_only()
+        ResolverType::Google
+            .resolver(true)
             .and_then(lookup(name))
             .map(aaaa_mapper(aaaa_to_ipv6))
     }
 
     fn nameservers_lookup(name: &str) -> Result<Vec<String>, Error> {
-        google_resolver_ipv6_only()
+        ResolverType::Google
+            .resolver(true)
             .and_then(ns_lookup(name))
             .map(ns_mapper(to_string))
     }

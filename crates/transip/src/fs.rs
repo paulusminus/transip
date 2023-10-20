@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::{error::ResultExt, Result};
 use std::{
     fs::{File, OpenOptions},
     path::Path,
@@ -14,7 +14,7 @@ where
     P: AsRef<Path>,
 {
     fn reader(&self) -> Result<File> {
-        OpenOptions::new().read(true).open(self).map_err(Into::into)
+        OpenOptions::new().read(true).open(self).err_into()
     }
 
     fn writer(&self) -> Result<File> {
@@ -22,6 +22,6 @@ where
             .create(true)
             .write(true)
             .open(self)
-            .map_err(Into::into)
+            .err_into()
     }
 }

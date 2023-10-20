@@ -8,6 +8,7 @@ use ureq::{Agent, AgentBuilder};
 use crate::authentication::{
     AuthRequest, KeyPair, Token, TokenExpired, TokenResponse, UrlAuthentication,
 };
+use crate::error::ResultExt;
 use crate::{Configuration, Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
@@ -40,7 +41,7 @@ impl From<&str> for Url {
     }
 }
 
-/// ApiClient is the main entry for this library. Creation is done by using ApiClient::new().
+/// Client is the main entry for this library. Creation is done by using Client::try_from(configuration).
 /// After creation of a client, this client can be used to call a Transip API call.
 /// Each call starts with a check to see if we have a valid JWT token
 /// If the token is expired or non existant then the Transip API call for requesting a new token is called
@@ -150,7 +151,7 @@ impl Client {
                 .call()
                 .map_err(Box::new)?
                 .into_json::<T>()
-                .map_err(Into::into)
+                .err_into()
         })
     }
 
@@ -164,6 +165,23 @@ impl Client {
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
                 .delete(url)
+                .set("Authorization", &format!("Bearer {}", token.raw()))
+                .send_json(object)
+                .map_err(Box::new)?;
+            Ok(())
+        })
+    }
+
+    #[instrument(skip(self))]
+    pub(crate) fn patch<T>(&mut self, url: &str, object: T) -> Result<()>
+    where
+        T: Serialize + Debug,
+    {
+        timeit!({
+            self.refresh_token_if_needed()?;
+            let token = self.token.as_ref().ok_or(Error::Token)?;
+            self.agent
+                .patch(url)
                 .set("Authorization", &format!("Bearer {}", token.raw()))
                 .send_json(object)
                 .map_err(Box::new)?;
@@ -187,4 +205,22 @@ impl Client {
             Ok(())
         })
     }
+
+    #[instrument(skip(self))]
+    pub(crate) fn put<T>(&mut self, url: &str, body: T) -> Result<()>
+    where
+        T: Serialize + Debug,
+    {
+        timeit!({
+            self.refresh_token_if_needed()?;
+            let token = self.token.as_ref().ok_or(Error::Token)?;
+            self.agent
+                .put(url)
+                .set("Authorization", &format!("Bearer {}", token.raw()))
+                .send_json(body)
+                .map_err(Box::new)?;
+            Ok(())
+        })
+    }
+
 }

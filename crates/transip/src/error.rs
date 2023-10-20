@@ -66,3 +66,19 @@ pub enum Error {
     #[error("Parse: {0}")]
     ParseBoolean(#[from] ParseBoolError),
 }
+
+pub(crate) trait ResultExt<T, E>
+where
+    E: Into<Error>,
+{
+    fn err_into(self) -> Result<T, Error>;
+}
+
+impl<T, E> ResultExt<T, E> for Result<T, E>
+where
+    E: Into<Error>,
+{
+    fn err_into(self) -> Result<T, Error> {
+        self.map_err(Into::into)
+    }
+}

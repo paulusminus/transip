@@ -1,3 +1,4 @@
+use crate::error::ResultExt;
 use crate::Result;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use base64::Engine;
@@ -13,7 +14,7 @@ where
     T: AsRef<[u8]>,
 {
     fn base64_decode_url_safe(&self) -> Result<Vec<u8>> {
-        URL_SAFE_NO_PAD.decode(self).map_err(Into::into)
+        URL_SAFE_NO_PAD.decode(self).err_into()
     }
 
     fn base64_encode_url_safe(&self) -> String {

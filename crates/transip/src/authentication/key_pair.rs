@@ -70,7 +70,7 @@ mod test {
 
     #[test]
     fn sign() {
-        let key_pair = KeyPair::try_from_file("/etc/transip/paulusminus.pem").unwrap();
+        let key_pair = KeyPair::try_from_file("/etc/transip/home.pem").unwrap();
         let signature = key_pair.sign("{}");
         assert!(signature.is_ok());
     }

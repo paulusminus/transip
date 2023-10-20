@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::{error::ResultExt, Error, Result};
 use std::{
     io::{Cursor, Read, Write},
     path::Path,
@@ -43,7 +43,7 @@ impl Token {
     where
         W: Write,
     {
-        writer.write_all(self.raw.as_bytes()).map_err(Into::into)
+        writer.write_all(self.raw.as_bytes()).err_into()
     }
 
     pub fn try_to_write_file<P>(&self, path: P) -> Result<()>
@@ -121,7 +121,7 @@ impl<'a> TryFrom<EncodedTokenMeta<'a>> for TokenResponseMeta {
             .expiration()
             .base64_decode_url_safe()
             .map(Cursor::new)
-            .and_then(|cursor| ureq::serde_json::from_reader(cursor).map_err(Into::into))
+            .and_then(|cursor| ureq::serde_json::from_reader(cursor).err_into())
     }
 }
 

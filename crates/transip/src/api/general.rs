@@ -2,7 +2,7 @@ use crate::{
     client::{Client, Url},
     HasName, Result,
 };
-use core::fmt::Display;
+use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 
 const API_TEST: &str = "api-test";
@@ -18,20 +18,30 @@ trait UrlGeneral {
 }
 
 /// [General](https://api.transip.nl/rest/docs.html#general)
+/// # Example
+///
+/// ```
+/// assert!(false);
+/// ```
 pub trait GeneralApi {
     /// See <https://api.transip.nl/rest/docs.html#general-apitest-get>
     ///
-    /// The result of this method should always be `pong` if successfull.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// let ping_result: String = client.api_test()?;
-    /// ```
+    /// The positive result of this method should always be `pong`.
+    /// You can use the demo token.
     ///
     fn api_test(&mut self) -> Result<String>;
 
     /// See <https://api.transip.nl/rest/docs.html#general-availabilityzone-get>
+    ///
+    /// The positive result of this method should always be `pong`.
+    /// You can use the demo token.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let zones = Client::demo().availability_zones().unwrap();
+    /// ```
+    ///
     fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>>;
 
     /// See <https://api.transip.nl/rest/docs.html#general-products-get>
@@ -162,7 +172,7 @@ impl GeneralApi for Client {
 
     fn availability_zones(&mut self) -> Result<Vec<AvailabilityZone>> {
         self.get::<AvailabilityZones>(&self.url.availability_zones())
-            .map(|a| a.availability_zones)
+            .map(|list| list.availability_zones)
     }
 
     fn product_elements(&mut self, name: &str) -> Result<Vec<ProductElement>> {

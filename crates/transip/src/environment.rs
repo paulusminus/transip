@@ -1,6 +1,6 @@
 use std::{path::Path, str::FromStr};
 
-use crate::{authentication::TokenExpiration, Configuration, Error, Result};
+use crate::{authentication::TokenExpiration, error::ResultExt, Configuration, Error, Result};
 
 const TRANSIP_API_PRIVATE_KEY: &str = "TRANSIP_API_PRIVATE_KEY";
 const TRANSIP_API_USERNAME: &str = "TRANSIP_API_USERNAME";
@@ -105,7 +105,7 @@ where
     T: FromStr,
     <T as FromStr>::Err: Into<Error>,
 {
-    s.parse::<T>().map_err(Into::into)
+    s.parse::<T>().err_into()
 }
 
 #[cfg(test)]
