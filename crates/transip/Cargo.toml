@@ -1,5 +1,6 @@
 [package]
 authors.workspace = true
+description = "Transip Api callables"
 edition.workspace = true
 license.workspace = true
 name = "transip"
