@@ -2,6 +2,7 @@ use std::{env::VarError, str::ParseBoolError};
 
 use thiserror::Error;
 
+/// All failable functions in this crate should use this Error
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Key: {0}")]

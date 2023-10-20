@@ -6,8 +6,8 @@ use hickory_resolver::{
         GOOGLE_IPS,
     },
     error::ResolveErrorKind,
-    lookup::{Ipv6Lookup, Ipv4Lookup},
-    proto::rr::rdata::{AAAA, A},
+    lookup::{Ipv4Lookup, Ipv6Lookup},
+    proto::rr::rdata::{A, AAAA},
     Resolver,
 };
 
@@ -82,9 +82,7 @@ pub struct RecursiveResolver {
 
 impl From<Resolver> for RecursiveResolver {
     fn from(resolver: Resolver) -> Self {
-        Self {
-            inner: resolver,
-        }
+        Self { inner: resolver }
     }
 }
 
@@ -118,12 +116,14 @@ impl RecursiveResolver {
     where
         S: AsRef<str>,
     {
-        let ipv6_addresses = self.inner
+        let ipv6_addresses = self
+            .inner
             .ipv6_lookup(host_name.as_ref())
             .map_err(Error::from)
             .map(aaaa_mapper(aaaa_to_ipv6))?;
 
-        let ipv4_addresses = self.inner
+        let ipv4_addresses = self
+            .inner
             .ipv4_lookup(host_name.as_ref())
             .map_err(Error::from)
             .map(a_mapper(a_to_ipv4))?;

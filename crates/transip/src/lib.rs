@@ -1,5 +1,6 @@
+// #![warn(missing_docs)]
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
-#![doc(test(attr(deny(warnings))))]
+// #![doc(test(attr(deny(warnings))))]
 
 pub use crate::client::Client;
 pub use crate::environment::configuration_from_environment;

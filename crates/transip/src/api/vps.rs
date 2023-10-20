@@ -1,6 +1,6 @@
 use crate::{
     client::{Client, Url},
-    Result, HasName,
+    HasName, Result,
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
@@ -37,13 +37,19 @@ struct Action {
 
 impl Action {
     fn stop() -> Self {
-        Self { action: "stop".to_owned() }
+        Self {
+            action: "stop".to_owned(),
+        }
     }
     fn start() -> Self {
-        Self { action: "start".to_owned() }
+        Self {
+            action: "start".to_owned(),
+        }
     }
     fn reset() -> Self {
-        Self { action: "reset".to_owned() }
+        Self {
+            action: "reset".to_owned(),
+        }
     }
 }
 
@@ -118,11 +124,13 @@ impl UrlVps for Url {
 
 impl TransipApiVps for Client {
     fn vps_list(&mut self) -> Result<Vec<Vps>> {
-        self.get::<VpsList>(&self.url.vps_list()).map(|list| list.vpss)
+        self.get::<VpsList>(&self.url.vps_list())
+            .map(|list| list.vpss)
     }
 
     fn vps(&mut self, name: &str) -> Result<Vps> {
-        self.get::<VpsItem>(&self.url.vps(name)).map(|item| item.vps)
+        self.get::<VpsItem>(&self.url.vps(name))
+            .map(|item| item.vps)
     }
 
     fn vps_stop(&mut self, name: &str) -> Result<()> {
@@ -146,14 +154,14 @@ impl TransipApiVps for Client {
     fn vps_set_description(&mut self, name: &str, description: &str) -> Result<()> {
         let mut vps_item = self.vps(name).map(VpsItem::from)?;
         vps_item.vps.description = description.to_owned();
-        self.put(&self.url.vps(name), &vps_item)        
+        self.put(&self.url.vps(name), &vps_item)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{Client, HasNames};
     use super::{TransipApiVps, Vps};
+    use crate::{Client, HasNames};
 
     #[test]
     fn vps_list() {

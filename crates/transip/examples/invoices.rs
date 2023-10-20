@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use transip::{Client, configuration_from_environment, api::account::AccountApi};
+use transip::{api::account::AccountApi, configuration_from_environment, Client};
 
 mod variables;
 

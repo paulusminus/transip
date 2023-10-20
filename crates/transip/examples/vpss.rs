@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use transip::{Client, configuration_from_environment, api::vps::TransipApiVps};
+use transip::{api::vps::TransipApiVps, configuration_from_environment, Client};
 
 #[allow(dead_code)]
 const VPS2: &str = "paulusminus-vps2";

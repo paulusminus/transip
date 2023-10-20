@@ -1,6 +1,6 @@
 use crate::{
     client::{Client, Url},
-    Result, HasName,
+    HasName, Result,
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,8 @@ trait UrlAccount {
     fn invoice_pdf(&self, invoice_number: &str) -> String;
 }
 
-/// [Account](https://api.transip.nl/rest/docs.html#account)
+/// See <https://api.transip.nl/rest/docs.html#account>
+
 pub trait AccountApi {
     /// See <https://api.transip.nl/rest/docs.html#account-invoices-get-1>
     fn invoice(&mut self, invoice_number: &str) -> Result<Invoice>;
@@ -137,9 +138,8 @@ impl AccountApi for Client {
 
 #[cfg(test)]
 mod test {
-    use crate::{Client, HasNames};
     use super::AccountApi;
-
+    use crate::{Client, HasNames};
 
     #[test]
     fn list() {

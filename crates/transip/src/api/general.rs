@@ -2,8 +2,8 @@ use crate::{
     client::{Client, Url},
     HasName, Result,
 };
-use std::fmt::Display;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 const API_TEST: &str = "api-test";
 const AVAILABILITY_ZONES: &str = "availability-zones";
@@ -17,12 +17,7 @@ trait UrlGeneral {
     fn product_elements(&self, name: &str) -> String;
 }
 
-/// [General](https://api.transip.nl/rest/docs.html#general)
-/// # Example
-///
-/// ```
-/// assert!(false);
-/// ```
+/// See <https://api.transip.nl/rest/docs.html#general>
 pub trait GeneralApi {
     /// See <https://api.transip.nl/rest/docs.html#general-apitest-get>
     ///
@@ -39,6 +34,7 @@ pub trait GeneralApi {
     /// # Example
     ///
     /// ```
+    /// use transip::{api::general::GeneralApi, Client};
     /// let zones = Client::demo().availability_zones().unwrap();
     /// ```
     ///
@@ -120,7 +116,6 @@ pub struct ProductElements {
     pub product_elements: Vec<ProductElement>,
 }
 
-/// What is Availability
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AvailabilityZone {

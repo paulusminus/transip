@@ -88,6 +88,7 @@ fn check_environment() -> Result<()> {
     Ok(())
 }
 
+/// get configuration from environment variables
 pub fn configuration_from_environment() -> Result<Box<dyn Configuration>> {
     check_environment()?;
     Ok(Box::new(Environment {

@@ -17,8 +17,7 @@ trait UrlDomain {
     fn domains(&self, includes: bool) -> String;
 }
 
-/// [Domains](https://api.transip.nl/rest/docs.html#domains)
-///  
+/// See <https://api.transip.nl/rest/docs.html#domains>
 pub trait DomainApi {
     /// See <https://api.transip.nl/rest/docs.html#domains-domains-get>
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
