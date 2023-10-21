@@ -15,7 +15,7 @@ trait UrlVps {
 /// [VPS](https://api.transip.nl/rest/docs.html#vps)
 #[deprecated(
     since = "0.2.0",
-    note = "This name is not consistent with the rest. Users should instead VpsApi"
+    note = "This name is not consistent with the rest. Users should instead transip::api::vps::VpsApi"
 )]
 pub trait TransipApiVps {
     /// [VPS list](https://api.transip.nl/rest/docs.html#vps-vps-get)
