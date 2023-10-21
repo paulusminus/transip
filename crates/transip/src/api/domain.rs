@@ -20,12 +20,12 @@ trait UrlDomain {
 /// See <https://api.transip.nl/rest/docs.html#domains>
 pub trait DomainApi {
     /// See <https://api.transip.nl/rest/docs.html#domains-domains-get>
-    /// 
+    ///
     /// Example
-    /// 
+    ///
     /// ```
     /// use transip::{api::domain::DomainApi, HasNames};
-    /// 
+    ///
     /// assert_eq!(
     ///     transip::Client::demo().domain_list().unwrap().names(),
     ///     vec![
@@ -37,7 +37,7 @@ pub trait DomainApi {
     ///     ]
     /// );
     /// ```
-    /// 
+    ///
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
 
     fn domain_item(&mut self, name: &str) -> Result<Domain>;
@@ -216,7 +216,8 @@ impl DomainApi for Client {
     }
 
     fn domain_item(&mut self, name: &str) -> Result<Domain> {
-        self.get::<DomainItem>(&self.url.domain(name)).map(|item| item.domain)
+        self.get::<DomainItem>(&self.url.domain(name))
+            .map(|item| item.domain)
     }
 
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
