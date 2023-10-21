@@ -164,8 +164,8 @@ mod tests {
 
     fn expired_token() -> Result<String> {
         Ok(
-            std::env::var("EXPIRED_TOKEN").unwrap_or(
-            std::fs::read_to_string("/home/paul/transip/expired_token.txt",
+            std::env::var("EXPIRED_TOKEN").unwrap_or(std::fs::read_to_string(
+                "/home/paul/transip/expired_token.txt",
             )?),
         )
     }
