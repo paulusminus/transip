@@ -185,7 +185,7 @@ mod tests {
         assert!(encoded.is_ok());
         assert_eq!(
             encoded.unwrap().expiration(),
-            "eyJpc3MiOiJhcGkudHJhbnNpcC5ubCIsImF1ZCI6ImFwaS50cmFuc2lwLm5sIiwianRpIjoiI3UlMnI0cmwlbz9Za1I2cHRITnUiLCJpYXQiOjE2OTY5MTQ0MzAsIm5iZiI6MTY5NjkxNDQzMCwiZXhwIjoxNjk2OTIxNjMwLCJjaWQiOjEwMTkxNCwicm8iOmZhbHNlLCJnayI6ZmFsc2UsImt2Ijp0cnVlfQ"
+            expired_token_meta_json().unwrap(),            
         );
     }
 
@@ -232,10 +232,12 @@ mod tests {
 
     #[test]
     fn try_token_from_existing_file() {
-        let filename = "/home/paul/transip/expired_token.txt";
-        let result = Token::try_from_file(filename);
-        assert!(result.is_ok());
-        assert!(result.unwrap().token_expired());
+        if std::env::var("EXPIRED_TOKEN").is_err() {
+            let filename = "/home/paul/transip/expired_token.txt";
+            let result = Token::try_from_file(filename);
+            assert!(result.is_ok());
+            assert!(result.unwrap().token_expired());    
+        }
     }
 
     #[test]
