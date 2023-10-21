@@ -9,7 +9,7 @@ use crate::fs::FileSystem;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-#[cfg(test)]
+// #[cfg(test)]
 pub const DEMO_TOKEN: &str = include_str!("demo_token.txt");
 
 pub trait TokenExpired {
@@ -22,7 +22,7 @@ pub struct Token {
 }
 
 impl Token {
-    #[cfg(test)]
+    // #[cfg(test)]
     pub fn demo() -> Self {
         Self {
             raw: DEMO_TOKEN.to_owned(),

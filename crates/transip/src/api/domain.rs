@@ -20,7 +20,28 @@ trait UrlDomain {
 /// See <https://api.transip.nl/rest/docs.html#domains>
 pub trait DomainApi {
     /// See <https://api.transip.nl/rest/docs.html#domains-domains-get>
+    /// 
+    /// Example
+    /// 
+    /// ```
+    /// use transip::{api::domain::DomainApi, HasNames};
+    /// 
+    /// assert_eq!(
+    ///     transip::Client::demo().domain_list().unwrap().names(),
+    ///     vec![
+    ///         "transipdemo.be",
+    ///         "transipdemo.de",
+    ///         "transipdemo.net",
+    ///         "transipdemonstratie.com",
+    ///         "transipdemonstratie.nl",
+    ///     ]
+    /// );
+    /// ```
+    /// 
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
+
+    fn domain_item(&mut self, name: &str) -> Result<Domain>;
+
     /// See <https://api.transip.nl/rest/docs.html#domains-dns-delete>
     #[deprecated(
         since = "0.1.2",
@@ -51,7 +72,7 @@ pub trait DomainApi {
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct WhoisContact {
     #[serde(rename = "type")]
@@ -76,7 +97,7 @@ pub struct NameServerList {
     pub nameservers: Vec<NameServer>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct NameServer {
     pub hostname: String,
     pub ipv4: Option<String>,
@@ -89,7 +110,7 @@ impl Display for NameServer {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Domain {
     pub name: String,
@@ -120,6 +141,11 @@ impl HasName for Domain {
     fn name(&self) -> &str {
         self.name.as_str()
     }
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct DomainItem {
+    pub domain: Domain,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -189,6 +215,10 @@ impl DomainApi for Client {
             .map(|list| list.domains)
     }
 
+    fn domain_item(&mut self, name: &str) -> Result<Domain> {
+        self.get::<DomainItem>(&self.url.domain(name)).map(|item| item.domain)
+    }
+
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
         self.delete::<DnsEntryItem>(&self.url.domain_dns(domain_name), entry.into())
     }
@@ -237,6 +267,12 @@ mod test {
                 "transipdemonstratie.nl",
             ]
         );
+    }
+
+    #[test]
+    fn domain_item() {
+        let domain = Client::demo().domain_item("transipdemo.be").unwrap();
+        dbg!(domain);
     }
 
     #[test]

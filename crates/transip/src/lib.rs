@@ -1,6 +1,4 @@
-// #![warn(missing_docs)]
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
-// #![doc(test(attr(deny(warnings))))]
 
 pub use crate::client::Client;
 pub use crate::environment::configuration_from_environment;
@@ -27,11 +25,11 @@ pub trait Configuration {
     fn token_expiration(&self) -> TokenExpiration;
 }
 
-trait HasName {
+pub trait HasName {
     fn name(&self) -> &str;
 }
 
-trait HasNames {
+pub trait HasNames {
     fn names(&self) -> Vec<&str>;
 }
 

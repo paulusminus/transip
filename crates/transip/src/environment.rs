@@ -109,7 +109,7 @@ where
     s.parse::<T>().err_into()
 }
 
-#[cfg(test)]
+// #[cfg(test)]
 pub fn demo_configuration() -> Box<dyn Configuration> {
     Box::new(Environment {
         user_name: Default::default(),

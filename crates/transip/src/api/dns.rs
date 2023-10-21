@@ -34,7 +34,7 @@ pub trait DnsApi {
 /// ```
 /// use transip::api::dns::RecordType;
 ///
-/// dbg!(RecordType::AA);
+/// dbg!(RecordType::AAAA);
 /// ```
 #[derive(Debug, PartialEq)]
 pub enum RecordType {

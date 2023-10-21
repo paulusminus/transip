@@ -60,7 +60,7 @@ impl Debug for Client {
     }
 }
 
-#[cfg(test)]
+// #[cfg(test)]
 impl Client {
     pub fn demo() -> Self {
         Self {
