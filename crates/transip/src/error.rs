@@ -52,6 +52,9 @@ pub enum Error {
     #[error("Parse Expiration: {0}")]
     ParseExpiration(&'static str),
 
+    #[error("Parse Dns entry: {0}")]
+    ParseDnsEntry(&'static str),
+
     #[error("Environment variable not set: {0}")]
     EnvironmentVariable(String),
 

@@ -2,7 +2,7 @@ use crate::{
     client::{Client, Url},
     HasName, Result,
 };
-use core::fmt::Display;
+use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 
 const DOMAINS: &str = "domains";
