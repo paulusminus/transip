@@ -9,7 +9,6 @@ use crate::fs::FileSystem;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-// #[cfg(test)]
 pub const DEMO_TOKEN: &str = include_str!("demo_token.txt");
 
 pub trait TokenExpired {
@@ -22,7 +21,6 @@ pub struct Token {
 }
 
 impl Token {
-    // #[cfg(test)]
     pub fn demo() -> Self {
         Self {
             raw: DEMO_TOKEN.to_owned(),
@@ -165,9 +163,11 @@ mod tests {
     // const TOKEN_META_JSON: &str = include_str!("/home/paul/transip/token_meta.json");
 
     fn expired_token() -> Result<String> {
-        Ok(std::env::var("EXPIRED_TOKEN").unwrap_or(
-            Token::try_from_file("/home/paul/transip/expired_token.txt").map(|t| t.raw)?,
-        ))
+        Ok(
+            std::env::var("EXPIRED_TOKEN").unwrap_or(
+            std::fs::read_to_string("/home/paul/transip/expired_token.txt",
+            )?),
+        )
     }
 
     fn expired_token_meta_json() -> Result<String> {
@@ -185,7 +185,7 @@ mod tests {
         assert!(encoded.is_ok());
         assert_eq!(
             encoded.unwrap().expiration(),
-            expired_token_meta_json().unwrap(),
+            "eyJpc3MiOiJhcGkudHJhbnNpcC5ubCIsImF1ZCI6ImFwaS50cmFuc2lwLm5sIiwianRpIjoiI3UlMnI0cmwlbz9Za1I2cHRITnUiLCJpYXQiOjE2OTY5MTQ0MzAsIm5iZiI6MTY5NjkxNDQzMCwiZXhwIjoxNjk2OTIxNjMwLCJjaWQiOjEwMTkxNCwicm8iOmZhbHNlLCJnayI6ZmFsc2UsImt2Ijp0cnVlfQ",
         );
     }
 
