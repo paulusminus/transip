@@ -185,7 +185,7 @@ mod tests {
         assert!(encoded.is_ok());
         assert_eq!(
             encoded.unwrap().expiration(),
-            expired_token_meta_json().unwrap(),            
+            expired_token_meta_json().unwrap(),
         );
     }
 
@@ -236,7 +236,7 @@ mod tests {
             let filename = "/home/paul/transip/expired_token.txt";
             let result = Token::try_from_file(filename);
             assert!(result.is_ok());
-            assert!(result.unwrap().token_expired());    
+            assert!(result.unwrap().token_expired());
         }
     }
 
