@@ -157,16 +157,31 @@ impl<'a> TryFrom<&'a str> for EncodedTokenMeta<'a> {
 mod tests {
     use super::EncodedTokenMeta;
     use super::{Token, TokenExpired};
-    use crate::base64::Base64;
+    use crate::{base64::Base64, Result};
     use chrono::Utc;
     use std::str::from_utf8;
 
-    const RAW_TOKEN: &str = include_str!("/home/paul/transip/expired_token.txt");
-    const TOKEN_META_JSON: &str = include_str!("/home/paul/transip/token_meta.json");
+    // const RAW_TOKEN: &str = include_str!("/home/paul/transip/expired_token.txt");
+    // const TOKEN_META_JSON: &str = include_str!("/home/paul/transip/token_meta.json");
+
+    fn expired_token() -> Result<String> {
+        Ok(std::env::var("EXPIRED_TOKEN").unwrap_or(
+            Token::try_from_file("/home/paul/transip/expired_token.txt").map(|t| t.raw)?,
+        ))
+    }
+
+    fn expired_token_meta_json() -> Result<String> {
+        Ok(
+            std::env::var("EXPIRED_TOKEN_META_JSON").unwrap_or(std::fs::read_to_string(
+                "/home/paul/transip/token_meta.json",
+            )?),
+        )
+    }
 
     #[test]
     fn encoded_token_meta_try_from() {
-        let encoded = EncodedTokenMeta::try_from(RAW_TOKEN);
+        let token = expired_token().unwrap();
+        let encoded = EncodedTokenMeta::try_from(token.as_str());
         assert!(encoded.is_ok());
         assert_eq!(
             encoded.unwrap().expiration(),
@@ -176,12 +191,13 @@ mod tests {
 
     #[test]
     fn decode() {
-        let encoded_metadata = EncodedTokenMeta::try_from(RAW_TOKEN).unwrap();
+        let token = expired_token().unwrap();
+        let encoded_metadata = EncodedTokenMeta::try_from(token.as_str()).unwrap();
         let decoded = encoded_metadata.expiration().base64_decode_url_safe();
         assert!(decoded.is_ok());
         let token_meta = decoded.unwrap();
         let s = from_utf8(token_meta.as_slice()).unwrap();
-        assert_eq!(s, TOKEN_META_JSON);
+        assert_eq!(s, expired_token_meta_json().unwrap());
     }
 
     #[test]

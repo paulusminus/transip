@@ -6,6 +6,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  EXPIRED_TOKEN: ${{ secrets.EXPIRED_TOKEN }}
+  EXPIRED_TOKEN_META_JSON: ${{ secrets.EXPIRED_TOKEN_META_JSON }}
 
 jobs:
   build:
