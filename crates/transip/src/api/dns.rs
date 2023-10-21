@@ -1,6 +1,6 @@
+use crate::Error;
 use std::fmt::Display;
 use std::str::FromStr;
-use crate::Error;
 
 use crate::error::ResultExt;
 use crate::{
@@ -33,7 +33,7 @@ pub trait DnsApi {
 /// Example
 /// ```
 /// use transip::api::dns::RecordType;
-/// 
+///
 /// dbg!(RecordType::AA);
 /// ```
 #[derive(Debug, PartialEq)]
@@ -69,7 +69,7 @@ impl FromStr for RecordType {
                 }
             };
         }
-        
+
         compare!(c, RecordType::A);
         compare!(c, RecordType::AAAA);
         compare!(c, RecordType::ALIAS);
@@ -96,7 +96,11 @@ pub struct DnsEntry {
 
 impl std::fmt::Display for DnsEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} {} {}", self.name, self.expire, self.entry_type, self.content)
+        write!(
+            f,
+            "{} {} {} {}",
+            self.name, self.expire, self.entry_type, self.content
+        )
     }
 }
 
@@ -121,14 +125,12 @@ impl FromStr for DnsEntry {
         if content.is_empty() {
             return Err(Error::ParseDnsEntry("content missing"));
         }
-        Ok(
-            Self {
-                name,
-                expire,
-                entry_type,
-                content,
-            }
-        )
+        Ok(Self {
+            name,
+            expire,
+            entry_type,
+            content,
+        })
     }
 }
 

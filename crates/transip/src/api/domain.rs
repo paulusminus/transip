@@ -2,8 +2,8 @@ use crate::{
     client::{Client, Url},
     HasName, Result,
 };
-use std::fmt::Display;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 const DOMAINS: &str = "domains";
 const DOMAINS_INCLUDES: &str = "?include=nameservers,contacts";
