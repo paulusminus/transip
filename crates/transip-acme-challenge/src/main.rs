@@ -9,7 +9,7 @@ use tracing_subscriber::{
     EnvFilter,
 };
 use transip::{
-    api::{dns::DnsEntry, dns::DnsApi},
+    api::{dns::DnsApi, dns::DnsEntry},
     configuration_from_environment, Client, Error,
 };
 
