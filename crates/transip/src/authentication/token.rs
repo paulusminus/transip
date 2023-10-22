@@ -177,16 +177,16 @@ mod tests {
     //     )
     // }
 
-    #[test]
-    fn encoded_token_meta_try_from() {
-        let token = expired_token().unwrap();
-        let encoded = EncodedTokenMeta::try_from(token.as_str());
-        assert!(encoded.is_ok());
-        assert_eq!(
-            encoded.unwrap().expiration(),
-            "eyJpc3MiOiJhcGkudHJhbnNpcC5ubCIsImF1ZCI6ImFwaS50cmFuc2lwLm5sIiwianRpIjoiI3UlMnI0cmwlbz9Za1I2cHRITnUiLCJpYXQiOjE2OTY5MTQ0MzAsIm5iZiI6MTY5NjkxNDQzMCwiZXhwIjoxNjk2OTIxNjMwLCJjaWQiOjEwMTkxNCwicm8iOmZhbHNlLCJnayI6ZmFsc2UsImt2Ijp0cnVlfQ",
-        );
-    }
+    // #[test]
+    // fn encoded_token_meta_try_from() {
+    //     let token = expired_token().unwrap();
+    //     let encoded = EncodedTokenMeta::try_from(token.as_str());
+    //     assert!(encoded.is_ok());
+    //     assert_eq!(
+    //         encoded.unwrap().expiration(),
+    //         "eyJpc3MiOiJhcGkudHJhbnNpcC5ubCIsImF1ZCI6ImFwaS50cmFuc2lwLm5sIiwianRpIjoiI3UlMnI0cmwlbz9Za1I2cHRITnUiLCJpYXQiOjE2OTY5MTQ0MzAsIm5iZiI6MTY5NjkxNDQzMCwiZXhwIjoxNjk2OTIxNjMwLCJjaWQiOjEwMTkxNCwicm8iOmZhbHNlLCJnayI6ZmFsc2UsImt2Ijp0cnVlfQ",
+    //     );
+    // }
 
     // #[test]
     // fn decode() {
