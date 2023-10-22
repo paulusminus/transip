@@ -153,21 +153,20 @@ impl<'a> TryFrom<&'a str> for EncodedTokenMeta<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::EncodedTokenMeta;
+    // use super::EncodedTokenMeta;
     use super::{Token, TokenExpired};
-    use crate::Result;
     use chrono::Utc;
 
     // const RAW_TOKEN: &str = include_str!("/home/paul/transip/expired_token.txt");
     // const TOKEN_META_JSON: &str = include_str!("/home/paul/transip/token_meta.json");
 
-    fn expired_token() -> Result<String> {
-        Ok(
-            std::env::var("EXPIRED_TOKEN").unwrap_or(std::fs::read_to_string(
-                "/home/paul/transip/expired_token.txt",
-            )?),
-        )
-    }
+    // fn expired_token() -> Result<String> {
+    //     Ok(
+    //         std::env::var("EXPIRED_TOKEN").unwrap_or(std::fs::read_to_string(
+    //             "/home/paul/transip/expired_token.txt",
+    //         )?),
+    //     )
+    // }
 
     // fn expired_token_meta_json() -> Result<String> {
     //     Ok(

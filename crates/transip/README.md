@@ -29,9 +29,11 @@ transip = "0.1.0"
 
 ```rust
 use transip::{configuration_from_environment, Client, api::general::GeneralApi};
-let mut client = configuration_from_environment().and_then(Client::try_from).unwrap();
-let pong = client.api_test().unwrap();
-assert_eq!(pong.as_str(), "pong");
+# if std::env::var("EXPIRED_TOKEN").is_err() {
+    let mut client = configuration_from_environment().and_then(Client::try_from).unwrap();
+    let pong = client.api_test().unwrap();
+    assert_eq!(pong.as_str(), "pong");
+# }
 ```
 
 # Environment variables
