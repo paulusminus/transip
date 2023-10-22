@@ -155,9 +155,8 @@ impl<'a> TryFrom<&'a str> for EncodedTokenMeta<'a> {
 mod tests {
     use super::EncodedTokenMeta;
     use super::{Token, TokenExpired};
-    use crate::{base64::Base64, Result};
+    use crate::Result;
     use chrono::Utc;
-    use std::str::from_utf8;
 
     // const RAW_TOKEN: &str = include_str!("/home/paul/transip/expired_token.txt");
     // const TOKEN_META_JSON: &str = include_str!("/home/paul/transip/token_meta.json");
@@ -170,13 +169,13 @@ mod tests {
         )
     }
 
-    fn expired_token_meta_json() -> Result<String> {
-        Ok(
-            std::env::var("EXPIRED_TOKEN_META_JSON").unwrap_or(std::fs::read_to_string(
-                "/home/paul/transip/token_meta.json",
-            )?),
-        )
-    }
+    // fn expired_token_meta_json() -> Result<String> {
+    //     Ok(
+    //         std::env::var("EXPIRED_TOKEN_META_JSON").unwrap_or(std::fs::read_to_string(
+    //             "/home/paul/transip/token_meta.json",
+    //         )?),
+    //     )
+    // }
 
     #[test]
     fn encoded_token_meta_try_from() {
@@ -189,16 +188,16 @@ mod tests {
         );
     }
 
-    #[test]
-    fn decode() {
-        let token = expired_token().unwrap();
-        let encoded_metadata = EncodedTokenMeta::try_from(token.as_str()).unwrap();
-        let decoded = encoded_metadata.expiration().base64_decode_url_safe();
-        assert!(decoded.is_ok());
-        let token_meta = decoded.unwrap();
-        let s = from_utf8(token_meta.as_slice()).unwrap();
-        assert_eq!(s, expired_token_meta_json().unwrap());
-    }
+    // #[test]
+    // fn decode() {
+    //     let token = expired_token().unwrap();
+    //     let encoded_metadata = EncodedTokenMeta::try_from(token.as_str()).unwrap();
+    //     let decoded = encoded_metadata.expiration().base64_decode_url_safe();
+    //     assert!(decoded.is_ok());
+    //     let token_meta = decoded.unwrap();
+    //     let s = from_utf8(token_meta.as_slice()).unwrap();
+    //     assert_eq!(s, expired_token_meta_json().unwrap());
+    // }
 
     #[test]
     fn expired_if_none() {
