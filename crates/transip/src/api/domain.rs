@@ -48,6 +48,7 @@ pub trait DomainApi {
         note = "This name is not consistent with the api specification. Users should instead transip::api::dns::DnsApi"
     )]
     fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
+
     /// Delete all entries which comply to Filter F
     #[deprecated(
         since = "0.1.2",
@@ -56,18 +57,21 @@ pub trait DomainApi {
     fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()>
     where
         F: Fn(&DnsEntry) -> bool;
+
     /// See <https://api.transip.nl/rest/docs.html#domains-dns-get>
     #[deprecated(
         since = "0.1.2",
         note = "This name is not consistent with the rest. Users should instead transip::api::dns::DnsApi"
     )]
     fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
+
     /// See <https://api.transip.nl/rest/docs.html#domains-dns-post>
     #[deprecated(
         since = "0.1.2",
         note = "This name is not consistent with the rest. Users should instead transip::api::dns::DnsApi"
     )]
     fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
+
     /// See <https://api.transip.nl/rest/docs.html#domains-nameservers-get>
     fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
 }
