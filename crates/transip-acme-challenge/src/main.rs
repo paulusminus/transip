@@ -16,10 +16,6 @@ use transip::{
 mod constant;
 mod error;
 
-fn is_acme_challenge(entry: &DnsEntry) -> bool {
-    entry.name == *constant::ACME_CHALLENGE && entry.entry_type == *"TXT"
-}
-
 fn update_dns() -> Result<(), error::Error> {
     let validation_config = certbot::ValidationConfig::new();
     info!("Certbot environment: {}", validation_config);
@@ -35,11 +31,11 @@ fn update_dns() -> Result<(), error::Error> {
     if args_is_cleanup() {
         info!("Deleting all _acme_challenge records");
         client
-            .dns_entry_delete_all(&transip_domain, is_acme_challenge)
+            .dns_entry_delete_all(&transip_domain, DnsEntry::is_acme_challenge)
             .map_err(error::Error::from)
     } else if let Some(challenge) = validation_config.validation() {
         info!("Acme challenge {} detected", &challenge);
-        client.dns_entry_delete_all(&transip_domain, is_acme_challenge)?;
+        client.dns_entry_delete_all(&transip_domain, DnsEntry::is_acme_challenge)?;
         info!("All _acme-challenge records deleted");
 
         let dns_entry = DnsEntry {

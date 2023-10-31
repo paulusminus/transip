@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 
 const DOMAINS: &str = "domains";
 const DNS: &str = "dns";
+const ACME_CHALLENGE: &str = "_acme-challenge";
 
 trait UrlDomain {
     fn domain_dns(&self, domain_name: &str) -> String;
@@ -92,6 +93,21 @@ pub struct DnsEntry {
     #[serde(rename = "type")]
     pub entry_type: String,
     pub content: String,
+}
+
+impl DnsEntry {
+    pub fn is_acme_challenge(&self) -> bool {
+        self.entry_type == *"TXT" && self.name == *ACME_CHALLENGE
+    }
+
+    pub fn new_acme_challenge(expire: u32, content: &str) -> Self {
+        Self {
+            name: ACME_CHALLENGE.to_owned(),
+            expire,
+            entry_type: RecordType::TXT.to_string(),
+            content: content.to_owned(),
+        }
+    }
 }
 
 impl std::fmt::Display for DnsEntry {
@@ -191,8 +207,14 @@ impl DnsApi for Client {
 
 #[cfg(test)]
 mod test {
-    use super::{DnsApi, RecordType};
+    use super::{DnsApi, DnsEntry, RecordType};
     use crate::{Client, HasNames};
+
+    #[test]
+    fn acme_challenge() {
+        let dns_entry = DnsEntry::new_acme_challenge(60, "Hallo");
+        assert!(dns_entry.is_acme_challenge());
+    }
 
     #[test]
     fn record_types() {
