@@ -66,7 +66,6 @@ where
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::{fmt::Display, net::IpAddr};
@@ -123,8 +122,7 @@ mod tests {
             ipv6_address_lookup("www.paulmin.nl.").unwrap(),
             vec!["2a01:7c8:bb0d:1bf:5054:ff:fedc:a36b"
                 .parse::<IpAddr>()
-                .unwrap(),
-            ],
+                .unwrap(),],
         );
     }
 
