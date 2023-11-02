@@ -1,39 +1,36 @@
 ![main](https://github.com/paulusminus/transip-api/actions/workflows/rust.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![crates](https://img.shields.io/crates/d/transip)
+![docs.rs](https://img.shields.io/docsrs/transip)
 
-This crate provides a library for calling Rest Api functions on the Transip endpoint.
-More information on the rest api can be obtained from [`Transip API`].
+This library crate can be used for calling functions on the [`Transip Api`] endpoint.
 Only part of the api is implemented. The main reason for writing this library is the ability
-to [`CRUD`] dns records for a particular domain. This functionality can be used to respond to DNS01 challenges
-from the [`Let's Encrypt`] servers.
+to [`CRUD`] dns records for a particular domain. This functionality can be used to respond to DNS01 challenges from the [`Let's Encrypt`] servers.
 This type of challenge is needed to get wildcard certificates.
 
-[`Transip API`]: https://api.transip.nl
+[`Transip Api`]: https://api.transip.nl
 [`CRUD`]: https://en.wikipedia.org/wiki/Create,_read,_update_and_delete
 [`Let's Encrypt`]: https://letsencrypt.org
 
 # Usage
 
-This crate is [`on crates.io`] and can
-be used by adding `transip` to your depencies in your projects `Cargo.toml`.
-Before running a program using this library a private key should be download from the
-Transip control panel and stored in a file.
-
-[`on crates.io`]: https://crates.io/crates/transip
-
-```toml
-[dependencies]
-transip = "0.1.0"
+```bash
+cargo add transip
 ```
 
 # Example
 
 ```rust
 use transip::{configuration_from_environment, Client, api::general::GeneralApi};
-# if std::env::var("EXPIRED_TOKEN").is_err() {
-    let mut client = configuration_from_environment().and_then(Client::try_from).unwrap();
+
+fn main() {
+    let mut client = configuration_from_environment()
+        .and_then(Client::try_from)
+        .expect("No cliënt");
+
     let pong = client.api_test().unwrap();
     assert_eq!(pong.as_str(), "pong");
-# }
+}
 ```
 
 # Environment variables

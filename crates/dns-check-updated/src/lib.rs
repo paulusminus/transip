@@ -66,39 +66,6 @@ where
     }
 }
 
-// fn servers_have_acme_challenge<I, S>(
-//     nameservers: I,
-//     domain_name: &str,
-//     acme_challenge: &str,
-//     challenge: &str,
-// ) -> Result<()>
-// where
-//     I: Iterator<Item = S>,
-//     S: AsRef<str>,
-// {
-//     let default_resolver = default_resolver()?;
-//     let resolvers = nameservers
-//         .map(to_resolver_by_resolver(default_resolver))
-//         .collect::<Result<Vec<Resolver>>>()?;
-//     let mut i = 0;
-//     let record_name = format!("{}.{}.", acme_challenge, domain_name);
-//     while !resolvers
-//         .iter()
-//         .all(has_acme_challenge_domain(&record_name, challenge.into()))
-//         && i < 60
-//     {
-//         i += 1;
-//         tracing::warn!("Attempt {} failed", i);
-//         sleep(Duration::from_secs(60));
-//     }
-
-//     if i >= 60 {
-//         tracing::error!("1 hour timeout finding acme challenge");
-//         Err(Error::AcmeChallege)
-//     } else {
-//         Ok(())
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
@@ -156,7 +123,8 @@ mod tests {
             ipv6_address_lookup("www.paulmin.nl.").unwrap(),
             vec!["2a01:7c8:bb0d:1bf:5054:ff:fedc:a36b"
                 .parse::<IpAddr>()
-                .unwrap(),]
+                .unwrap(),
+            ],
         );
     }
 
