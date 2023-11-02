@@ -20,7 +20,7 @@ cargo add transip
 
 # Example
 
-```rust
+```no_run
 use transip::{configuration_from_environment, Client, api::general::GeneralApi};
 
 fn main() {
