@@ -1,6 +1,6 @@
 [package]
 authors.workspace = true
-description = "Transip Api callables"
+description = "Call functions on the Transip Api Endpoint"
 edition.workspace = true
 license.workspace = true
 name = "transip"

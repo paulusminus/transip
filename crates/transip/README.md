@@ -69,7 +69,7 @@ export TRANSIP_API_READONLY=false
 
 ## TRANSIP_API_WHITELISTED_ONLY
 
-Can be 'true' or 'false'.
+Can be 'true' or 'false'. If you wan't to access the api on a whitelisted ipaddress set this to 'true'.
 
 ## TRANSIP_API_TOKEN_EXPIRATION
 
