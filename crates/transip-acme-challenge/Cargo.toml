@@ -10,4 +10,4 @@ tracing = "0.1"
 tracing-appender = "0.2.2"
 tracing-log = "0.2"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "local-time"] }
-transip = { version = "0.2.0", path = "../transip" }
+transip = { version = "0.1.5", path = "../transip" }
