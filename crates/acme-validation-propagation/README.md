@@ -13,11 +13,11 @@ cargo add acme-validation-propagation
 
 # Example
 
-```
+```no_run
 use acme_validation_propagation::wait;
 
 fn main() {
-    match wait("paulmin.nl", "89823875") {
+    match wait("example.com", "89823875") {
         Ok(_) => println!("Propagation finished"),
         Err(error) => eprintln!("Error: {error}"),
     }
