@@ -46,7 +46,7 @@ fn update_dns() -> Result<(), error::Error> {
         };
         client.dns_entry_insert(&transip_domain, dns_entry)?;
 
-        dns_check_updated::has_acme_challenge(format!("{transip_domain}."), challenge)
+        acme_validation_propagation::wait(format!("{transip_domain}."), challenge)
             .map_err(|error| error::Error::Dns(Box::new(error)))
     } else {
         Err(error::Error::Missing(constant::CERTBOT_VALIDATION.into()))

@@ -13,9 +13,11 @@ use hickory_resolver::{
 
 use crate::{recursive_resolver, Error};
 
-pub enum ResolverType {
+pub(crate) enum ResolverType {
     Google,
+    #[allow(dead_code)]
     Cloudflare,
+    #[allow(dead_code)]
     Local,
 }
 

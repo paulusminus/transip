@@ -1,3 +1,5 @@
+#![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
+
 use hickory_resolver::{
     config::{LookupIpStrategy, NameServerConfigGroup, ResolverConfig, ResolverOpts},
     Resolver,
@@ -5,7 +7,7 @@ use hickory_resolver::{
 use std::{convert::identity, net::IpAddr, thread::sleep, time::Duration};
 
 use crate::error::Error;
-pub use resolver::ResolverType;
+use resolver::ResolverType;
 
 mod error;
 mod resolver;
@@ -35,7 +37,10 @@ fn recursive_resolver(ips: &[IpAddr], ipv6_only: bool) -> Result<Resolver> {
     ipv6_resolver(group, true, ipv6_only)
 }
 
-pub fn has_acme_challenge<S>(domain_name: S, challenge: S) -> Result<()>
+/// wait checks the authoritive nameservers periodically.
+/// It returns Ok(()) when all nameservers have the challenge.
+/// It returns an error after several attempts failed.
+pub fn wait<S>(domain_name: S, challenge: S) -> Result<()>
 where
     S: AsRef<str>,
 {

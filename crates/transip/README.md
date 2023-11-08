@@ -1,6 +1,5 @@
 ![main](https://github.com/paulusminus/transip-api/actions/workflows/rust.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![crates](https://img.shields.io/crates/d/transip)
 ![docs.rs](https://img.shields.io/docsrs/transip)
 
 This library crate can be used for calling functions on the [`Transip Api`] endpoint.

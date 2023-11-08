@@ -16,13 +16,23 @@ const AGENT_TIMEOUT_SECONDS: u64 = 30;
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
 
 macro_rules! timeit {
-    ($code:block) => {{
+    ($url:expr, $method:expr, $code:block) => {{
         let start = std::time::Instant::now();
         let t = $code;
         if t.is_err() {
-            tracing::error!("error after {} milliseconds", start.elapsed().as_millis());
+            tracing::error!(
+                "error {} {} after {} milliseconds",
+                $method,
+                $url,
+                start.elapsed().as_millis()
+            );
         } else {
-            tracing::info!("result after {} milliseconds", start.elapsed().as_millis());
+            tracing::info!(
+                "result {} {} after {} milliseconds",
+                $method,
+                $url,
+                start.elapsed().as_millis()
+            );
         };
         t
     }};
@@ -113,7 +123,7 @@ impl Client {
         if self.token.token_expired() {
             let span = tracing::span!(tracing::Level::INFO, "token_refresh");
             let _span_enter = span.enter();
-            let token_result = timeit!({
+            let token_result = timeit!(&self.url.auth(), "POST", {
                 let auth_request = AuthRequest::new(
                     self.configuration.user_name(),
                     self.configuration.token_expiration(),
@@ -142,7 +152,7 @@ impl Client {
     where
         T: DeserializeOwned,
     {
-        timeit!({
+        timeit!(url, "GET", {
             self.refresh_token_if_needed()?;
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
@@ -160,7 +170,7 @@ impl Client {
     where
         T: Serialize + Debug,
     {
-        timeit!({
+        timeit!(url, "DELETE", {
             self.refresh_token_if_needed()?;
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
@@ -177,7 +187,7 @@ impl Client {
     where
         T: Serialize + Debug,
     {
-        timeit!({
+        timeit!(url, "PATCH", {
             self.refresh_token_if_needed()?;
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
@@ -194,7 +204,7 @@ impl Client {
     where
         T: Serialize + Debug,
     {
-        timeit!({
+        timeit!(url, "POST", {
             self.refresh_token_if_needed()?;
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
@@ -211,7 +221,7 @@ impl Client {
     where
         T: Serialize + Debug,
     {
-        timeit!({
+        timeit!(url, "PUT", {
             self.refresh_token_if_needed()?;
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent

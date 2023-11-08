@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use dns_check_updated::has_acme_challenge;
+use acme_validation_propagation::wait;
 
 // const NAMESERVERS: [&str; 3] = ["ns0.transip.net", "ns1.transip.nl", "ns2.transip.eu"];
 const DOMAIN_NAME: &str = "paulmin.nl.";
@@ -15,7 +15,7 @@ fn main() {
         CHALLENGE,
         DOMAIN_NAME
     );
-    match has_acme_challenge(DOMAIN_NAME, CHALLENGE) {
+    match wait(DOMAIN_NAME, CHALLENGE) {
         Ok(_) => {
             tracing::info!("Checking took {} seconds", start.elapsed().as_secs());
         }
