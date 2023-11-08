@@ -45,7 +45,7 @@ where
     S: AsRef<str>,
 {
     let resolvers = ResolverType::Google
-        .recursive_resolver(true)
+        .recursive_resolver(false)
         .and_then(|resolver| resolver.authoritive_resolvers(domain_name.as_ref()))?;
 
     let mut i: usize = 0;

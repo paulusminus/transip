@@ -1,5 +1,6 @@
 [package]
 authors.workspace = true
+description = "Waiting for propagation of acme validation record"
 edition.workspace = true
 license.workspace = true
 name = "acme-validation-propagation"
