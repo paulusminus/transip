@@ -11,12 +11,6 @@ This type of challenge is needed to get wildcard certificates.
 [`CRUD`]: https://en.wikipedia.org/wiki/Create,_read,_update_and_delete
 [`Let's Encrypt`]: https://letsencrypt.org
 
-# Usage
-
-```bash
-cargo add transip
-```
-
 # Example
 
 ```no_run

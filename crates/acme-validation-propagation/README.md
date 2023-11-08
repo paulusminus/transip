@@ -4,13 +4,6 @@
 
 This library crate can be used to check if an acme challenge record is propagated to all authoritive nameservers.
 
-
-# Usage
-
-```bash
-cargo add acme-validation-propagation
-```
-
 # Example
 
 ```no_run
