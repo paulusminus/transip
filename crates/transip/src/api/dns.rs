@@ -257,7 +257,9 @@ mod test {
         );
 
         assert_eq!(
-            "_acme-challenge 60 TXT Er is een kindeke".parse::<DnsEntry>().unwrap(),
+            "_acme-challenge 60 TXT Er is een kindeke"
+                .parse::<DnsEntry>()
+                .unwrap(),
             DnsEntry {
                 name: "_acme-challenge".to_owned(),
                 expire: 60,
