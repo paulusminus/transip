@@ -86,7 +86,7 @@ impl FromStr for RecordType {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize, Debug)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 pub struct DnsEntry {
     pub name: String,
     pub expire: u32,
@@ -123,21 +123,21 @@ impl std::fmt::Display for DnsEntry {
 impl FromStr for DnsEntry {
     type Err = Error;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let mut splitted = s.split(' ');
+        let mut splitted = s.split_ascii_whitespace();
         let name = splitted
-            .nth(0)
+            .next()
             .ok_or(Error::ParseDnsEntry("name missing"))
             .map(String::from)?;
         let expire = splitted
-            .nth(1)
-            .ok_or(Error::ParseDnsEntry("Second part missing"))
+            .next()
+            .ok_or(Error::ParseDnsEntry("ttl missing"))
             .and_then(|s| s.parse::<u32>().err_into())?;
         let entry_type = splitted
-            .nth(2)
-            .ok_or(Error::ParseDnsEntry("name missing"))
+            .next()
+            .ok_or(Error::ParseDnsEntry("record type missing"))
             .and_then(|s| s.parse::<RecordType>())
             .map(|r| r.to_string())?;
-        let content = splitted.skip(3).collect::<Vec<_>>().join(" ");
+        let content = splitted.collect::<Vec<_>>().join(" ");
         if content.is_empty() {
             return Err(Error::ParseDnsEntry("content missing"));
         }
@@ -242,6 +242,29 @@ mod test {
         assert_eq!("SOA".parse::<RecordType>().unwrap(), RecordType::SOA);
         assert_eq!("SRV".parse::<RecordType>().unwrap(), RecordType::SRV);
         assert_eq!("TXT".parse::<RecordType>().unwrap(), RecordType::TXT);
+    }
+
+    #[test]
+    fn domain_entry_from_str() {
+        assert_eq!(
+            "www 30 A 235.4.3.231".parse::<DnsEntry>().unwrap(),
+            DnsEntry {
+                name: "www".to_owned(),
+                expire: 30,
+                entry_type: "A".to_owned(),
+                content: "235.4.3.231".to_owned(),
+            }
+        );
+
+        assert_eq!(
+            "_acme-challenge 60 TXT Er is een kindeke".parse::<DnsEntry>().unwrap(),
+            DnsEntry {
+                name: "_acme-challenge".to_owned(),
+                expire: 60,
+                entry_type: "TXT".to_owned(),
+                content: "Er is een kindeke".to_owned(),
+            }
+        );
     }
 
     #[test]

@@ -85,6 +85,26 @@ export TRANSIP_API_TOKEN_EXPIRATION=55 seconds
 export TRANSIP_API_TOKEN_EXPIRATION=1 hour
 ```
 
+### TRANSIP_API_LOG_DIR
+
+Directory where the rotating log files are written.
+
+#### Example
+
+```bash
+export TRANSIP_API_LOG_DIR=/var/log/transip
+```
+
+### TRANSIP_API_TOKEN_PATH
+
+Name of the file where the authentication token received from the endpoint will be written to.
+
+#### Example
+
+```bash
+export TRANSIP_API_TOKEN_PATH=/root/.token.txt
+```
+
 [`Transip Api`]: https://api.transip.nl
 [`CRUD`]: https://en.wikipedia.org/wiki/Create,_read,_update_and_delete
 [`Let's Encrypt`]: https://letsencrypt.org

@@ -41,39 +41,6 @@ pub trait DomainApi {
     fn domain_list(&mut self) -> Result<Vec<Domain>>;
 
     fn domain_item(&mut self, name: &str) -> Result<Domain>;
-
-    /// See <https://api.transip.nl/rest/docs.html#domains-dns-delete>
-    #[deprecated(
-        since = "0.1.2",
-        note = "This name is not consistent with the api specification. Users should instead transip::api::dns::DnsApi"
-    )]
-    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
-
-    /// Delete all entries which comply to Filter F
-    #[deprecated(
-        since = "0.1.2",
-        note = "This name is not consistent with the rest. Users should instead transip::api::dns::DnsApi"
-    )]
-    fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()>
-    where
-        F: Fn(&DnsEntry) -> bool;
-
-    /// See <https://api.transip.nl/rest/docs.html#domains-dns-get>
-    #[deprecated(
-        since = "0.1.2",
-        note = "This name is not consistent with the rest. Users should instead transip::api::dns::DnsApi"
-    )]
-    fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>>;
-
-    /// See <https://api.transip.nl/rest/docs.html#domains-dns-post>
-    #[deprecated(
-        since = "0.1.2",
-        note = "This name is not consistent with the rest. Users should instead transip::api::dns::DnsApi"
-    )]
-    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()>;
-
-    /// See <https://api.transip.nl/rest/docs.html#domains-nameservers-get>
-    fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>>;
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -223,34 +190,6 @@ impl DomainApi for Client {
         self.get::<DomainItem>(&self.url.domain(name))
             .map(|item| item.domain)
     }
-
-    fn dns_entry_delete(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
-        self.delete::<DnsEntryItem>(&self.url.domain_dns(domain_name), entry.into())
-    }
-
-    fn dns_entry_delete_all<F>(&mut self, domain_name: &str, f: F) -> Result<()>
-    where
-        F: Fn(&DnsEntry) -> bool,
-    {
-        for dns_entry in self.dns_entry_list(domain_name)?.into_iter().filter(f) {
-            self.dns_entry_delete(domain_name, dns_entry)?;
-        }
-        Ok(())
-    }
-
-    fn dns_entry_list(&mut self, domain_name: &str) -> Result<Vec<DnsEntry>> {
-        self.get::<DnsEntryList>(&self.url.domain_dns(domain_name))
-            .map(|list| list.dns_entries)
-    }
-
-    fn dns_entry_insert(&mut self, domain_name: &str, entry: DnsEntry) -> Result<()> {
-        self.post::<DnsEntryItem>(&self.url.domain_dns(domain_name), entry.into())
-    }
-
-    fn nameserver_list(&mut self, domain_name: &str) -> Result<Vec<NameServer>> {
-        self.get::<NameServerList>(&self.url.domain_nameservers(domain_name))
-            .map(|list| list.nameservers)
-    }
 }
 
 #[cfg(test)]
@@ -278,27 +217,5 @@ mod test {
     fn domain_item() {
         let domain = Client::demo().domain_item("transipdemo.be").unwrap();
         dbg!(domain);
-    }
-
-    #[test]
-    fn domain_entry_list() {
-        let entry_list = Client::demo().dns_entry_list("transipdemo.be").unwrap();
-        let names = entry_list.names();
-
-        assert_eq!(
-            names,
-            vec![
-                "*",
-                "*",
-                "@",
-                "@",
-                "@",
-                "@",
-                "transip-A._domainkey",
-                "transip-B._domainkey",
-                "transip-C._domainkey",
-                "_dmarc",
-            ],
-        );
     }
 }
