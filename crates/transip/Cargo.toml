@@ -12,7 +12,7 @@ base64 = "0.21"
 chrono = { version = "0.4", features = ["serde"] }
 hostname = "0.3"
 ring = "0.17"
-rustls-pemfile = "1"
+rustls-pemfile = "2"
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"
 tracing = "0.1"
