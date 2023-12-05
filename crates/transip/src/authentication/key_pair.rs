@@ -28,11 +28,13 @@ impl KeyPair {
     where
         R: Read,
     {
-        let keys = rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(r))?;
+        let keys = rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(r))
+            .filter_map(|s| s.ok())
+            .collect::<Vec<_>>();
         if keys.is_empty() {
             Err(Error::Key("None"))
         } else {
-            signature::RsaKeyPair::from_pkcs8(keys[0].as_slice())
+            signature::RsaKeyPair::from_pkcs8(keys[0].secret_pkcs8_der())
                 .map_err(|error| Error::Rejected(error.to_string()))
                 .map(KeyPair::from)
         }
