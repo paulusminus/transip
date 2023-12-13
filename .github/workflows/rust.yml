@@ -15,7 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Rust cache
+      uses: Swatinem/rust-cache@v2
     - name: Install extra packages
       run: |
         sudo apt update
@@ -28,6 +31,6 @@ jobs:
       run: cargo clippy -- -D warnings
     - name: Run tests
       run: cargo test -p transip --verbose
-    - name: Build for x86_64
+    - name: Build for x86_64 musl
       run: cargo build --verbose --target x86_64-unknown-linux-musl
 
