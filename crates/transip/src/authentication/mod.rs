@@ -27,6 +27,40 @@ impl UrlAuthentication for Url {
     }
 }
 
+pub struct AuthRequestBuilder {
+    login: String,
+    nonce: String,
+    read_only: bool,
+    label: String,
+    global_key: bool,
+}
+
+impl AuthRequestBuilder {
+    pub fn new<S: Into<String>>(username: S) -> Self {
+        Self {
+            login: username.into(),
+            nonce: milliseconds_since_epoch(),
+            read_only: false,
+            label: create_label(),
+            global_key: true,
+        }
+    }
+
+    pub fn read_only(mut self) -> Self {
+        self.read_only = true;
+        self
+    }
+
+    pub fn whitelisted_only(mut self) -> Self {
+        self.global_key = false;
+        self
+    }
+
+    pub fn expiration(mut self, expiration: TokenExpiration) -> Self {
+        self
+    }
+}
+
 #[derive(Serialize)]
 pub struct AuthRequest {
     login: String,
