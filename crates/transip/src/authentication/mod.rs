@@ -27,6 +27,7 @@ impl UrlAuthentication for Url {
     }
 }
 
+/*
 pub struct AuthRequestBuilder {
     login: String,
     nonce: String,
@@ -60,6 +61,7 @@ impl AuthRequestBuilder {
         self
     }
 }
+*/
 
 #[derive(Serialize)]
 pub struct AuthRequest {
