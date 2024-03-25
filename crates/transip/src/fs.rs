@@ -19,7 +19,7 @@ where
 
     fn writer(&self) -> Result<File> {
         OpenOptions::new()
-            .create(true)
+            .create_new(true)
             .write(true)
             .open(self)
             .err_into()
