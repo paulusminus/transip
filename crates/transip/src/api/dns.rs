@@ -1,5 +1,4 @@
 use crate::Error;
-use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::error::ResultExt;
@@ -8,6 +7,7 @@ use crate::{
     HasName, Result,
 };
 use serde::{Deserialize, Serialize};
+use strum::{Display, EnumString};
 
 const DOMAINS: &str = "domains";
 const DNS: &str = "dns";
@@ -37,7 +37,7 @@ pub trait DnsApi {
 ///
 /// dbg!(RecordType::AAAA);
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Display, EnumString, PartialEq)]
 pub enum RecordType {
     A,
     AAAA,
@@ -49,41 +49,6 @@ pub enum RecordType {
     SOA,
     SRV,
     TXT,
-}
-
-impl Display for RecordType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl FromStr for RecordType {
-    type Err = Error;
-
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let c = s.trim().to_uppercase();
-
-        macro_rules! compare {
-            ($compare:expr, $record_type:expr) => {
-                if $compare == $record_type.to_string() {
-                    return Ok($record_type);
-                }
-            };
-        }
-
-        compare!(c, RecordType::A);
-        compare!(c, RecordType::AAAA);
-        compare!(c, RecordType::ALIAS);
-        compare!(c, RecordType::CNAME);
-        compare!(c, RecordType::MX);
-        compare!(c, RecordType::NS);
-        compare!(c, RecordType::PTR);
-        compare!(c, RecordType::SOA);
-        compare!(c, RecordType::SRV);
-        compare!(c, RecordType::TXT);
-
-        Err(Error::ParseDnsEntry("invalid record type"))
-    }
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
@@ -135,7 +100,7 @@ impl FromStr for DnsEntry {
         let entry_type = splitted
             .next()
             .ok_or(Error::ParseDnsEntry("record type missing"))
-            .and_then(|s| s.parse::<RecordType>())
+            .and_then(|s| s.parse::<RecordType>().err_into())
             .map(|r| r.to_string())?;
         let content = splitted.collect::<Vec<_>>().join(" ");
         if content.is_empty() {

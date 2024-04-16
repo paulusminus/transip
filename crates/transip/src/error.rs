@@ -55,6 +55,12 @@ pub enum Error {
     #[error("Parse Dns entry: {0}")]
     ParseDnsEntry(&'static str),
 
+    #[error("Parse Mailbox entry: {0}")]
+    ParseMailboxEntry(String),
+
+    #[error("Parse Mail forward entry: {0}")]
+    ParseMailForwardEntry(String),
+
     #[error("Environment variable not set: {0}")]
     EnvironmentVariable(String),
 
@@ -69,6 +75,9 @@ pub enum Error {
 
     #[error("Parse: {0}")]
     ParseBoolean(#[from] ParseBoolError),
+
+    #[error("Strum: {0}")]
+    Strum(#[from] strum::ParseError),
 
     #[error("Serialization: {0}")]
     Serialization(Box<dyn std::error::Error>),

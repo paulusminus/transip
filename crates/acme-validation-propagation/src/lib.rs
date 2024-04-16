@@ -125,9 +125,12 @@ mod tests {
     fn test_www_paulmin_nl() {
         assert_eq!(
             ipv6_address_lookup("www.paulmin.nl.").unwrap(),
-            vec!["2a01:7c8:bb0d:1bf:5054:ff:fedc:a36b"
-                .parse::<IpAddr>()
-                .unwrap(),],
+            vec![
+                "2606:50c0:8000::153".parse::<IpAddr>().unwrap(),
+                "2606:50c0:8001::153".parse::<IpAddr>().unwrap(),
+                "2606:50c0:8002::153".parse::<IpAddr>().unwrap(),
+                "2606:50c0:8003::153".parse::<IpAddr>().unwrap(),
+            ],
         );
     }
 

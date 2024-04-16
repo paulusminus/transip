@@ -143,42 +143,6 @@ impl UrlVps for Url {
     }
 }
 
-impl TransipApiVps for Client {
-    fn vps_list(&mut self) -> Result<Vec<Vps>> {
-        self.get::<VpsList>(&self.url.vps_list())
-            .map(|list| list.vpss)
-    }
-
-    fn vps(&mut self, name: &str) -> Result<Vps> {
-        self.get::<VpsItem>(&self.url.vps(name))
-            .map(|item| item.vps)
-    }
-
-    fn vps_stop(&mut self, name: &str) -> Result<()> {
-        self.patch(&self.url.vps(name), &Action::stop())
-    }
-
-    fn vps_start(&mut self, name: &str) -> Result<()> {
-        self.patch(&self.url.vps(name), &Action::start())
-    }
-
-    fn vps_reset(&mut self, name: &str) -> Result<()> {
-        self.patch(&self.url.vps(name), &Action::reset())
-    }
-
-    fn vps_set_is_locked(&mut self, name: &str, locked: bool) -> Result<()> {
-        let mut vps_item = TransipApiVps::vps(self, name).map(VpsItem::from)?;
-        vps_item.vps.is_customer_locked = locked;
-        self.put(&self.url.vps(name), &vps_item)
-    }
-
-    fn vps_set_description(&mut self, name: &str, description: &str) -> Result<()> {
-        let mut vps_item = TransipApiVps::vps(self, name).map(VpsItem::from)?;
-        vps_item.vps.description = description.to_owned();
-        self.put(&self.url.vps(name), &vps_item)
-    }
-}
-
 impl VpsApi for Client {
     fn vps_list(&mut self) -> Result<Vec<Vps>> {
         self.get::<VpsList>(&self.url.vps_list())

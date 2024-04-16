@@ -183,6 +183,20 @@ impl Client {
     }
 
     #[instrument(skip(self))]
+    pub(crate) fn delete_no_object(&mut self, url: &str) -> Result<()> {
+        timeit!(url, "DELETE", {
+            self.refresh_token_if_needed()?;
+            let token = self.token.as_ref().ok_or(Error::Token)?;
+            self.agent
+                .delete(url)
+                .set("Authorization", &format!("Bearer {}", token.raw()))
+                .call()
+                .map_err(Box::new)?;
+            Ok(())
+        })
+    }
+
+    #[instrument(skip(self))]
     pub(crate) fn patch<T>(&mut self, url: &str, object: T) -> Result<()>
     where
         T: Serialize + Debug,
