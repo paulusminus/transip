@@ -342,7 +342,7 @@ mod test {
         let server = wiremock::MockServer::start().await;
         let relative_url = "/email/paulmin.nl/mailboxes/info@paulmin.nl";
         let name = "mail-box-item";
-        let body = r#"{"mailbox":{"identifier":"info@paulmin.nl","localPart":"info","domain":"paulmin.nl","forwardTo":"","availableDiskSpace":2500.0,"usedDiskSpace":454.35,"status":"created","isLocked":false,"imapServer":"imap.transip.email","imapPort":993,"smtpServer":"smtp.transip.email","smtpPort":465,"pop3Server":"pop3.transip.email","pop3Port":995,"webmailUrl":"https://transip.email/"}}"#;
+        let body = r#"{"mailbox":{"identifier":"info@paulmin.nl","localPart":"info","domain":"paulmin.nl","forwardTo":"","availableDiskSpace":2500,"usedDiskSpace":454.35,"status":"created","isLocked":false,"imapServer":"imap.transip.email","imapPort":993,"smtpServer":"smtp.transip.email","smtpPort":465,"pop3Server":"pop3.transip.email","pop3Port":995,"webmailUrl":"https://transip.email/"}}"#;
 
         Mock::given(method("GET"))
             .and(path(relative_url))
