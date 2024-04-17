@@ -84,6 +84,19 @@ impl Client {
             configuration: crate::environment::demo_configuration(),
         }
     }
+
+    pub fn test(prefix: String) -> Self {
+        Self {
+            url: format!("{prefix}/").as_str().into(),
+            key: None,
+            agent: AgentBuilder::new()
+                .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
+                .user_agent(USER_AGENT)
+                .build(),
+            token: Some(Token::demo()),
+            configuration: crate::environment::demo_configuration(),
+        }
+    }
 }
 
 impl TryFrom<Box<dyn Configuration>> for Client {
