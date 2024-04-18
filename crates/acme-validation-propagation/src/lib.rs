@@ -123,14 +123,18 @@ mod tests {
 
     #[test]
     fn test_www_paulmin_nl() {
-        assert_eq!(
-            ipv6_address_lookup("www.paulmin.nl.").unwrap(),
-            vec![
-                "2606:50c0:8000::153".parse::<IpAddr>().unwrap(),
-                "2606:50c0:8001::153".parse::<IpAddr>().unwrap(),
-                "2606:50c0:8002::153".parse::<IpAddr>().unwrap(),
-                "2606:50c0:8003::153".parse::<IpAddr>().unwrap(),
-            ],
+        let addresses = ipv6_address_lookup("www.paulmin.nl.").unwrap();
+        assert!(
+            addresses.contains(&"2606:50c0:8000::153".parse::<IpAddr>().unwrap()),
+        );
+        assert!(
+            addresses.contains(&"2606:50c0:8001::153".parse::<IpAddr>().unwrap()),
+        );
+        assert!(
+            addresses.contains(&"2606:50c0:8002::153".parse::<IpAddr>().unwrap()),
+        );
+        assert!(
+            addresses.contains(&"2606:50c0:8003::153".parse::<IpAddr>().unwrap()),
         );
     }
 

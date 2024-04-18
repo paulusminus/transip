@@ -1,9 +1,0 @@
-[env]
-TRANSIP_API_USERNAME = "paulusminus"
-TRANSIP_API_PRIVATE_KEY = "/etc/transip/home.pem"
-TRANSIP_API_READONLY = "false"
-TRANSIP_API_WHITELISTED_ONLY = "true"
-TRANSIP_API_TOKEN_EXPIRATION = "20 seconds"
-TRANSIP_API_LOG_DIR = "/home/paul/transip/"
-TRANSIP_API_TOKEN_PATH = "/home/paul/.token.txt"
-RUST_LOG = "trace"
