@@ -7,15 +7,15 @@ use serde::{Deserialize, Serialize};
 const EMAIL_URL: &str = "email";
 const MAIL_BOXES_URL: &str = "mailboxes";
 const MAIL_FORWARDS_URL: &str = "mail-forwards";
-const MAIL_LISTS_URL: &str = "mail-lists";
+// const MAIL_LISTS_URL: &str = "mail-lists";
 
 trait UrlEmail {
     fn mailbox_domain(&self, domain_name: &str) -> String;
     fn mailbox_domain_item(&self, domain_name: &str, id: &str) -> String;
     fn mailforward_domain(&self, domain_name: &str) -> String;
     fn mailforward_domain_item(&self, domain_name: &str, id: &str) -> String;
-    fn maillist_domain(&self, domain_name: &str) -> String;
-    fn maillist_domain_item(&self, domain_name: &str, id: &str) -> String;
+    // fn maillist_domain(&self, domain_name: &str) -> String;
+    // fn maillist_domain_item(&self, domain_name: &str, id: &str) -> String;
 }
 
 pub trait EmailApi {
@@ -223,16 +223,16 @@ impl UrlEmail for Url {
         format!("{}/{}", self.mailforward_domain(domain_name), id)
     }
 
-    fn maillist_domain(&self, domain_name: &str) -> String {
-        format!(
-            "{}{}/{}/{}",
-            self.prefix, EMAIL_URL, domain_name, MAIL_LISTS_URL
-        )
-    }
+    // fn maillist_domain(&self, domain_name: &str) -> String {
+    //     format!(
+    //         "{}{}/{}/{}",
+    //         self.prefix, EMAIL_URL, domain_name, MAIL_LISTS_URL
+    //     )
+    // }
 
-    fn maillist_domain_item(&self, domain_name: &str, id: &str) -> String {
-        format!("{}/{}", self.maillist_domain(domain_name), id)
-    }
+    // fn maillist_domain_item(&self, domain_name: &str, id: &str) -> String {
+    //     format!("{}/{}", self.maillist_domain(domain_name), id)
+    // }
 }
 
 impl EmailApi for Client {

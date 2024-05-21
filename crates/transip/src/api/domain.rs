@@ -7,13 +7,13 @@ use std::fmt::Display;
 
 const DOMAINS: &str = "domains";
 const DOMAINS_INCLUDES: &str = "?include=nameservers,contacts";
-const DNS: &str = "dns";
-const NAMESERVERS: &str = "nameservers";
+// const DNS: &str = "dns";
+// const NAMESERVERS: &str = "nameservers";
 
 trait UrlDomain {
     fn domain(&self, domain_name: &str) -> String;
-    fn domain_dns(&self, domain_name: &str) -> String;
-    fn domain_nameservers(&self, domain_name: &str) -> String;
+    // fn domain_dns(&self, domain_name: &str) -> String;
+    // fn domain_nameservers(&self, domain_name: &str) -> String;
     fn domains(&self, includes: bool) -> String;
 }
 
@@ -162,13 +162,13 @@ impl UrlDomain for Url {
         format!("{}/{}", self.domains(false), domain_name)
     }
 
-    fn domain_dns(&self, domain_name: &str) -> String {
-        format!("{}/{}/{}", self.domains(false), domain_name, DNS)
-    }
+    // fn domain_dns(&self, domain_name: &str) -> String {
+    //     format!("{}/{}/{}", self.domains(false), domain_name, DNS)
+    // }
 
-    fn domain_nameservers(&self, domain_name: &str) -> String {
-        format!("{}/{}/{}", self.domains(false), domain_name, NAMESERVERS)
-    }
+    // fn domain_nameservers(&self, domain_name: &str) -> String {
+    //     format!("{}/{}/{}", self.domains(false), domain_name, NAMESERVERS)
+    // }
 
     fn domains(&self, includes: bool) -> String {
         format!(

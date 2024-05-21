@@ -5,7 +5,7 @@ use base64::Engine;
 
 pub trait Base64 {
     fn base64_decode_url_safe(&self) -> Result<Vec<u8>>;
-    fn base64_encode_url_safe(&self) -> String;
+    // fn base64_encode_url_safe(&self) -> String;
     fn base64_encode_standard_padding(&self) -> String;
 }
 
@@ -17,9 +17,9 @@ where
         URL_SAFE_NO_PAD.decode(self).err_into()
     }
 
-    fn base64_encode_url_safe(&self) -> String {
-        URL_SAFE_NO_PAD.encode(self)
-    }
+    // fn base64_encode_url_safe(&self) -> String {
+    //     URL_SAFE_NO_PAD.encode(self)
+    // }
 
     fn base64_encode_standard_padding(&self) -> String {
         STANDARD.encode(self)
@@ -35,10 +35,10 @@ mod test {
     const TEST_STRING: &str = "Hallo allemaal wat fijn dat u er bent";
     const TEST_STRING_ENCODED: &str = "SGFsbG8gYWxsZW1hYWwgd2F0IGZpam4gZGF0IHUgZXIgYmVudA";
 
-    #[test]
-    fn encode() {
-        assert_eq!(TEST_STRING.base64_encode_url_safe(), TEST_STRING_ENCODED,);
-    }
+    // #[test]
+    // fn encode() {
+    //     assert_eq!(TEST_STRING.base64_decode_url_safe(), TEST_STRING_ENCODED,);
+    // }
 
     #[test]
     fn decode() {

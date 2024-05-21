@@ -174,7 +174,7 @@ impl VpsApi for Client {
 
     fn vps_set_description(&mut self, name: &str, description: &str) -> Result<()> {
         let mut vps_item = VpsApi::vps(self, name).map(VpsItem::from)?;
-        vps_item.vps.description = description.to_owned();
+        description.clone_into(&mut vps_item.vps.description);
         self.put(&self.url.vps(name), &vps_item)
     }
 }

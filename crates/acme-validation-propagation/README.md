@@ -9,10 +9,8 @@ This library crate can be used to check if an acme challenge record is propagate
 ```no_run
 use acme_validation_propagation::wait;
 
-fn main() {
-    match wait("example.com", "89823875") {
-        Ok(_) => println!("Propagation finished"),
-        Err(error) => eprintln!("Error: {error}"),
-    }
+match wait("example.com", "89823875") {
+    Ok(_) => println!("Propagation finished"),
+    Err(error) => eprintln!("Error: {error}"),
 }
 ```
