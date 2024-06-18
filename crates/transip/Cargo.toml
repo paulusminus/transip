@@ -12,7 +12,6 @@ version.workspace = true
 base64 = "0.22"
 chrono = { version = "0.4", features = ["serde"] }
 derive = "1.0.0"
-features = "0.10.0"
 ring = "0.17"
 rustls-pemfile = "2"
 serde = { version = "1", features = ["derive"] }
