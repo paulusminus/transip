@@ -1,6 +1,5 @@
 use std::{
-    ffi::OsString,
-    time::{SystemTime, UNIX_EPOCH},
+    env, time::{SystemTime, UNIX_EPOCH}
 };
 
 use serde::Serialize;
@@ -95,16 +94,16 @@ impl AuthRequest {
     }
 }
 
-fn hostname_timestamp(hostname: OsString) -> String {
+fn hostname_timestamp(hostname: String) -> String {
     format!(
         "{}-{}",
-        hostname.to_string_lossy(),
+        hostname,
         chrono::offset::Local::now().format("%Y%m%dT%H%M%S"),
     )
 }
 
 fn create_label() -> String {
-    hostname::get().map(hostname_timestamp).unwrap_or(format!(
+    env::var("HOSTNAME").map(hostname_timestamp).unwrap_or(format!(
         "{} {}",
         env!("CARGO_PKG_NAME"),
         milliseconds_since_epoch(),
