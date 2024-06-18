@@ -1,5 +1,6 @@
 use std::{
-    env, time::{SystemTime, UNIX_EPOCH}
+    env,
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use serde::Serialize;
@@ -103,11 +104,13 @@ fn hostname_timestamp(hostname: String) -> String {
 }
 
 fn create_label() -> String {
-    env::var("HOSTNAME").map(hostname_timestamp).unwrap_or(format!(
-        "{} {}",
-        env!("CARGO_PKG_NAME"),
-        milliseconds_since_epoch(),
-    ))
+    env::var("HOSTNAME")
+        .map(hostname_timestamp)
+        .unwrap_or(format!(
+            "{} {}",
+            env!("CARGO_PKG_NAME"),
+            milliseconds_since_epoch(),
+        ))
 }
 
 fn milliseconds_since_epoch() -> String {
