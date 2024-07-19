@@ -1,9 +1,10 @@
 use core::time::Duration;
 use std::fmt::Debug;
+use std::net::{SocketAddr, ToSocketAddrs};
 
 use serde::{de::DeserializeOwned, Serialize};
-use tracing::instrument;
-use ureq::{Agent, AgentBuilder};
+use tracing::{info, instrument};
+use ureq::{Agent, AgentBuilder, Resolver};
 
 use crate::authentication::{
     AuthRequest, KeyPair, Token, TokenExpired, TokenResponse, UrlAuthentication,
@@ -99,13 +100,42 @@ impl Client {
     }
 }
 
+pub struct Ipv6Resolver;
+
+impl Resolver for Ipv6Resolver {
+    fn resolve(&self, netloc: &str) -> std::io::Result<Vec<std::net::SocketAddr>> {
+        ToSocketAddrs::to_socket_addrs(netloc).map(|iter| {
+            iter
+                // only keep ipv6 addresses
+                .filter(|s| s.is_ipv6())
+                .collect::<Vec<SocketAddr>>()
+
+        })
+        .inspect(|v| {
+            if v.is_empty() {
+                info!("Failed to find any ipv6 addresses. This probably means \
+                    the DNS server didn't return any.")
+            }
+        })
+    }
+}
+
+fn build_agent(ipv6only: bool) -> AgentBuilder {
+    if ipv6only {
+        AgentBuilder::new().resolver(Ipv6Resolver {})
+    }
+    else {
+        AgentBuilder::new()
+    }
+}
+
 impl TryFrom<Box<dyn Configuration>> for Client {
     type Error = Error;
     fn try_from(configuration: Box<dyn Configuration>) -> Result<Self> {
         KeyPair::try_from_file(configuration.private_key_pem_file()).map(|key| Self {
             url: TRANSIP_API_PREFIX.into(),
             key: Some(key),
-            agent: AgentBuilder::new()
+            agent: build_agent(configuration.ipv6_only())
                 .user_agent(USER_AGENT)
                 .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
                 .build(),

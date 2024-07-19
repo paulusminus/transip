@@ -7,14 +7,16 @@ const TRANSIP_API_USERNAME: &str = "TRANSIP_API_USERNAME";
 const TRANSIP_API_TOKEN_PATH: &str = "TRANSIP_API_TOKEN_PATH";
 const TRANSIP_API_WHITELISTED_ONLY: &str = "TRANSIP_API_WHITELISTED_ONLY";
 const TRANSIP_API_READONLY: &str = "TRANSIP_API_READONLY";
+const TRANSIP_API_IPV6ONLY: &str = "TRANSIP_API_IPV6ONLY";
 const TRANSIP_API_TOKEN_EXPIRATION: &str = "TRANSIP_API_TOKEN_EXPIRATION";
 
-const ENVIRONMENT_VARIABLES: [&str; 6] = [
+const ENVIRONMENT_VARIABLES: [&str; 7] = [
     TRANSIP_API_USERNAME,
     TRANSIP_API_PRIVATE_KEY,
     TRANSIP_API_TOKEN_PATH,
     TRANSIP_API_WHITELISTED_ONLY,
     TRANSIP_API_READONLY,
+    TRANSIP_API_IPV6ONLY,
     TRANSIP_API_TOKEN_EXPIRATION,
 ];
 
@@ -24,6 +26,7 @@ struct Environment {
     token_path: String,
     whitelisted_only: bool,
     read_only: bool,
+    ipv6_only: bool,
     token_expiration: TokenExpiration,
 }
 
@@ -46,6 +49,10 @@ impl Configuration for Environment {
 
     fn read_only(&self) -> bool {
         self.read_only
+    }
+
+    fn ipv6_only(&self) -> bool {
+        self.ipv6_only
     }
 
     fn token_expiration(&self) -> TokenExpiration {
@@ -97,6 +104,7 @@ pub fn configuration_from_environment() -> Result<Box<dyn Configuration>> {
         token_path: var(TRANSIP_API_TOKEN_PATH)?,
         whitelisted_only: var(TRANSIP_API_WHITELISTED_ONLY).and_then(parse::<bool>)?,
         read_only: var(TRANSIP_API_READONLY).and_then(parse::<bool>)?,
+        ipv6_only: var(TRANSIP_API_IPV6ONLY).and_then(parse::<bool>)?,
         token_expiration: var(TRANSIP_API_TOKEN_EXPIRATION).and_then(parse::<TokenExpiration>)?,
     }))
 }
@@ -116,6 +124,7 @@ pub fn demo_configuration() -> Box<dyn Configuration> {
         private_key: Default::default(),
         token_path: Default::default(),
         read_only: false,
+        ipv6_only: false,
         whitelisted_only: false,
         token_expiration: TokenExpiration::Hours(10),
     })

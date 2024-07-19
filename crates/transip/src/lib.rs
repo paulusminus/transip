@@ -22,6 +22,7 @@ pub trait Configuration {
     fn token_path(&self) -> &str;
     fn whitelisted_only(&self) -> bool;
     fn read_only(&self) -> bool;
+    fn ipv6_only(&self) -> bool;
     fn token_expiration(&self) -> TokenExpiration;
 }
 

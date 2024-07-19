@@ -57,6 +57,17 @@ Example
 export TRANSIP_API_READONLY=false
 ```
 
+### TRANSIP_API_IPV6ONLY
+
+Can be 'true' or 'false'. Use true if on a ipv6 only (virtual) machine.
+
+Example
+
+```bash
+export TRANSIP_API_IPV6ONLY=false
+```
+
+
 ### TRANSIP_API_WHITELISTED_ONLY
 
 Can be 'true' or 'false'. If you wan't to access the api on a whitelisted ipaddress set this to 'true'.
