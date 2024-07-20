@@ -104,27 +104,28 @@ pub struct Ipv6Resolver;
 
 impl Resolver for Ipv6Resolver {
     fn resolve(&self, netloc: &str) -> std::io::Result<Vec<std::net::SocketAddr>> {
-        ToSocketAddrs::to_socket_addrs(netloc).map(|iter| {
-            iter
-                // only keep ipv6 addresses
-                .filter(|s| s.is_ipv6())
-                .collect::<Vec<SocketAddr>>()
-
-        })
-        .inspect(|v| {
-            if v.is_empty() {
-                info!("Failed to find any ipv6 addresses. This probably means \
-                    the DNS server didn't return any.")
-            }
-        })
+        ToSocketAddrs::to_socket_addrs(netloc)
+            .map(|iter| {
+                iter
+                    // only keep ipv6 addresses
+                    .filter(|s| s.is_ipv6())
+                    .collect::<Vec<SocketAddr>>()
+            })
+            .inspect(|v| {
+                if v.is_empty() {
+                    info!(
+                        "Failed to find any ipv6 addresses. This probably means \
+                    the DNS server didn't return any."
+                    )
+                }
+            })
     }
 }
 
 fn build_agent(ipv6only: bool) -> AgentBuilder {
     if ipv6only {
         AgentBuilder::new().resolver(Ipv6Resolver {})
-    }
-    else {
+    } else {
         AgentBuilder::new()
     }
 }
