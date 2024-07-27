@@ -155,15 +155,15 @@ impl VpsApi for Client {
     }
 
     fn vps_stop(&mut self, name: &str) -> Result<()> {
-        self.patch(&self.url.vps(name), &Action::stop())
+        self.patch(&self.url.vps(name), Action::stop())
     }
 
     fn vps_start(&mut self, name: &str) -> Result<()> {
-        self.patch(&self.url.vps(name), &Action::start())
+        self.patch(&self.url.vps(name), Action::start())
     }
 
     fn vps_reset(&mut self, name: &str) -> Result<()> {
-        self.patch(&self.url.vps(name), &Action::reset())
+        self.patch(&self.url.vps(name), Action::reset())
     }
 
     fn vps_set_is_locked(&mut self, name: &str, locked: bool) -> Result<()> {
