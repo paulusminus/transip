@@ -571,6 +571,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-client"
+version = "0.4.0"
+dependencies = [
+ "http",
+ "http-body",
+ "ureq",
+]
+
+[[package]]
 name = "httparse"
 version = "1.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

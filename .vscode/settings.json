@@ -1,0 +1,7 @@
+{
+    "rust-targets.targets": [
+        "system",
+        "x86_64-unknown-linux-gnu",
+        "wasm32-wasip1"
+    ]
+}
