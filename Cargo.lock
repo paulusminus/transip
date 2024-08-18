@@ -860,6 +860,8 @@ version = "0.4.0"
 dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
+ "serde",
+ "serde_json",
  "ureq",
  "waki",
 ]
