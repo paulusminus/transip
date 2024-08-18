@@ -1,8 +1,5 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
-#[cfg(target_family = "wasm")]
-compile_error!("Webassembly is not supported");
-
 use hickory_resolver::{
     config::{LookupIpStrategy, NameServerConfigGroup, ResolverConfig, ResolverOpts},
     Resolver,

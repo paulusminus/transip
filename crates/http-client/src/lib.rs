@@ -1,30 +1,16 @@
-use std::error::Error;
+pub use http::{Request, Response};
 
-use http::{Request, Response};
+#[cfg(not(all(target_family = "wasm", target_os = "wasi")))]
+mod ureq_client;
 
-#[cfg(all(target_family = "wasm", target_env = "p1"))]
-pub fn fetch(request: Request<Vec<u8>>) -> Result<Response<Request<Vec<u8>>>, Box<dyn Error>> {
-    Response::builder()
-        .status(200)
-        .body(request)
-        .map_err(Into::into)
-}
+#[cfg(not(all(target_family = "wasm", target_os = "wasi")))]
+pub use ureq_client::Client;
 
-#[cfg(not(all(target_family = "wasm", target_env = "p1")))]
-pub fn fetch(request: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, Box<dyn Error>> {
-    use std::io::Read;
+#[cfg(all(target_family = "wasm", target_os = "wasi"))]
+mod waki_client;
 
-    let response = ureq::Agent::new()
-        .request(request.method().as_str(), &request.uri().to_string())
-        .send_bytes(request.body())?;
-    let status = response.status();
-    let body = response.into_reader().bytes().collect::<Result<_, _>>()?;
-
-    Response::builder()
-        .status(status)
-        .body(body)
-        .map_err(Into::into)
-}
+#[cfg(all(target_family = "wasm", target_os = "wasi"))]
+pub use waki_client::Client;
 
 #[cfg(test)]
 mod tests {}

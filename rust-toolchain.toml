@@ -1,5 +1,0 @@
-[toolchain]
-channel = "nightly-2024-08-15"
-components = [ "rustfmt" ]
-targets = [ "wasm32-wasip1", "wasm32-wasip2" ]
-profile = "default"

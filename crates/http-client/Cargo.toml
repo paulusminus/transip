@@ -11,5 +11,8 @@ version.workspace = true
 http = "1.1.0"
 http-body = "1.0.1"
 
-[target.'cfg(not(all(target_family = "wasm", target_env = "p1")))'.dependencies]
+[target.'cfg(not(all(target_family = "wasm", target_os = "wasi")))'.dependencies]
 ureq = "2.10.1"
+
+[target.'cfg(all(target_family = "wasm", target_os = "wasi"))'.dependencies]
+waki = "0.3.1"
