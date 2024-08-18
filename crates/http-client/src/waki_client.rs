@@ -3,6 +3,8 @@ use std::io::Read;
 
 use http::{Request, Response};
 
+use crate::Fetch;
+
 pub struct Client {
     agent: waki::Client,
 }
@@ -13,8 +15,16 @@ impl Client {
             agent: waki::Client {},
         }
     }
+}
 
-    pub fn fetch(&self, request: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, Box<dyn Error>> {
+impl Default for Client {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Fetch for Client {
+    fn fetch(&self, request: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, Box<dyn Error>> {
         let method = waki_method(request.method())?;
         let body = request
             .body()
@@ -31,13 +41,7 @@ impl Client {
         Response::builder()
             .status(status)
             .body(response_body)
-            .map_err(Into::into)
-    }
-}
-
-impl Default for Client {
-    fn default() -> Self {
-        Self::new()
+            .map_err(Into::into)        
     }
 }
 

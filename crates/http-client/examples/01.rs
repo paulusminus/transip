@@ -1,6 +1,6 @@
 use std::str::from_utf8;
 
-use http_client::Client;
+use http_client::{Client, Fetch};
 
 fn empty_body() -> Vec<u8> {
     vec![]
