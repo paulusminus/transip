@@ -16,7 +16,6 @@ impl Client {
             agent: Agent::new(),
         }
     }
-
 }
 
 impl Default for Client {
@@ -38,5 +37,5 @@ impl Fetch for Client {
             .status(status)
             .body(body)
             .map_err(Into::into)
-    }    
+    }
 }

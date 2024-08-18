@@ -41,7 +41,7 @@ impl Fetch for Client {
         Response::builder()
             .status(status)
             .body(response_body)
-            .map_err(Into::into)        
+            .map_err(Into::into)
     }
 }
 
