@@ -277,14 +277,16 @@ impl EmailApi for Client {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[cfg(test)]
 mod test {
     const DEFAULT_CONTENT_TYPE: &str = "application/json";
 
-    use wiremock::{
-        matchers::{body_string, header, method, path},
-        Mock, ResponseTemplate,
-    };
+    // use httpmock::{
+    //     // matchers::{body_string, header, method, path}, Method::GET, Mock, ResponseTemplate
+    // };
+
+    use httpmock::Method::{DELETE, GET, POST};
 
     use super::{Client, EmailApi, MailForward, MailForwardInsert, Mailbox};
 
@@ -312,196 +314,190 @@ mod test {
         }
     }
 
-    #[tokio::test]
-    async fn mailbox_list() {
-        let server = wiremock::MockServer::start().await;
+    #[test]
+    fn mailbox_list() {
+        let server = httpmock::MockServer::start();
         let relative_url = "/email/paulmin.nl/mailboxes";
-        let name = "mail-box-list";
         let body = r#"{"mailboxes":[{"identifier":"info@paulmin.nl","localPart":"info","domain":"paulmin.nl","forwardTo":"","availableDiskSpace":2500,"usedDiskSpace":454.35,"status":"created","isLocked":false,"imapServer":"imap.transip.email","imapPort":993,"smtpServer":"smtp.transip.email","smtpPort":465,"pop3Server":"pop3.transip.email","pop3Port":995,"webmailUrl":"https://transip.email/"}]}"#;
 
-        Mock::given(method("GET"))
-            .and(path(relative_url))
-            .respond_with(
-                ResponseTemplate::new(200)
-                    .set_body_bytes(body)
-                    .insert_header("Content-Type", DEFAULT_CONTENT_TYPE),
-            )
-            .expect(1)
-            .named(name)
-            .mount(&server)
-            .await;
+        let mock = server.mock(|when, then| {
+            when.method(GET).path(relative_url);
+            then.status(200)
+                .body(body)
+                .header("Content-Type", DEFAULT_CONTENT_TYPE);
+        });
 
-        let mut client = Client::test(server.uri());
+        let mut client = Client::test(server.base_url());
         let mailbox_list = client.mailbox_list("paulmin.nl").unwrap();
 
         assert_eq!(mailbox_list, vec![mailbox_for_paulmin_demo()]);
+        mock.assert_hits(1);
     }
 
-    #[tokio::test]
-    async fn mailbox_item() {
-        let server = wiremock::MockServer::start().await;
+    #[test]
+    fn mailbox_item() {
+        let server = httpmock::MockServer::start();
         let relative_url = "/email/paulmin.nl/mailboxes/info@paulmin.nl";
-        let name = "mail-box-item";
         let body = r#"{"mailbox":{"identifier":"info@paulmin.nl","localPart":"info","domain":"paulmin.nl","forwardTo":"","availableDiskSpace":2500,"usedDiskSpace":454.35,"status":"created","isLocked":false,"imapServer":"imap.transip.email","imapPort":993,"smtpServer":"smtp.transip.email","smtpPort":465,"pop3Server":"pop3.transip.email","pop3Port":995,"webmailUrl":"https://transip.email/"}}"#;
 
-        Mock::given(method("GET"))
-            .and(path(relative_url))
-            .respond_with(
-                ResponseTemplate::new(200)
-                    .set_body_bytes(body)
-                    .insert_header("Content-Type", DEFAULT_CONTENT_TYPE),
-            )
-            .expect(1)
-            .named(name)
-            .mount(&server)
-            .await;
-
-        let mut client = Client::test(server.uri());
+        let mock = server.mock(|when, then| {
+            when.method(GET).path(relative_url);
+            then.status(200)
+                .body(body)
+                .header("Content-Type", DEFAULT_CONTENT_TYPE);
+        });
+        let mut client = Client::test(server.base_url());
 
         let item = client
             .mailbox_item("paulmin.nl", "info@paulmin.nl")
             .unwrap();
 
         assert_eq!(item, mailbox_for_paulmin_demo());
+        mock.assert_hits(1);
     }
 
-    #[tokio::test]
-    async fn mailbox_delete() {
-        let server = wiremock::MockServer::start().await;
+    #[test]
+    fn mailbox_delete() {
+        let server = httpmock::MockServer::start();
         let relative_url = "/email/paulmin.nl/mailboxes/info@paulmin.nl";
-        let name = "mail-box-delete";
 
-        Mock::given(method("DELETE"))
-            .and(path(relative_url))
-            .respond_with(ResponseTemplate::new(200))
-            .expect(1)
-            .named(name)
-            .mount(&server)
-            .await;
+        let mock = server.mock(|when, then| {
+            when.method(DELETE).path(relative_url);
+            then.status(200);
+        });
 
-        let mut client = Client::test(server.uri());
+        let mut client = Client::test(server.base_url());
         client
             .mailbox_delete("paulmin.nl", "info@paulmin.nl")
             .unwrap();
+        mock.assert_hits(1);
     }
 
-    #[tokio::test]
-    async fn mailbox_insert() {
-        let server = wiremock::MockServer::start().await;
-        let relative_url = "/email/paulmin.nl/mailboxes";
-        let name = "mail-box-insert";
+    #[test]
+    fn mailbox_insert() {
+        let server = httpmock::MockServer::start();
         let body = r#"{"localPart":"test","maxDiskUsage":0,"password":"Ulkdjfi@kj#"}"#;
 
-        Mock::given(method("POST"))
-            .and(path(relative_url))
-            .and(header("Content-Type", "application/json"))
-            .and(body_string(body))
-            .respond_with(ResponseTemplate::new(201))
-            .expect(1)
-            .named(name)
-            .mount(&server)
-            .await;
+        let mock = server.mock(|when, then| {
+            when.method(POST)
+                .header("Content-Type", "application/json")
+                .body(body);
+            then.status(201);
+        });
 
-        let mut client = Client::test(server.uri());
+        let mut client = Client::test(server.base_url());
         let body_object = super::MailboxInsert {
             local_part: "test".to_owned(),
             max_disk_usage: 0,
             password: "Ulkdjfi@kj#".to_owned(),
         };
         client.mailbox_insert("paulmin.nl", body_object).unwrap();
+        mock.assert_hits(1);
     }
 
-    #[tokio::test]
-    async fn mailforward_list() {
-        let server = wiremock::MockServer::start().await;
+    #[test]
+    fn mailforward_list() {
+        let server = httpmock::MockServer::start();
         let relative_url = "/email/transipdemo.be/mail-forwards";
-        let name = "mail-forward-list";
         let body = r#"{"forwards":[{"id":292883,"localPart":"info","domain":"transipdemo.be","status":"created","forwardTo":"info@paulmin.nl"}]}"#;
 
-        Mock::given(method("GET"))
-            .and(path(relative_url))
-            .respond_with(
-                ResponseTemplate::new(200)
-                    .set_body_bytes(body)
-                    .insert_header("Content-Type", DEFAULT_CONTENT_TYPE),
-            )
-            .expect(1)
-            .named(name)
-            .mount(&server)
-            .await;
+        let mock = server.mock(|when, then| {
+            when.method(GET).path(relative_url);
+            then.status(200)
+                .body(body)
+                .header("Content-Type", DEFAULT_CONTENT_TYPE);
+        });
 
-        let mut client = Client::test(server.uri());
+        let mut client = Client::test(server.base_url());
         let mailforward_list = client.mailforward_list(DOMAIN_NAME).unwrap();
 
         assert_eq!(mailforward_list, vec![mail_forward_for_transip_demo()]);
+        mock.assert_hits(1);
     }
 
-    #[tokio::test]
-    async fn mailforward_item() {
-        let server = wiremock::MockServer::start().await;
+    #[test]
+    fn mailforward_item() {
+        let server = httpmock::MockServer::start();
         let relative_url = "/email/transipdemo.be/mail-forwards/292883";
-        let name = "mail-forward-item";
+        // let name = "mail-forward-item";
         let body = r#"{"forward":{"id":292883,"localPart":"info","domain":"transipdemo.be","status":"created","forwardTo":"info@paulmin.nl"}}"#;
 
-        Mock::given(method("GET"))
-            .and(path(relative_url))
-            .respond_with(
-                ResponseTemplate::new(200)
-                    .set_body_bytes(body)
-                    .insert_header("Content-Type", DEFAULT_CONTENT_TYPE),
-            )
-            .expect(1)
-            .named(name)
-            .mount(&server)
-            .await;
+        let mock = server.mock(|when, then| {
+            when.method(GET).path(relative_url);
+            then.status(200)
+                .body(body)
+                .header("Content-Type", DEFAULT_CONTENT_TYPE);
+        });
+        // Mock::given(method("GET"))
+        //     .and(path(relative_url))
+        //     .respond_with(
+        //         ResponseTemplate::new(200)
+        //             .set_body_bytes(body)
+        //             .insert_header("Content-Type", DEFAULT_CONTENT_TYPE),
+        //     )
+        //     .expect(1)
+        //     .named(name)
+        //     .mount(&server);
 
-        let mut client = Client::test(server.uri());
+        let mut client = Client::test(server.url(""));
 
         let item = client.mailforward_item(DOMAIN_NAME, "292883").unwrap();
 
         assert_eq!(item, mail_forward_for_transip_demo(),);
+        mock.assert_hits(1);
     }
 
-    #[tokio::test]
-    async fn mailforward_delete() {
-        let server = wiremock::MockServer::start().await;
+    #[test]
+    fn mailforward_delete() {
+        let server = httpmock::MockServer::start();
         let relative_url = "/email/transipdemo.be/mail-forwards/292883";
-        let name = "mail-forward-delete";
+        // let name = "mail-forward-delete";
 
-        Mock::given(method("DELETE"))
-            .and(path(relative_url))
-            .respond_with(ResponseTemplate::new(200))
-            .expect(1)
-            .named(name)
-            .mount(&server)
-            .await;
+        let mock = server.mock(|when, then| {
+            when.method(DELETE).path(relative_url);
+            then.status(200);
+        });
+        // Mock::given(method("DELETE"))
+        //     .and(path(relative_url))
+        //     .respond_with(ResponseTemplate::new(200))
+        //     .expect(1)
+        //     .named(name)
+        //     .mount(&server);
 
-        let mut client = Client::test(server.uri());
+        let mut client = Client::test(server.url(""));
         client.mailforward_delete(DOMAIN_NAME, "292883").unwrap();
+        mock.assert_hits(1);
     }
 
-    #[tokio::test]
-    async fn mailforward_insert() {
-        let server = wiremock::MockServer::start().await;
+    #[test]
+    fn mailforward_insert() {
+        let server = httpmock::MockServer::start();
         let relative_url = "/email/transipdemo.be/mail-forwards";
-        let name = "mail-forward-insert";
+        // let name = "mail-forward-insert";
         let body = r#"{"localPart":"test","forwardTo":"info@paulmin.nl"}"#;
 
-        Mock::given(method("POST"))
-            .and(path(relative_url))
-            .and(header("Content-Type", "application/json"))
-            .and(body_string(body))
-            .respond_with(ResponseTemplate::new(201))
-            .expect(1)
-            .named(name)
-            .mount(&server)
-            .await;
+        let mock = server.mock(|when, then| {
+            when.method(POST)
+                .path(relative_url)
+                .header("Content-Type", DEFAULT_CONTENT_TYPE)
+                .body(body);
+            then.status(201);
+        });
+        // Mock::given(method("POST"))
+        //     .and(path(relative_url))
+        //     .and(header("Content-Type", "application/json"))
+        //     .and(body_string(body))
+        //     .respond_with(ResponseTemplate::new(201))
+        //     .expect(1)
+        //     .named(name)
+        //     .mount(&server);
 
-        let mut client = Client::test(server.uri());
+        let mut client = Client::test(server.url(""));
         let entry = MailForwardInsert {
             local_part: "test".to_owned(),
             forward_to: "info@paulmin.nl".to_owned(),
         };
         client.mailforward_insert(DOMAIN_NAME, entry).unwrap();
+        mock.assert_hits(1);
     }
 }
