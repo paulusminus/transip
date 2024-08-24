@@ -33,9 +33,13 @@ impl Fetch for Client {
         let status = response.status();
         let body = response.into_reader().bytes().collect::<Result<_, _>>()?;
 
-        Response::builder()
-            .status(status)
-            .body(body)
-            .map_err(Into::into)
+        if status >= 400 {
+            Err(format!("status: {status}").as_str().into())
+        } else {
+            Response::builder()
+                .status(status)
+                .body(body)
+                .map_err(Into::into)
+        }
     }
 }

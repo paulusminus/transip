@@ -17,8 +17,8 @@ http-body = "1.0.1"
 serde = { version = "1.0.208", features = ["derive"], optional = true }
 serde_json = { version = "1.0.125", optional = true }
 
-[target.'cfg(not(all(target_family = "wasm", target_os = "wasi")))'.dependencies]
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
 ureq = "2.10.1"
 
-[target.'cfg(all(target_family = "wasm", target_os = "wasi"))'.dependencies]
+[target.'cfg(target_family = "wasm")'.dependencies]
 waki = "0.3.1"

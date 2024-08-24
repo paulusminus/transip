@@ -1,18 +1,18 @@
 use std::error::Error;
-use std::io::Read;
+use waki::Client as WakiClient;
 
 use http::{Request, Response};
 
 use crate::Fetch;
 
 pub struct Client {
-    agent: waki::Client,
+    agent: WakiClient,
 }
 
 impl Client {
     pub fn new() -> Self {
         Self {
-            agent: waki::Client {},
+            agent: WakiClient::new(),
         }
     }
 }
@@ -26,10 +26,7 @@ impl Default for Client {
 impl Fetch for Client {
     fn fetch(&self, request: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, Box<dyn Error>> {
         let method = waki_method(request.method())?;
-        let body = request
-            .body()
-            .bytes()
-            .collect::<Result<Vec<u8>, std::io::Error>>()?;
+        let body = request.body().clone();
         let response = self
             .agent
             .request(method, request.uri().to_string().as_str())
@@ -38,10 +35,14 @@ impl Fetch for Client {
         let status = response.status_code();
         let response_body = response.body()?;
 
-        Response::builder()
-            .status(status)
-            .body(response_body)
-            .map_err(Into::into)
+        if status >= 400 {
+            Err(format!("status: {status}").as_str().into())
+        } else {
+            Response::builder()
+                .status(status)
+                .body(response_body)
+                .map_err(Into::into)
+        }
     }
 }
 

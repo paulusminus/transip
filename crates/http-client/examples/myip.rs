@@ -20,8 +20,8 @@ impl std::fmt::Display for Ipify {
 fn main() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
 
-    let ipv4 = client.get::<Ipify>(IPIFY_IPV4_URL)?;
-    let ipv6 = client.get::<Ipify>(IPIFY_IPV6_URL)?;
+    let ipv4: Ipify = client.get(IPIFY_IPV4_URL)?;
+    let ipv6: Ipify = client.get(IPIFY_IPV6_URL)?;
     println!("ipv4: {ipv4}, ip6: {ipv6}");
 
     Ok(())
