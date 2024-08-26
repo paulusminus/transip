@@ -12,10 +12,10 @@ use serde::Serialize;
 #[cfg(not(target_family = "wasm"))]
 pub use ureq_client::Client;
 
-#[cfg(all(target_family = "wasm"))]
+#[cfg(target_family = "wasm")]
 mod waki_client;
 
-#[cfg(all(target_family = "wasm"))]
+#[cfg(target_family = "wasm")]
 pub use waki_client::Client;
 
 pub trait Fetch {
