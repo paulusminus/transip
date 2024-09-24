@@ -13,7 +13,7 @@ json = ["dep:serde", "dep:serde_json"]
 
 [dependencies]
 http = "1.1.0"
-http-body = "1.0.1"
+# http-body = "1.0.1"
 serde = { version = "1.0.208", features = ["derive"], optional = true }
 serde_json = { version = "1.0.125", optional = true }
 
