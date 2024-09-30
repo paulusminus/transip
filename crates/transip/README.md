@@ -5,10 +5,12 @@
 # transip
 
 This library crate can be used for calling functions on the [`Transip Api`] endpoint.
-Only part of the api is implemented. The main reason for writing this library is the ability
-to [`CRUD`] dns records for a particular domain. This functionality can be used to respond to DNS01 challenges from the [`Let's Encrypt`] servers.
+Only part of the api is implemented.
+The main reason for writing this library is the ability
+to [`CRUD`] dns records for a particular domain.
+This functionality can be used to respond to
+DNS01 challenges from the [`Let's Encrypt`] servers.
 This type of challenge is needed to get wildcard certificates.
-
 
 ## Example
 
@@ -49,7 +51,8 @@ export TRANSIP_API_PRIVATE_KEY=/etc/transip/private.pem
 
 ### TRANSIP_API_READONLY
 
-Can be 'true' or 'false'. If you wan't to prevent accidental modifications set this to 'true'.
+Can be 'true' or 'false'.
+If you want to prevent accidental modifications set this to 'true'.
 
 Example
 
@@ -67,14 +70,15 @@ Example
 export TRANSIP_API_IPV6ONLY=false
 ```
 
-
 ### TRANSIP_API_WHITELISTED_ONLY
 
-Can be 'true' or 'false'. If you wan't to access the api on a whitelisted ipaddress set this to 'true'.
+Can be 'true' or 'false'.
+If you want to access the api on a whitelisted ipaddress set this to 'true'.
 
 ### TRANSIP_API_TOKEN_EXPIRATION
 
-Authentication means receiving a token. The interval in which the received will expired can be controlled.
+Authentication means receiving a token.
+The interval in which the received will expired can be controlled.
 
 #### Example 1
 
@@ -106,7 +110,8 @@ export TRANSIP_API_LOG_DIR=/var/log/transip
 
 ### TRANSIP_API_TOKEN_PATH
 
-Name of the file where the authentication token received from the endpoint will be written to.
+Name of the file where the authentication token
+received from the endpoint will be written to.
 
 #### Example
 

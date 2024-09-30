@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0]
 
-- use environment variable TRANSIP_API_IPV6ONLY to decide if dns address resolver should only return AAAA records.
+- use environment variable TRANSIP_API_IPV6ONLY to decide
+if dns address resolver should only return AAAA records.
 
 ## [0.3.2]
 
 - Remove dependency on hostname. Use environment variable HOSTNAME instead.
-
 
 ## [0.3.1]
 
@@ -30,4 +30,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cargo update. base64 updated to 0.22
 - Use cache in Github Action Workflow
-
