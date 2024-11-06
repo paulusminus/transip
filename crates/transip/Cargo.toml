@@ -15,7 +15,7 @@ ring = "0.17.8"
 rustls-pemfile = "2.2.0"
 serde = { version = "1.0.210", features = ["derive"] }
 strum = { version = "0.26.3", features = ["derive"] }
-thiserror = "1.0.64"
+thiserror = "2.0.0"
 tracing = "0.1.40"
 ureq = { version = "2.10.1", features = ["json"] }
 
