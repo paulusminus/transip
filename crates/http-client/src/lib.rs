@@ -5,17 +5,17 @@ pub use http::{Request, Response};
 #[cfg(feature = "json")]
 use serde::de::DeserializeOwned;
 
-#[cfg(not(target_family = "wasm"))]
+#[cfg(not(all(target_family = "wasm", target_env = "p2")))]
 mod ureq_client;
 
 use serde::Serialize;
-#[cfg(not(target_family = "wasm"))]
+#[cfg(not(all(target_family = "wasm", target_env = "p2")))]
 pub use ureq_client::Client;
 
-#[cfg(target_family = "wasm")]
+#[cfg(all(target_family = "wasm", target_env = "p2"))]
 mod waki_client;
 
-#[cfg(target_family = "wasm")]
+#[cfg(all(target_family = "wasm", target_env = "p2"))]
 pub use waki_client::Client;
 
 pub trait Fetch {
