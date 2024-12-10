@@ -17,7 +17,6 @@ trait UrlAccount {
 }
 
 /// See <https://api.transip.nl/rest/docs.html#account>
-
 pub trait AccountApi {
     /// See <https://api.transip.nl/rest/docs.html#account-invoices-get-1>
     fn invoice(&mut self, invoice_number: &str) -> Result<Invoice>;

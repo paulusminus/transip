@@ -112,7 +112,7 @@ struct TokenResponseMeta {
     pub kv: bool,
 }
 
-impl<'a> TryFrom<EncodedTokenMeta<'a>> for TokenResponseMeta {
+impl TryFrom<EncodedTokenMeta<'_>> for TokenResponseMeta {
     type Error = Error;
     fn try_from(encoded_token_meta: EncodedTokenMeta) -> Result<Self> {
         encoded_token_meta
@@ -125,7 +125,7 @@ impl<'a> TryFrom<EncodedTokenMeta<'a>> for TokenResponseMeta {
 
 struct EncodedTokenMeta<'a>(&'a str);
 
-impl<'a> EncodedTokenMeta<'a> {
+impl EncodedTokenMeta<'_> {
     pub fn expiration(&self) -> String {
         self.0.to_owned()
     }
