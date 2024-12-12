@@ -222,6 +222,7 @@ mod tests {
                 "vps-sandbox-d1",
                 "vps-sandbox-d2",
                 "vps-sandbox-d3",
+                "vps-bladevps-x4"
             ]
         );
     }
