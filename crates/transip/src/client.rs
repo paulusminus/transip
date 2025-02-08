@@ -4,7 +4,8 @@ use std::net::{SocketAddr, ToSocketAddrs};
 
 use serde::{de::DeserializeOwned, Serialize};
 use tracing::{info, instrument};
-use ureq::{Agent, AgentBuilder, Resolver};
+use ureq::config::ConfigBuilder;
+use ureq::{unversioned::resolver::Resolver, Agent};
 
 use crate::authentication::{
     AuthRequest, KeyPair, Token, TokenExpired, TokenResponse, UrlAuthentication,
@@ -77,10 +78,11 @@ impl Client {
         Self {
             url: TRANSIP_API_PREFIX.into(),
             key: None,
-            agent: AgentBuilder::new()
-                .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
-                .user_agent(USER_AGENT)
-                .build(),
+            agent: Agent::config_builder()
+                .timeout_global(Some(Duration::from_secs(AGENT_TIMEOUT_SECONDS)))
+                //                .user_agent(USER_AGENT)
+                .build()
+                .into(),
             token: Some(Token::demo()),
             configuration: crate::environment::demo_configuration(),
         }
@@ -90,10 +92,11 @@ impl Client {
         Self {
             url: format!("{prefix}/").as_str().into(),
             key: None,
-            agent: AgentBuilder::new()
-                .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
-                .user_agent(USER_AGENT)
-                .build(),
+            agent: Agent::config_builder()
+                .timeout_global(Some(Duration::from_secs(AGENT_TIMEOUT_SECONDS)))
+                //                .user_agent(USER_AGENT)
+                .build()
+                .into(),
             token: Some(Token::demo()),
             configuration: crate::environment::demo_configuration(),
         }
@@ -122,11 +125,11 @@ impl Resolver for Ipv6Resolver {
     }
 }
 
-fn build_agent(ipv6only: bool) -> AgentBuilder {
+fn build_agent(ipv6only: bool) -> ConfigBuilder {
     if ipv6only {
-        AgentBuilder::new().resolver(Ipv6Resolver {})
+        Agent::config_builder().resolver(Ipv6Resolver {})
     } else {
-        AgentBuilder::new()
+        Agent::config_builder()
     }
 }
 
