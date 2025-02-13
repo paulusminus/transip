@@ -1,16 +1,15 @@
 use core::time::Duration;
 use std::fmt::Debug;
-use std::net::{SocketAddr, ToSocketAddrs};
 
 use serde::{de::DeserializeOwned, Serialize};
-use tracing::{info, instrument};
-use ureq::config::ConfigBuilder;
-use ureq::{unversioned::resolver::Resolver, Agent};
+use tracing::instrument;
+use ureq::config::{ConfigBuilder, IpFamily};
+use ureq::typestate::AgentScope;
+use ureq::Agent;
 
 use crate::authentication::{
     AuthRequest, KeyPair, Token, TokenExpired, TokenResponse, UrlAuthentication,
 };
-use crate::error::ResultExt;
 use crate::{Configuration, Error, Result};
 
 const TRANSIP_API_PREFIX: &str = "https://api.transip.nl/v6/";
@@ -103,33 +102,34 @@ impl Client {
     }
 }
 
-pub struct Ipv6Resolver;
+//#[derive(Debug)]
+//pub struct Ipv6Resolver;
+//
+//impl Resolver for Ipv6Resolver {
+//    fn resolve(&self, netloc: &str) -> std::io::Result<Vec<std::net::SocketAddr>> {
+//        ToSocketAddrs::to_socket_addrs(netloc)
+//            .map(|iter| {
+//                iter
+//                    // only keep ipv6 addresses
+//                    .filter(|s| s.is_ipv6())
+//                    .collect::<Vec<SocketAddr>>()
+//            })
+//            .inspect(|v| {
+//                if v.is_empty() {
+//                    info!(
+//                        "Failed to find any ipv6 addresses. This probably means \
+//                    the DNS server didn't return any."
+//                    )
+//                }
+//            })
+//    }
+//}
 
-impl Resolver for Ipv6Resolver {
-    fn resolve(&self, netloc: &str) -> std::io::Result<Vec<std::net::SocketAddr>> {
-        ToSocketAddrs::to_socket_addrs(netloc)
-            .map(|iter| {
-                iter
-                    // only keep ipv6 addresses
-                    .filter(|s| s.is_ipv6())
-                    .collect::<Vec<SocketAddr>>()
-            })
-            .inspect(|v| {
-                if v.is_empty() {
-                    info!(
-                        "Failed to find any ipv6 addresses. This probably means \
-                    the DNS server didn't return any."
-                    )
-                }
-            })
-    }
-}
-
-fn build_agent(ipv6only: bool) -> ConfigBuilder {
+fn build_agent(ipv6only: bool) -> ConfigBuilder<AgentScope> {
     if ipv6only {
-        Agent::config_builder().resolver(Ipv6Resolver {})
+        Agent::config_builder().ip_family(IpFamily::Ipv6Only)
     } else {
-        Agent::config_builder()
+        Agent::config_builder().ip_family(IpFamily::Any)
     }
 }
 
@@ -141,8 +141,8 @@ impl TryFrom<Box<dyn Configuration>> for Client {
             key: Some(key),
             agent: build_agent(configuration.ipv6_only())
                 .user_agent(USER_AGENT)
-                .timeout(Duration::from_secs(AGENT_TIMEOUT_SECONDS))
-                .build(),
+                .build()
+                .into(),
             token: Token::try_from_file(configuration.token_path()).ok(),
             configuration,
         })
@@ -182,11 +182,11 @@ impl Client {
                 let token_response = self
                     .agent
                     .post(&self.url.auth())
-                    .set("Content-Type", "application/json")
-                    .set("Signature", &signature)
-                    .send_bytes(json.as_slice())
-                    .map_err(Box::new)?
-                    .into_json::<TokenResponse>()?;
+                    .header("Content-Type", "application/json")
+                    .header("Signature", &signature)
+                    .send_json(&auth_request)?
+                    .into_body()
+                    .read_json::<TokenResponse>()?;
                 Token::try_from(token_response.token)
             });
             self.token = token_result.ok();
@@ -202,13 +202,13 @@ impl Client {
         timeit!(url, "GET", {
             self.refresh_token_if_needed()?;
             let token = self.token.as_ref().ok_or(Error::Token)?;
-            self.agent
+            let response = self
+                .agent
                 .get(url)
-                .set("Authorization", &format!("Bearer {}", token.raw()))
-                .call()
-                .map_err(Box::new)?
-                .into_json::<T>()
-                .err_into()
+                .header("Authorization", &format!("Bearer {}", token.raw()))
+                .call()?;
+            let result = response.into_body().read_json::<T>()?;
+            Ok(result)
         })
     }
 
@@ -222,9 +222,8 @@ impl Client {
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
                 .delete(url)
-                .set("Authorization", &format!("Bearer {}", token.raw()))
-                .send_json(object)
-                .map_err(Box::new)?;
+                .header("Authorization", &format!("Bearer {}", token.raw()))
+                .call()?;
             Ok(())
         })
     }
@@ -236,9 +235,8 @@ impl Client {
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
                 .delete(url)
-                .set("Authorization", &format!("Bearer {}", token.raw()))
-                .call()
-                .map_err(Box::new)?;
+                .header("Authorization", &format!("Bearer {}", token.raw()))
+                .call()?;
             Ok(())
         })
     }
@@ -253,9 +251,8 @@ impl Client {
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
                 .patch(url)
-                .set("Authorization", &format!("Bearer {}", token.raw()))
-                .send_json(object)
-                .map_err(Box::new)?;
+                .header("Authorization", &format!("Bearer {}", token.raw()))
+                .send_json(object)?;
             Ok(())
         })
     }
@@ -270,9 +267,8 @@ impl Client {
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
                 .post(url)
-                .set("Authorization", &format!("Bearer {}", token.raw()))
-                .send_json(body)
-                .map_err(Box::new)?;
+                .header("Authorization", &format!("Bearer {}", token.raw()))
+                .send_json(body)?;
             Ok(())
         })
     }
@@ -287,9 +283,8 @@ impl Client {
             let token = self.token.as_ref().ok_or(Error::Token)?;
             self.agent
                 .put(url)
-                .set("Authorization", &format!("Bearer {}", token.raw()))
-                .send_json(body)
-                .map_err(Box::new)?;
+                .header("Authorization", &format!("Bearer {}", token.raw()))
+                .send_json(body)?;
             Ok(())
         })
     }

@@ -3,9 +3,8 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use serde::Serialize;
-
 use crate::client::Url;
+use serde::Serialize;
 
 pub use key_pair::KeyPair;
 pub use token::{Token, TokenExpired, TokenResponse};
@@ -91,7 +90,7 @@ impl AuthRequest {
     }
 
     pub fn json(&self) -> Vec<u8> {
-        ureq::serde_json::to_vec(self).unwrap()
+        serde_json::to_vec(self).unwrap()
     }
 }
 

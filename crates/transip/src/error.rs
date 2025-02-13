@@ -20,11 +20,10 @@ pub enum Error {
     #[error("Systemtime: {0}")]
     SystemTime(#[from] std::time::SystemTimeError),
 
-    #[error("Json: {0}")]
-    Json(#[from] ureq::serde_json::Error),
-
+    //    #[error("Json: {0}")]
+    //    Json(#[from] ureq::serde_json::Error),
     #[error("Ureq: {0}")]
-    Ureq(#[from] Box<ureq::Error>),
+    Ureq(#[from] ureq::Error),
 
     // #[allow(dead_code)]
     #[error("IP 4 address missing")]

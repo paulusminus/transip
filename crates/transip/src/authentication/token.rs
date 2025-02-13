@@ -1,6 +1,6 @@
 use crate::{error::ResultExt, Error, Result};
 use std::{
-    io::{Cursor, Read, Write},
+    io::{Read, Write},
     path::Path,
 };
 
@@ -8,6 +8,7 @@ use crate::base64::Base64;
 use crate::fs::FileSystem;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use ureq::Body;
 
 pub const DEMO_TOKEN: &str = include_str!("demo_token.txt");
 
@@ -118,8 +119,9 @@ impl TryFrom<EncodedTokenMeta<'_>> for TokenResponseMeta {
         encoded_token_meta
             .expiration()
             .base64_decode_url_safe()
-            .map(Cursor::new)
-            .and_then(|cursor| ureq::serde_json::from_reader(cursor).err_into())
+            .map(|data| Body::builder().data(data))
+            .and_then(|mut body| body.read_json().map_err(Into::into))
+            .err_into()
     }
 }
 
