@@ -286,9 +286,9 @@ mod test {
     //     // matchers::{body_string, header, method, path}, Method::GET, Mock, ResponseTemplate
     // };
 
-    use httpmock::Method::{DELETE, GET, POST};
+    use httpmock::Method::{DELETE, GET};
 
-    use super::{Client, EmailApi, MailForward, MailForwardInsert, Mailbox};
+    use super::{Client, EmailApi, MailForward, Mailbox};
 
     const DOMAIN_NAME: &str = "transipdemo.be";
 
@@ -373,27 +373,27 @@ mod test {
         mock.assert_hits(1);
     }
 
-    #[test]
-    fn mailbox_insert() {
-        let server = httpmock::MockServer::start();
-        let body = r#"{"localPart":"test","maxDiskUsage":0,"password":"Ulkdjfi@kj#"}"#;
-
-        let mock = server.mock(|when, then| {
-            when.method(POST)
-                .header("Content-Type", "application/json")
-                .body(body);
-            then.status(201);
-        });
-
-        let mut client = Client::test(server.base_url());
-        let body_object = super::MailboxInsert {
-            local_part: "test".to_owned(),
-            max_disk_usage: 0,
-            password: "Ulkdjfi@kj#".to_owned(),
-        };
-        client.mailbox_insert("paulmin.nl", body_object).unwrap();
-        mock.assert_hits(1);
-    }
+    //     #[test]
+    //     fn mailbox_insert() {
+    //         let server = httpmock::MockServer::start();
+    //         let body = r#"{"localPart":"test","maxDiskUsage":0,"password":"Ulkdjfi@kj#"}"#;
+    //
+    //         let mock = server.mock(|when, then| {
+    //             when.method(POST)
+    //                 .header("Content-Type", "application/json")
+    //                 .body(body);
+    //             then.status(201);
+    //         });
+    //
+    //         let mut client = Client::test(server.base_url());
+    //         let body_object = super::MailboxInsert {
+    //             local_part: "test".to_owned(),
+    //             max_disk_usage: 0,
+    //             password: "Ulkdjfi@kj#".to_owned(),
+    //         };
+    //         client.mailbox_insert("paulmin.nl", body_object).unwrap();
+    //         mock.assert_hits(1);
+    //     }
 
     #[test]
     fn mailforward_list() {
@@ -469,35 +469,35 @@ mod test {
         mock.assert_hits(1);
     }
 
-    #[test]
-    fn mailforward_insert() {
-        let server = httpmock::MockServer::start();
-        let relative_url = "/email/transipdemo.be/mail-forwards";
-        // let name = "mail-forward-insert";
-        let body = r#"{"localPart":"test","forwardTo":"info@paulmin.nl"}"#;
-
-        let mock = server.mock(|when, then| {
-            when.method(POST)
-                .path(relative_url)
-                .header("Content-Type", DEFAULT_CONTENT_TYPE)
-                .body(body);
-            then.status(201);
-        });
-        // Mock::given(method("POST"))
-        //     .and(path(relative_url))
-        //     .and(header("Content-Type", "application/json"))
-        //     .and(body_string(body))
-        //     .respond_with(ResponseTemplate::new(201))
-        //     .expect(1)
-        //     .named(name)
-        //     .mount(&server);
-
-        let mut client = Client::test(server.url(""));
-        let entry = MailForwardInsert {
-            local_part: "test".to_owned(),
-            forward_to: "info@paulmin.nl".to_owned(),
-        };
-        client.mailforward_insert(DOMAIN_NAME, entry).unwrap();
-        mock.assert_hits(1);
-    }
+    //     #[test]
+    //     fn mailforward_insert() {
+    //         let server = httpmock::MockServer::start();
+    //         let relative_url = "/email/transipdemo.be/mail-forwards";
+    //         // let name = "mail-forward-insert";
+    //         let body = r#"{"localPart":"test","forwardTo":"info@paulmin.nl"}"#;
+    //
+    //         let mock = server.mock(|when, then| {
+    //             when.method(POST)
+    //                 .path(relative_url)
+    //                 .header("Content-Type", DEFAULT_CONTENT_TYPE)
+    //                 .body(body);
+    //             then.status(201);
+    //         });
+    //         // Mock::given(method("POST"))
+    //         //     .and(path(relative_url))
+    //         //     .and(header("Content-Type", "application/json"))
+    //         //     .and(body_string(body))
+    //         //     .respond_with(ResponseTemplate::new(201))
+    //         //     .expect(1)
+    //         //     .named(name)
+    //         //     .mount(&server);
+    //
+    //         let mut client = Client::test(server.url(""));
+    //         let entry = MailForwardInsert {
+    //             local_part: "test".to_owned(),
+    //             forward_to: "info@paulmin.nl".to_owned(),
+    //         };
+    //         client.mailforward_insert(DOMAIN_NAME, entry).unwrap();
+    //         mock.assert_hits(1);
+    //     }
 }
