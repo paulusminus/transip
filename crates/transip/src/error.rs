@@ -80,6 +80,9 @@ pub enum Error {
 
     #[error("Serialization: {0}")]
     Serialization(Box<dyn std::error::Error>),
+
+    #[error("Json: {0}")]
+    Json(#[from] serde_json::Error),
 }
 
 pub(crate) trait ResultExt<T, E>
