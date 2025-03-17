@@ -7,8 +7,7 @@ authors = ["Paul Min"]
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/paulusminus/transip"
-rust-version = "1.68.2"
-version = "0.4.1"
+version = "0.4.2"
 
 [profile.release]
 lto = true
