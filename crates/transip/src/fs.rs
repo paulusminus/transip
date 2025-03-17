@@ -1,4 +1,4 @@
-use crate::{error::ResultExt, Result};
+use crate::{Result, error::ResultExt};
 use std::{
     fs::{File, OpenOptions},
     path::Path,

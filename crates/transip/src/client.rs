@@ -1,11 +1,11 @@
 use core::time::Duration;
 use std::fmt::Debug;
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use tracing::instrument;
+use ureq::Agent;
 use ureq::config::{ConfigBuilder, IpFamily};
 use ureq::typestate::AgentScope;
-use ureq::Agent;
 
 use crate::authentication::{
     AuthRequest, KeyPair, Token, TokenExpired, TokenResponse, UrlAuthentication,

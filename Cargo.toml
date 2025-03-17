@@ -1,10 +1,10 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = ["crates/*"]
 
 [workspace.package]
 authors = ["Paul Min"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 repository = "https://github.com/paulusminus/transip"
 version = "0.4.2"

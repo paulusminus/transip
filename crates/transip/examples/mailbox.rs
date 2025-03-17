@@ -1,6 +1,6 @@
 use serde_json::to_string_pretty;
 use transip::api::email::{EmailApi, MailboxInsert};
-use transip::{configuration_from_environment, Client, Result};
+use transip::{Client, Result, configuration_from_environment};
 
 const DOMAIN_NAME: &str = "paulmin.nl";
 const EMAIL_ADDRESS: &str = "info@paulmin.nl";

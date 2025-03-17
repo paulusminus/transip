@@ -1,4 +1,4 @@
-use crate::{error::ResultExt, Error, Result};
+use crate::{Error, Result, error::ResultExt};
 use std::{
     io::{Read, Write},
     path::Path,

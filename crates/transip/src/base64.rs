@@ -1,7 +1,7 @@
-use crate::error::ResultExt;
 use crate::Result;
-use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
+use crate::error::ResultExt;
 use base64::Engine;
+use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 
 pub trait Base64 {
     fn base64_decode_url_safe(&self) -> Result<Vec<u8>>;

@@ -1,6 +1,6 @@
 use crate::{
-    client::{Client, Url},
     HasName, Result,
+    client::{Client, Url},
 };
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -184,8 +184,8 @@ impl GeneralApi for Client {
 #[cfg(test)]
 mod tests {
     use super::{GeneralApi, Product};
-    use crate::client::Client;
     use crate::HasNames;
+    use crate::client::Client;
 
     #[test]
     fn api_test() {

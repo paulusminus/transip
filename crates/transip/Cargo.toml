@@ -1,7 +1,7 @@
 [package]
 authors.workspace = true
 description = "Call functions on the Transip Api Endpoint"
-edition.workspace = true
+edition = "2024"
 license.workspace = true
 name = "transip"
 repository.workspace = true

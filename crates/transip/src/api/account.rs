@@ -1,6 +1,6 @@
 use crate::{
-    client::{Client, Url},
     HasName, Result,
+    client::{Client, Url},
 };
 use core::fmt::Display;
 use serde::{Deserialize, Serialize};

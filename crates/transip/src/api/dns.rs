@@ -3,8 +3,8 @@ use std::str::FromStr;
 
 use crate::error::ResultExt;
 use crate::{
-    client::{Client, Url},
     HasName, Result,
+    client::{Client, Url},
 };
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};

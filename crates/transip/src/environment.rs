@@ -1,6 +1,6 @@
 use std::{path::Path, str::FromStr};
 
-use crate::{authentication::TokenExpiration, error::ResultExt, Configuration, Error, Result};
+use crate::{Configuration, Error, Result, authentication::TokenExpiration, error::ResultExt};
 
 const TRANSIP_API_PRIVATE_KEY: &str = "TRANSIP_API_PRIVATE_KEY";
 const TRANSIP_API_USERNAME: &str = "TRANSIP_API_USERNAME";

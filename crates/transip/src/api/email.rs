@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{client::Url, Client, Error, Result};
+use crate::{Client, Error, Result, client::Url};
 use serde::{Deserialize, Serialize};
 // use ureq::serde_json::Value;
 
