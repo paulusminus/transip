@@ -17,7 +17,7 @@ const AGENT_TIMEOUT_SECONDS: u64 = 30;
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
 
 macro_rules! timeit {
-    ($url:expr, $method:expr, $code:block) => {{
+    ($url:expr_2021, $method:expr_2021, $code:block) => {{
         let start = std::time::Instant::now();
         let t = $code;
         if t.is_err() {
