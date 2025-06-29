@@ -79,12 +79,12 @@ impl FromStr for MailForwardInsert {
         let mut splitted = s.split_ascii_whitespace();
         let username = splitted
             .next()
-            .ok_or(error(format!("Missing username on {}", s)))?;
+            .ok_or(error(format!("Missing username on {s}")))?;
         let forward = splitted
             .next()
-            .ok_or(error(format!("Missing forward address on {}", s)))?;
+            .ok_or(error(format!("Missing forward address on {s}")))?;
         if splitted.next().is_some() {
-            Err(error(format!("Too many parameters on {}", s)))
+            Err(error(format!("Too many parameters on {s}")))
         } else {
             Ok(Self {
                 local_part: username.to_owned(),
@@ -179,17 +179,17 @@ impl FromStr for MailboxInsert {
         let mut splitted = s.split_ascii_whitespace();
         let username = splitted
             .next()
-            .ok_or(error(format!("Missing username on {}", s)))?;
+            .ok_or(error(format!("Missing username on {s}")))?;
         let password = splitted
             .next()
-            .ok_or(error(format!("Missing password on {}", s)))?;
+            .ok_or(error(format!("Missing password on {s}")))?;
         let mailbox_size_str = splitted
             .next()
-            .ok_or(error(format!("Missing mailbox size on {}", s)))?;
+            .ok_or(error(format!("Missing mailbox size on {s}")))?;
         let mailbox_size = mailbox_size_str.parse::<u64>()?;
 
         if splitted.next().is_some() {
-            Err(error(format!("Too many fields on {}", s)))
+            Err(error(format!("Too many fields on {s}")))
         } else {
             Ok(Self {
                 local_part: username.to_owned(),

@@ -82,14 +82,12 @@ fn check_environment() -> Result<()> {
         .is_err()
     {
         return Err(Error::EnvironmentVariable(format!(
-            "{} should contain true of false",
-            TRANSIP_API_WHITELISTED_ONLY
+            "{TRANSIP_API_WHITELISTED_ONLY} should contain true of false"
         )));
     }
     if var(TRANSIP_API_READONLY).unwrap().parse::<bool>().is_err() {
         return Err(Error::EnvironmentVariable(format!(
-            "{} should contain true of false",
-            TRANSIP_API_READONLY
+            "{TRANSIP_API_READONLY} should contain true of false"
         )));
     }
     Ok(())

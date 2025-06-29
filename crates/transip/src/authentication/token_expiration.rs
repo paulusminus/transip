@@ -17,7 +17,7 @@ impl Default for TokenExpiration {
 }
 
 fn fmt(count: &u8, unit: &'static str) -> String {
-    format!("{} {}", count, unit) + if count <= &1 { "" } else { "s" }
+    format!("{count} {unit}") + if count <= &1 { "" } else { "s" }
 }
 
 impl Display for TokenExpiration {
