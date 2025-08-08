@@ -151,17 +151,15 @@ impl TryFrom<Box<dyn Configuration>> for Client {
 
 impl Drop for Client {
     fn drop(&mut self) {
-        if self.key.is_some() {
-            if let Some(token) = self.token.take() {
-                if let Err(error) = token.try_to_write_file(self.configuration.token_path()) {
+        if self.key.is_some()
+            && let Some(token) = self.token.take()
+                && let Err(error) = token.try_to_write_file(self.configuration.token_path()) {
                     tracing::error!(
                         "Error {} writing token to {}",
                         error,
                         self.configuration.token_path()
                     );
                 }
-            }
-        }
     }
 }
 
