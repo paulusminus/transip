@@ -331,7 +331,7 @@ mod test {
         let mailbox_list = client.mailbox_list("paulmin.nl").unwrap();
 
         assert_eq!(mailbox_list, vec![mailbox_for_paulmin_demo()]);
-        mock.assert_hits(1);
+        mock.assert_calls(1);
     }
 
     #[test]
@@ -353,7 +353,7 @@ mod test {
             .unwrap();
 
         assert_eq!(item, mailbox_for_paulmin_demo());
-        mock.assert_hits(1);
+        mock.assert_calls(1);
     }
 
     #[test]
@@ -370,7 +370,7 @@ mod test {
         client
             .mailbox_delete("paulmin.nl", "info@paulmin.nl")
             .unwrap();
-        mock.assert_hits(1);
+        mock.assert_calls(1);
     }
 
     //     #[test]
@@ -412,7 +412,7 @@ mod test {
         let mailforward_list = client.mailforward_list(DOMAIN_NAME).unwrap();
 
         assert_eq!(mailforward_list, vec![mail_forward_for_transip_demo()]);
-        mock.assert_hits(1);
+        mock.assert_calls(1);
     }
 
     #[test]
@@ -444,7 +444,7 @@ mod test {
         let item = client.mailforward_item(DOMAIN_NAME, "292883").unwrap();
 
         assert_eq!(item, mail_forward_for_transip_demo(),);
-        mock.assert_hits(1);
+        mock.assert_calls(1);
     }
 
     #[test]
@@ -466,7 +466,7 @@ mod test {
 
         let mut client = Client::test(server.url(""));
         client.mailforward_delete(DOMAIN_NAME, "292883").unwrap();
-        mock.assert_hits(1);
+        mock.assert_calls(1);
     }
 
     //     #[test]
